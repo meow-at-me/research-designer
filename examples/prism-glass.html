@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Field Notes — CatTower LTD</title>
+<meta name="description" content="Fictional demo page for the prism-glass theme (research-designer).">
+
+<!-- Fonts: SIL OFL only -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<!-- Lenis smooth-scroll styles (MIT), pinned -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.3.23/dist/lenis.css">
+
+<!-- three.js (MIT) + Motion (MIT), pinned. +esm files skip SRI per jsDelivr. -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+    "motion": "https://cdn.jsdelivr.net/npm/motion@12.40.0/+esm"
+  }
+}
+</script>
+
+<style>
+:root{
+  --canvas:#0C0D10; --hi:#F4F4F2; --mid:#A6A6AE; --low:#6E6E78; --focus:#CDE3EF;
+  --glass-hi:rgba(255,255,255,.14); --glass-lo:rgba(255,255,255,.03); --edge:rgba(255,255,255,.6);
+  --radius:16px; --radius-pill:999px;
+  --font-display:"Inter Tight",sans-serif; --font-body:"Inter",system-ui,sans-serif; --font-mono:"JetBrains Mono",monospace;
+  --maxw:1240px;
+}
+@property --mx{ syntax:"<percentage>"; inherits:false; initial-value:50% }
+@property --my{ syntax:"<percentage>"; inherits:false; initial-value:30% }
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--canvas); color:var(--hi);
+  font-family:var(--font-body); font-size:16px; line-height:1.6;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; overflow-x:hidden;
+}
+a{color:inherit; text-decoration:none}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px; border-radius:4px}
+
+/* ---- aurora backdrop (WebGL canvas) + CSS fallback ---- */
+#bg{position:fixed; inset:0; z-index:0; display:block; width:100%; height:100%}
+.aurora-fallback{position:fixed; inset:0; z-index:0; display:none;
+  background:
+    radial-gradient(46% 40% at 26% 30%, rgba(110,71,201,.60), transparent 62%),
+    radial-gradient(42% 44% at 76% 36%, rgba(31,143,134,.45), transparent 62%),
+    radial-gradient(58% 50% at 60% 82%, rgba(180,71,143,.42), transparent 62%),
+    var(--canvas);
+}
+body.no-webgl #bg{display:none}
+body.no-webgl .aurora-fallback{display:block}
+
+.page{position:relative; z-index:2}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+
+/* ---- progress (Tier 0 native scroll-driven) ---- */
+.progress{position:fixed; top:0; left:0; height:2px; width:100%; background:rgba(255,255,255,.85); transform:scaleX(0); transform-origin:0 50%; z-index:50; mix-blend-mode:overlay}
+@supports (animation-timeline: scroll()){
+  .progress{animation:grow linear both; animation-timeline:scroll(root)}
+  @keyframes grow{to{transform:scaleX(1)}}
+}
+
+/* ---- glass recipe (the identity) ---- */
+.glass{
+  position:relative; isolation:isolate; border-radius:var(--radius);
+  background:linear-gradient(150deg, var(--glass-hi), var(--glass-lo) 60%);
+  -webkit-backdrop-filter:blur(18px) saturate(165%);
+  backdrop-filter:blur(18px) saturate(165%);
+  box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.40), inset 0 -1px 0 rgba(255,255,255,.06);
+}
+.glass::before{ /* light-catching edge */
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; pointer-events:none;
+  background:linear-gradient(150deg, var(--edge), rgba(255,255,255,.08) 28%, rgba(255,255,255,0) 56%, rgba(255,255,255,.18));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+}
+.glass::after{ /* frost grain */
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; opacity:.05; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+.glass>.gc{position:relative; z-index:2}
+.sheen,.sweep{position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:1}
+.sweep{overflow:hidden}
+.sweep::before{content:""; position:absolute; top:-40%; left:-80%; width:55%; height:180%; transform:rotate(18deg); background:linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent); transition:transform .85s cubic-bezier(.2,.7,.2,1)}
+.card:hover .sweep::before{transform:rotate(18deg) translateX(430%)}
+.sheen{background:radial-gradient(240px 240px at var(--mx) var(--my), rgba(255,255,255,.20), rgba(255,255,255,0) 60%)}
+
+/* ---- chips, buttons ---- */
+.chip{display:inline-flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--hi);
+  padding:6px 12px; border-radius:var(--radius-pill); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px)}
+.btn{display:inline-flex; align-items:center; gap:8px; font-size:14px; font-weight:500; padding:12px 22px; border-radius:var(--radius-pill); cursor:pointer; color:var(--mid);
+  background:var(--glass-lo); border:1px solid rgba(255,255,255,.14); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:all .25s cubic-bezier(.2,.7,.2,1)}
+.btn:hover{color:var(--hi); border-color:rgba(255,255,255,.4); transform:translateY(-2px)}
+.btn-primary{background:rgba(255,255,255,.16); color:var(--hi)}
+.btn svg{width:16px;height:16px}
+
+/* ---- topbar ---- */
+.topbar{position:fixed; top:0; left:0; right:0; z-index:40; height:60px;
+  -webkit-backdrop-filter:blur(12px) saturate(140%); backdrop-filter:blur(12px) saturate(140%);
+  background:linear-gradient(180deg, rgba(12,13,16,.6), rgba(12,13,16,.18)); border-bottom:1px solid rgba(255,255,255,.07)}
+.topbar .wrap{display:flex; align-items:center; height:60px; gap:28px}
+.brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:600; font-size:17px; letter-spacing:-.01em}
+.brand .mk{width:16px;height:16px;border-radius:5px;background:linear-gradient(135deg,#fff,rgba(255,255,255,.35));box-shadow:inset 0 1px 1px rgba(255,255,255,.8),0 0 14px rgba(255,255,255,.35)}
+.topbar nav{margin-left:auto; display:flex; gap:24px}
+.topbar nav a{font-size:13px; color:var(--mid); transition:color .2s}
+.topbar nav a:hover{color:var(--hi)}
+.topbar .label{font-family:var(--font-mono); font-size:11px; color:var(--low); text-transform:uppercase; letter-spacing:.08em}
+
+/* ---- hero ---- */
+.hero{padding:150px 0 90px}
+.hero .chip{margin-bottom:22px}
+.hero h1{font-family:var(--font-display); font-weight:500; font-size:clamp(40px,6vw,76px); line-height:1.04; letter-spacing:-.02em; margin:0; max-width:14ch; text-shadow:0 2px 40px rgba(0,0,0,.45)}
+.lens{max-width:560px; margin-top:40px; padding:30px 32px; border-radius:22px}
+.lens{-webkit-backdrop-filter:blur(28px) saturate(170%); backdrop-filter:blur(28px) saturate(170%)}
+.lens p{margin:0; color:var(--hi); opacity:.92; font-size:17px}
+.lens .meta{font-family:var(--font-mono); font-size:12px; color:var(--mid); margin-top:18px; letter-spacing:.02em}
+.lens .actions{display:flex; gap:12px; margin-top:24px; flex-wrap:wrap}
+
+/* ---- editorial sections: heading above + 3-up vertical cards (image top, description below) ---- */
+.ed{padding:9vh 0}
+.ed .head{margin-bottom:40px}
+.ed .head .chip{margin-bottom:16px}
+.ed .head h2{font-family:var(--font-display); font-weight:500; font-size:clamp(28px,3.4vw,44px); line-height:1.06; letter-spacing:-.02em; margin:0; max-width:18ch; text-shadow:0 2px 30px rgba(0,0,0,.5)}
+.ed .head .body{color:var(--mid); margin:16px 0 0; max-width:54ch}
+.ed .head .body strong{color:var(--hi); font-weight:600}
+.cards{display:grid; grid-template-columns:repeat(3,1fr); gap:20px}
+.card{padding:0; overflow:hidden; display:flex; flex-direction:column}
+.card .media{position:relative; height:180px; overflow:hidden; flex:none}
+.card .gc{padding:22px}
+.card .chip{margin-bottom:14px}
+.card h3{font-family:var(--font-display); font-weight:500; font-size:19px; margin:0 0 8px}
+.card p{color:var(--mid); font-size:14.5px; margin:0}
+.ph{position:absolute; left:0; right:0; top:-15%; height:130%; z-index:0;
+  background:
+    radial-gradient(60% 50% at 30% 30%, rgba(110,71,201,.55), transparent 60%),
+    radial-gradient(55% 55% at 75% 70%, rgba(31,143,134,.5), transparent 60%),
+    linear-gradient(160deg, rgba(180,71,143,.35), rgba(12,13,16,.2));
+  filter:saturate(1.1)}
+.ph.v2{background:
+    radial-gradient(60% 50% at 70% 30%, rgba(31,143,134,.55), transparent 60%),
+    radial-gradient(55% 55% at 25% 70%, rgba(110,71,201,.5), transparent 60%),
+    linear-gradient(160deg, rgba(110,71,201,.30), rgba(12,13,16,.2))}
+.ph.v3{background:
+    radial-gradient(60% 50% at 40% 35%, rgba(180,71,143,.55), transparent 60%),
+    radial-gradient(55% 55% at 80% 65%, rgba(31,143,134,.45), transparent 60%),
+    linear-gradient(160deg, rgba(110,71,201,.30), rgba(12,13,16,.2))}
+
+/* ---- people ---- */
+.people{padding:9vh 0}
+.people .head{margin-bottom:40px}
+.people h2{font-family:var(--font-display); font-weight:500; font-size:clamp(28px,3.4vw,42px); margin:14px 0 0; letter-spacing:-.02em; text-shadow:0 2px 30px rgba(0,0,0,.5)}
+.pgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px}
+.person{padding:0; overflow:hidden}
+.person .av{height:160px; position:relative; background:
+  radial-gradient(70% 80% at 40% 25%, rgba(255,255,255,.18), transparent 55%),
+  linear-gradient(150deg, rgba(110,71,201,.5), rgba(31,143,134,.4))}
+.person .gc{padding:20px}
+.person h3{font-family:var(--font-display); font-weight:500; font-size:18px; margin:0}
+.person .role{font-family:var(--font-mono); font-size:11px; color:var(--mid); text-transform:uppercase; letter-spacing:.06em; margin-top:6px}
+
+/* ---- CTA ---- */
+.cta{padding:14vh 0}
+.cta .glass{max-width:760px; margin:0 auto; text-align:center; padding:56px 40px; border-radius:22px}
+.cta h2{font-family:var(--font-display); font-weight:500; font-size:clamp(30px,4vw,52px); letter-spacing:-.02em; margin:0}
+.cta p{color:var(--mid); margin:16px auto 0; max-width:46ch}
+.cta .actions{display:flex; gap:12px; justify-content:center; margin-top:30px; flex-wrap:wrap}
+
+/* ---- footer ---- */
+footer{border-top:1px solid rgba(255,255,255,.08); margin-top:6vh; padding:48px 0 64px; color:var(--mid); font-size:14px}
+footer .row{display:flex; justify-content:space-between; gap:30px; flex-wrap:wrap}
+footer .disc{font-family:var(--font-mono); font-size:11px; line-height:1.8; color:var(--low); margin-top:36px; max-width:60ch}
+
+/* ---- reveal (Tier 0 native view-timeline; default visible for no-JS / fallback) ---- */
+.rv{opacity:1}
+@supports (animation-timeline: view()){
+  @media (prefers-reduced-motion: no-preference){
+    .rv{animation:rvAnim linear both; animation-timeline:view(); animation-range:entry 2% exit 96%}
+    @keyframes rvAnim{
+      0%{opacity:0; transform:translateY(54px)}
+      18%{opacity:1; transform:translateY(0)}
+      84%{opacity:1; transform:translateY(0)}
+      100%{opacity:0; transform:translateY(-30px)}
+    }
+  }
+}
+/* IntersectionObserver fallback (added by JS only when view-timeline unsupported & motion allowed) */
+html.rv-fallback .rv{opacity:0; transform:translateY(40px); transition:opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1)}
+html.rv-fallback .rv.in{opacity:1; transform:none}
+
+@media (max-width:860px){
+  .cards{grid-template-columns:1fr}
+  .pgrid{grid-template-columns:1fr}
+  .topbar nav{display:none}
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important}
+  .progress{animation:none}
+}
+</style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="aurora-fallback" aria-hidden="true"></div>
+<div class="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="mk" aria-hidden="true"></span>CatTower</a>
+    <span class="label">Field Notes · 04</span>
+    <nav>
+      <a href="#method">Method</a>
+      <a href="#surfaces">Surfaces</a>
+      <a href="#team">Team</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page" id="top">
+  <!-- HERO (static on load) -->
+  <section class="hero">
+    <div class="wrap">
+      <span class="chip">Field Notes · fictional preview</span>
+      <h1>Frosted glass, over a living light.</h1>
+      <div class="lens glass">
+        <span class="sheen" aria-hidden="true"></span>
+        <div class="gc">
+          <p>Glass only looks real when something moves behind it. Here a slow aurora drifts behind every panel — blurred, saturated, lit on the edges. A fictional demo of the <strong>prism-glass</strong> theme.</p>
+          <div class="meta">three.js · Motion · Lenis · native scroll-driven</div>
+          <div class="actions">
+            <a class="btn btn-primary" href="#method">Read the method
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a class="btn" href="#surfaces">View components</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EDITORIAL 1 -->
+  <section class="ed" id="method">
+    <div class="wrap">
+      <div class="head">
+        <span class="chip rv">01 — Method</span>
+        <h2 class="rv">A page that scrolls like a deck.</h2>
+        <p class="body rv">Titles hold while cards rise into place, then let go as the next section pushes up. The reveal is native CSS scroll-driven motion — <strong>compositor-thread smooth</strong>, no library.</p>
+      </div>
+      <div class="cards">
+        <article class="card glass rv">
+          <span class="sweep" aria-hidden="true"></span>
+          <div class="media"><div class="ph" data-parallax="0.16" aria-hidden="true"></div></div>
+          <div class="gc">
+            <span class="chip">Surface</span>
+            <h3>Refraction, not paint</h3>
+            <p>This card has no color of its own. The hue is the aurora behind it, blurred and saturated through the glass.</p>
+          </div>
+        </article>
+        <article class="card glass rv">
+          <span class="sweep" aria-hidden="true"></span>
+          <div class="media"><div class="ph v2" data-parallax="0.12" aria-hidden="true"></div></div>
+          <div class="gc">
+            <span class="chip">Edge</span>
+            <h3>Lit on the rim</h3>
+            <p>A one-pixel gradient border catches light at the top-left and fades — the detail flat blur always misses.</p>
+          </div>
+        </article>
+        <article class="card glass rv">
+          <span class="sweep" aria-hidden="true"></span>
+          <div class="media"><div class="ph v3" data-parallax="0.2" aria-hidden="true"></div></div>
+          <div class="gc">
+            <span class="chip">Frost</span>
+            <h3>Grain on the pane</h3>
+            <p>A faint procedural noise overlay gives the glass a frosted tactility instead of a clean digital wash.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- EDITORIAL 2 -->
+  <section class="ed" id="surfaces">
+    <div class="wrap">
+      <div class="head">
+        <span class="chip rv">02 — Light</span>
+        <h2 class="rv">Light that answers the cursor.</h2>
+        <p class="body rv">Move across the hero panel and a soft highlight follows — <strong>Motion</strong> springs the light spot toward your pointer. Hover any card and a specular sweep travels its surface.</p>
+      </div>
+      <div class="cards">
+        <article class="card glass rv">
+          <span class="sweep" aria-hidden="true"></span>
+          <div class="media"><div class="ph v2" data-parallax="0.14" aria-hidden="true"></div></div>
+          <div class="gc">
+            <span class="chip">Motion</span>
+            <h3>Pointer sheen</h3>
+            <p>An animated custom property moves the highlight — registered with <code>@property</code> so it tweens instead of jumping.</p>
+          </div>
+        </article>
+        <article class="card glass rv">
+          <span class="sweep" aria-hidden="true"></span>
+          <div class="media"><div class="ph v3" data-parallax="0.2" aria-hidden="true"></div></div>
+          <div class="gc">
+            <span class="chip">Parallax</span>
+            <h3>Depth on scroll</h3>
+            <p>The plate behind this glass drifts at its own speed, tied to scroll progress with Motion's <code>scroll()</code>.</p>
+          </div>
+        </article>
+        <article class="card glass rv">
+          <span class="sweep" aria-hidden="true"></span>
+          <div class="media"><div class="ph" data-parallax="0.12" aria-hidden="true"></div></div>
+          <div class="gc">
+            <span class="chip">Sweep</span>
+            <h3>Specular hover</h3>
+            <p>A diagonal band of light crosses the pane on hover — pure CSS, runs even when scripting is off.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- PEOPLE -->
+  <section class="people" id="team">
+    <div class="wrap">
+      <div class="head">
+        <span class="chip rv">03 — Studio</span>
+        <h2 class="rv">A fictional glass studio.</h2>
+      </div>
+      <div class="pgrid">
+        <article class="person card glass rv"><span class="sweep" aria-hidden="true"></span><div class="av" aria-hidden="true"></div><div class="gc"><h3>Kitty Park</h3><div class="role">CEO</div></div></article>
+        <article class="person card glass rv"><span class="sweep" aria-hidden="true"></span><div class="av" aria-hidden="true"></div><div class="gc"><h3>Ya-ong Kim</h3><div class="role">CTO</div></div></article>
+        <article class="person card glass rv"><span class="sweep" aria-hidden="true"></span><div class="av" aria-hidden="true"></div><div class="gc"><h3>Calico Lee</h3><div class="role">Head of Design</div></div></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="wrap">
+      <div class="glass rv">
+        <span class="sheen" aria-hidden="true"></span>
+        <div class="gc">
+          <h2>Build something translucent.</h2>
+          <p>Every panel on this page is the same glass recipe over one shared aurora. A fictional invitation.</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="#top">Request a fictional invite
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a class="btn" href="#top">Read the spec</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="row">
+        <div>
+          <a class="brand" href="#top" style="font-size:15px"><span class="mk" aria-hidden="true"></span>CatTower LTD</a>
+          <p style="margin:12px 0 0; max-width:32ch; font-size:14px">Kitty Park, CEO · Ya-ong Kim, CTO · Calico Lee, Head of Design. A fictional studio.</p>
+        </div>
+        <nav style="display:flex; gap:46px; font-size:14px">
+          <div><div class="label" style="font-family:var(--font-mono);font-size:11px;color:var(--low);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Notes</div><a href="#method" style="display:block;color:var(--mid);padding:4px 0">Method</a><a href="#surfaces" style="display:block;color:var(--mid);padding:4px 0">Surfaces</a></div>
+          <div><div class="label" style="font-family:var(--font-mono);font-size:11px;color:var(--low);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Studio</div><a href="#team" style="display:block;color:var(--mid);padding:4px 0">Team</a><a href="#top" style="display:block;color:var(--mid);padding:4px 0">Contact</a></div>
+        </nav>
+      </div>
+      <p class="disc">Demo page generated from themes/prism-glass.md (research-designer).<br>
+      All people, companies, products, and figures are fictional.<br>
+      No affiliation with any real entity.</p>
+    </div>
+  </footer>
+</main>
+
+<noscript><p style="position:fixed;bottom:0;left:0;right:0;background:#15161b;border-top:1px solid rgba(255,255,255,.1);padding:12px;text-align:center;font-size:13px;margin:0;z-index:99">This demo uses JavaScript for its aurora and motion. Content remains readable without it.</p></noscript>
+
+<!-- Lenis (MIT), pinned, UMD global -->
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.23/dist/lenis.min.js"></script>
+
+<script type="module">
+import * as THREE from "three";
+import { animate, scroll } from "motion";
+
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- Tier 0: section reveal fallback when view-timeline unsupported ---------- */
+(function revealFallback(){
+  const supported = CSS.supports && CSS.supports("animation-timeline: view()");
+  if (supported || REDUCE) return;                  // native handles it, or reduced = stay visible
+  document.documentElement.classList.add("rv-fallback");
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll(".rv").forEach(el => io.observe(el));
+})();
+
+/* ---------- Tier 0 fallback: progress bar when scroll-timeline unsupported ---------- */
+(function progressFallback(){
+  if (CSS.supports && CSS.supports("animation-timeline: scroll()")) return;
+  const bar = document.querySelector(".progress");
+  const onScroll = () => {
+    const h = document.documentElement;
+    bar.style.transform = "scaleX(" + (h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)) + ")";
+  };
+  addEventListener("scroll", onScroll, { passive:true }); onScroll();
+})();
+
+/* ---------- Tier 1: Lenis smooth scroll (off when reduced) ---------- */
+if (!REDUCE && window.Lenis){
+  const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+  const raf = (t) => { lenis.raf(t); requestAnimationFrame(raf); };
+  requestAnimationFrame(raf);
+}
+
+/* ---------- Tier 1: hero pointer sheen (Motion) ---------- */
+if (!REDUCE){
+  document.querySelectorAll(".sheen").forEach(sheen => {
+    const host = sheen.parentElement;
+    host.addEventListener("pointermove", (e) => {
+      const r = host.getBoundingClientRect();
+      animate(sheen, { "--mx": (((e.clientX - r.left) / r.width) * 100) + "%",
+                       "--my": (((e.clientY - r.top) / r.height) * 100) + "%" },
+                     { duration: 0.5, ease: "easeOut" });
+    });
+    host.addEventListener("pointerleave", () => animate(sheen, { "--mx": "50%", "--my": "30%" }, { duration: 0.6 }));
+  });
+}
+
+/* ---------- Tier 1: card plate parallax (Motion scroll) ---------- */
+if (!REDUCE){
+  document.querySelectorAll("[data-parallax]").forEach(el => {
+    const d = parseFloat(el.dataset.parallax) || 0.12;
+    const card = el.closest(".card") || el;
+    try {
+      scroll((p) => { el.style.transform = "translateY(" + ((p - 0.5) * d * 200) + "px)"; },
+             { target: card, offset: ["start end", "end start"] });
+    } catch (err) { /* parallax is non-essential */ }
+  });
+}
+
+/* ---------- Tier 2: aurora shader (three.js) ---------- */
+function hasWebGL(){
+  try{ const c = document.createElement("canvas");
+    return !!(window.WebGLRenderingContext && (c.getContext("webgl2") || c.getContext("webgl"))); }
+  catch(e){ return false; }
+}
+
+const bg = document.getElementById("bg");
+if (!hasWebGL()){ document.body.classList.add("no-webgl"); }
+else { try { initAurora(); } catch(e){ console.warn("WebGL aurora failed, using CSS fallback:", e); document.body.classList.add("no-webgl"); } }
+
+function initAurora(){
+  const renderer = new THREE.WebGLRenderer({ canvas: bg, antialias: false, powerPreference: "high-performance" });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.Camera();
+  const uniforms = { uTime: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) } };
+
+  const vert = `
+    varying vec2 vUv;
+    void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
+  `;
+  const frag = `
+    varying vec2 vUv;
+    uniform float uTime;
+    uniform vec2 uRes;
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
+    float noise(vec2 p){
+      vec2 i = floor(p), f = fract(p);
+      f = f * f * (3.0 - 2.0 * f);
+      float a = hash(i), b = hash(i + vec2(1.0, 0.0)), c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
+      return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+    }
+    float fbm(vec2 p){ float v = 0.0, a = 0.5; for(int i = 0; i < 5; i++){ v += a * noise(p); p *= 2.0; a *= 0.5; } return v; }
+    void main(){
+      vec2 uv = vUv;
+      float asp = uRes.x / max(uRes.y, 1.0);
+      vec2 p = vec2((uv.x - 0.5) * asp, uv.y - 0.5) * 2.2;
+      float t = uTime * 0.04;
+      float n = fbm(p + vec2(t, -t * 0.6) + fbm(p * 1.4 + vec2(-t, t)));
+      float m = fbm(p * 0.7 + vec2(t * 0.5, -t * 0.4) + 3.0);
+      vec3 indigo = vec3(0.165, 0.184, 0.420);
+      vec3 violet = vec3(0.431, 0.278, 0.788);
+      vec3 teal   = vec3(0.122, 0.561, 0.525);
+      vec3 mag    = vec3(0.706, 0.278, 0.561);
+      vec3 col = mix(indigo, violet, smoothstep(0.25, 0.85, n));
+      col = mix(col, teal, smoothstep(0.35, 0.95, m) * 0.55);
+      col = mix(col, mag, smoothstep(0.55, 1.0, n * m + 0.15) * 0.5);
+      col += violet * 0.12 * smoothstep(0.6, 1.0, fbm(p * 1.8 - vec2(t * 1.2, 0.0)));
+      float vig = smoothstep(1.15, 0.25, length(uv - 0.5));
+      col *= mix(0.18, 1.0, vig);
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+  const mat = new THREE.ShaderMaterial({ uniforms, vertexShader: vert, fragmentShader: frag });
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat));
+
+  function resize(){
+    const w = innerWidth, h = innerHeight;
+    renderer.setSize(w, h, false);
+    uniforms.uRes.value.set(w, h);
+    renderer.render(scene, camera);
+  }
+  addEventListener("resize", resize, { passive:true });
+  resize();                                   // one static frame on load (screenshot-ready)
+
+  if (!REDUCE){
+    const clock = new THREE.Clock();
+    (function loop(){
+      requestAnimationFrame(loop);
+      if (document.hidden) return;
+      uniforms.uTime.value = clock.getElapsedTime();
+      renderer.render(scene, camera);
+    })();
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhiskerSplat — Conference Poster (fictional) · CatTower Vision Lab</title>
+<meta name="description" content="Fictional demo poster for the research-poster theme (research-designer). A0 portrait, screen + print.">
+
+<!-- Fonts: SIL OFL only -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --canvas:#EDEDEF; --band:#FFFFFF; --ink:#111113; --ink-soft:#55555A; --ink-faint:#9A9AA0;
+  --line:#DDDDE1; --accent:#E2603A; --accent-soft:#F6DED4; --neutral-bar:#D2D2D6;
+  --radius:0;
+  --poster-w:841mm; --poster-h:1189mm; --fit:1;
+  --font-display:"Archivo",sans-serif; --font-head:"Inter Tight",sans-serif;
+  --font-body:"Inter",system-ui,sans-serif; --font-mono:"JetBrains Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{ background:#2A2B2F; color:var(--ink); font-family:var(--font-body); -webkit-font-smoothing:antialiased; }
+
+/* ---- screen-only toolbar ---- */
+.toolbar{position:fixed; top:0; left:0; right:0; z-index:50; height:52px; display:flex; align-items:center; gap:18px;
+  padding:0 18px; background:rgba(20,21,24,.92); color:#EDEDEF; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); border-bottom:1px solid #000}
+.toolbar .tb-brand{font-family:var(--font-mono); font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:#cfd0d4}
+.toolbar .tb-spacer{margin-left:auto}
+.toolbar .tb-note{font-size:12px; color:#9A9AA0}
+.toolbar button{font-family:var(--font-head); font-weight:600; font-size:13px; color:#111; background:#EDEDEF; border:0; padding:9px 16px; cursor:pointer; display:inline-flex; align-items:center; gap:8px}
+.toolbar button:hover{background:#fff}
+.toolbar svg{width:15px;height:15px}
+
+/* ---- stage / fit / poster ---- */
+.stage{padding:74px 24px 40px; display:flex; justify-content:center}
+.fit{margin:0 auto}
+.poster{
+  width:var(--poster-w); min-height:var(--poster-h); height:var(--poster-h);
+  background:var(--canvas); transform:scale(var(--fit)); transform-origin:top left;
+  padding:30mm; display:flex; flex-direction:column; gap:10mm;
+}
+
+/* ---- title banner ---- */
+.banner{display:grid; grid-template-columns:1fr auto; gap:12mm; align-items:start; border-bottom:2px solid var(--ink); padding-bottom:9mm}
+.eyebrow{font-family:var(--font-mono); font-size:15px; text-transform:uppercase; letter-spacing:.14em; color:var(--ink-faint); margin-bottom:8mm}
+.title{font-family:var(--font-display); font-weight:800; letter-spacing:-.02em; line-height:1.0}
+.title .tline{display:table; background:var(--ink); color:#fff; padding:.06em .26em; margin:0 0 4px; font-size:62px}
+.title .tline.accent{color:var(--accent-soft)}
+.subtitle{font-family:var(--font-head); font-weight:600; font-size:30px; color:var(--ink); margin:7mm 0 0; max-width:30ch}
+.authors{margin-top:8mm; font-family:var(--font-body); font-size:22px; color:var(--ink)}
+.authors b{font-weight:600}
+.authors sup{color:var(--accent); font-size:.7em}
+.afflist{margin-top:3mm; font-size:16px; color:var(--ink-soft)}
+.afflist .corr{color:var(--ink-faint); font-family:var(--font-mono); font-size:14px}
+.venue{display:inline-block; margin-top:6mm; font-family:var(--font-mono); font-size:15px; text-transform:uppercase; letter-spacing:.1em;
+  border:1.5px solid var(--ink); padding:6px 12px; color:var(--ink)}
+.wordmark{text-align:right}
+.wordmark .mk{display:inline-flex; align-items:center; gap:10px; font-family:var(--font-head); font-weight:700; font-size:22px}
+.wordmark .glyph{width:34px; height:34px; border:2px solid var(--ink); position:relative}
+.wordmark .glyph::before{content:""; position:absolute; inset:7px; background:var(--accent)}
+.wordmark .sub{font-family:var(--font-mono); font-size:13px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.08em; margin-top:6px}
+
+/* ---- body grid ---- */
+.body{display:grid; grid-template-columns:repeat(3,1fr); gap:9mm; flex:1 1 auto; align-content:space-between}
+.panel{background:var(--band); border:1px solid var(--line); display:flex; flex-direction:column}
+.span2{grid-column:span 2}
+.span3{grid-column:span 3}
+.bar{background:var(--ink); color:#fff; font-family:var(--font-head); font-weight:700; font-size:19px; letter-spacing:.02em; padding:9px 14px}
+.panel .pad{padding:8mm 7mm}
+.lead{font-size:17px; line-height:1.5; color:var(--ink-soft); margin:0}
+.lead + .lead{margin-top:3mm}
+.lead .mark{background:var(--accent-soft); padding:0 3px}
+
+/* contributions */
+.contrib{border-left:3px solid var(--accent)}
+.contrib ol{margin:0; padding-left:20px}
+.contrib li{font-size:16px; line-height:1.45; color:var(--ink); margin-bottom:5mm}
+.contrib li b{color:var(--accent)}
+
+/* takeaways */
+.stats{display:grid; grid-template-columns:1fr 1fr; gap:6mm}
+.stat .num{font-family:var(--font-display); font-weight:800; font-size:46px; color:var(--ink); line-height:1}
+.stat .num.accent{color:var(--accent)}
+.stat .lab{font-family:var(--font-mono); font-size:13px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em; margin-top:3mm}
+
+/* method diagram */
+.method svg{width:100%; height:auto; display:block}
+.method .cap{font-family:var(--font-body); font-size:14px; color:var(--ink-soft); padding:0 7mm 7mm}
+
+/* qualitative */
+.qual .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:4mm; padding:7mm}
+.plate{aspect-ratio:4/3; border:1px solid var(--line); position:relative; overflow:hidden}
+.plate .tab{position:absolute; top:0; left:0; background:var(--ink); color:#fff; font-family:var(--font-mono); font-size:11px; padding:3px 7px; z-index:2; letter-spacing:.04em}
+.plate.ours .tab{background:var(--accent)}
+.scene{position:absolute; inset:0}
+
+/* figure tab */
+.figtab{display:inline-block; background:var(--ink); color:#fff; font-family:var(--font-head); font-weight:600; font-size:13px; padding:5px 11px; margin:7mm 0 0 7mm}
+
+/* tables */
+table{width:100%; border-collapse:collapse; font-size:15px}
+th,td{text-align:right; padding:7px 10px; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums; font-family:var(--font-mono)}
+th{font-family:var(--font-head); font-weight:600; color:var(--ink-faint); font-size:12px; text-transform:uppercase; letter-spacing:.04em}
+td.name,th.name{text-align:left; font-family:var(--font-body)}
+tr.ours td{font-weight:600}
+tr.ours td b{color:var(--accent)}
+.tbl-wrap{padding:0 7mm 7mm}
+
+/* comparison bars */
+.cbars{padding:7mm}
+.cbar{display:grid; grid-template-columns:120px 1fr 70px; align-items:center; gap:10px; margin-bottom:7px; font-size:14px}
+.cbar .cl{font-family:var(--font-body); color:var(--ink-soft); text-align:left}
+.cbar .track{height:20px; background:#F0F0F2; position:relative}
+.cbar .fill{height:100%; width:0; background:var(--neutral-bar); transition:width .6s cubic-bezier(.2,.7,.2,1)}
+.cbar.ours .fill{background:var(--accent)}
+.cbar .cv{font-family:var(--font-mono); text-align:right; font-variant-numeric:tabular-nums}
+.cbar.ours .cv{color:var(--accent); font-weight:600}
+.reveal-bars .cbar .fill{width:var(--w)}
+
+/* references / conclusion */
+.refs li, .concl li{font-size:14px; line-height:1.4; color:var(--ink-soft); margin-bottom:4mm}
+.refs ol{margin:0; padding-left:18px} .refs li{font-family:var(--font-body)}
+.concl p{font-size:16px; line-height:1.5; color:var(--ink-soft); margin:0 0 4mm}
+
+/* footer strip */
+.foot{display:grid; grid-template-columns:auto 1fr auto; gap:9mm; align-items:center; border-top:2px solid var(--ink); padding-top:7mm; margin-top:auto}
+.qr{width:120px; height:120px; display:grid; grid-template-columns:repeat(25,1fr); grid-template-rows:repeat(25,1fr); border:6px solid var(--band); background:var(--band)}
+.qr i{background:var(--ink)}
+.qr i.off{background:transparent}
+.foot .fmeta{font-family:var(--font-mono); font-size:14px; color:var(--ink-soft); line-height:1.7}
+.foot .fmeta b{color:var(--ink)}
+.foot .disc{font-family:var(--font-mono); font-size:12px; color:var(--ink-faint); line-height:1.6; text-align:right}
+
+/* ---- panels are static: a poster is seen all at once (screenshot- & print-safe). Only the bars animate. ---- */
+.rv{opacity:1}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important; transition:none !important}
+  .cbar .fill{width:var(--w) !important}
+}
+
+/* ---- print: real A0 ---- */
+@page{ size: A0 portrait; margin: 0; }
+@media print{
+  body{background:#fff}
+  .toolbar{display:none}
+  .stage{padding:0}
+  .poster{transform:none !important; width:var(--poster-w); height:var(--poster-h)}
+  .rv{opacity:1 !important; transform:none !important}
+  .cbar .fill{width:var(--w) !important}
+}
+
+/* responsive toolbar text */
+@media (max-width:640px){ .toolbar .tb-note{display:none} }
+</style>
+</head>
+<body class="web">
+
+<div class="toolbar">
+  <span class="tb-brand">research-poster · research-designer</span>
+  <span class="tb-note">A0 portrait · scales to fit · Print → Save as PDF for the real poster</span>
+  <span class="tb-spacer"></span>
+  <button id="print" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>
+    Print / Save as PDF
+  </button>
+</div>
+
+<div class="stage">
+ <div class="fit" id="fit">
+  <div class="poster" id="poster">
+
+    <!-- TITLE BANNER -->
+    <header class="banner">
+      <div>
+        <div class="eyebrow">PURRCV 2026 · Oral · Catnip Bay</div>
+        <h1 class="title">
+          <span class="tline">WhiskerSplat</span>
+          <span class="tline">Feed-Forward Neural 3D</span>
+          <span class="tline accent">Reconstruction</span>
+          <span class="tline">from Sparse Views</span>
+        </h1>
+        <p class="subtitle">Metric-scale 3D from as few as 3 unposed RGB views in ~0.9&nbsp;s — no per-scene optimization.</p>
+        <p class="authors">
+          <b>Kitty Park</b><sup>1</sup>, <b>Ya-ong Kim</b><sup>1,2</sup>, <b>Calico Lee</b><sup>1</sup>, <b>Mittens Choi</b><sup>1</sup>
+        </p>
+        <p class="afflist"><sup>1</sup> CatTower Vision Lab · <sup>2</sup> Whiskr Inc &nbsp;&nbsp; <span class="corr">✉ kitty.park@cattower.example</span></p>
+        <span class="venue">PURRCV 2026 · Oral</span>
+      </div>
+      <div class="wordmark">
+        <div class="mk"><span class="glyph" aria-hidden="true"></span>CatTower<br>Vision Lab</div>
+        <div class="sub">github.com/cattower/whiskersplat</div>
+      </div>
+    </header>
+
+    <!-- BODY -->
+    <div class="body">
+
+      <!-- Introduction -->
+      <section class="panel rv">
+        <div class="bar">Introduction</div>
+        <div class="pad">
+          <p class="lead">Reconstructing 3D scenes from a handful of photos usually means <span class="mark">minutes of per-scene optimization</span> and known camera poses — impractical for casual capture.</p>
+          <p class="lead">WhiskerSplat predicts a metric-scale 3D field in a single forward pass from <b>≤3 unposed views</b>, recovering scale and geometry without test-time optimization.</p>
+        </div>
+      </section>
+
+      <!-- Contributions -->
+      <section class="panel contrib rv">
+        <div class="bar">Contributions</div>
+        <div class="pad">
+          <ol>
+            <li><b>Feed-forward reconstruction.</b> A single encoder maps sparse, unposed views to a metric 3D field — no per-scene fitting.</li>
+            <li><b>Cross-view attention</b> resolves scale ambiguity across views, replacing pose supervision.</li>
+            <li><b>State of the art on CT-Scenes-Hard</b> at 0.9&nbsp;s/scene — ~40× faster than optimization baselines.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- Takeaways -->
+      <section class="panel rv">
+        <div class="bar">Headline results</div>
+        <div class="pad">
+          <div class="stats">
+            <div class="stat"><div class="num accent">28.41</div><div class="lab">PSNR (dB) ↑</div></div>
+            <div class="stat"><div class="num">0.087</div><div class="lab">LPIPS ↓</div></div>
+            <div class="stat"><div class="num">0.9 s</div><div class="lab">per scene ↓</div></div>
+            <div class="stat"><div class="num">3</div><div class="lab">input views</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Method diagram (full width) -->
+      <section class="panel method span3 rv">
+        <div class="bar">Method — feed-forward reconstruction pipeline</div>
+        <svg viewBox="0 0 1180 250" role="img" aria-label="Pipeline: three input views into an encoder, cross-view attention, a 3D field, and a differentiable renderer.">
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0L10 5L0 10z" fill="#111113"/>
+            </marker>
+          </defs>
+          <!-- input views -->
+          <g transform="translate(30,55)">
+            <rect x="0" y="0" width="92" height="64" fill="#cfe0e6" stroke="#111113"/>
+            <rect x="14" y="14" width="92" height="64" fill="#dbe7d6" stroke="#111113"/>
+            <rect x="28" y="28" width="92" height="64" fill="#e9ddc8" stroke="#111113"/>
+            <text x="60" y="150" font-family="JetBrains Mono" font-size="15" text-anchor="middle" fill="#55555A">3 unposed views</text>
+          </g>
+          <line x1="175" y1="90" x2="245" y2="90" stroke="#111113" stroke-width="2" marker-end="url(#ar)"/>
+          <!-- encoder -->
+          <g transform="translate(250,52)">
+            <rect width="160" height="76" fill="#fff" stroke="#111113" stroke-width="2"/>
+            <text x="80" y="36" font-family="Inter Tight" font-weight="700" font-size="18" text-anchor="middle" fill="#111113">View Encoder</text>
+            <text x="80" y="58" font-family="JetBrains Mono" font-size="13" text-anchor="middle" fill="#9A9AA0">ViT-B, shared</text>
+            <text x="80" y="112" font-family="JetBrains Mono" font-size="14" text-anchor="middle" fill="#55555A">per-view tokens</text>
+          </g>
+          <line x1="410" y1="90" x2="470" y2="90" stroke="#111113" stroke-width="2" marker-end="url(#ar)"/>
+          <!-- cross-view attention (accent) -->
+          <g transform="translate(475,52)">
+            <rect width="180" height="76" fill="#F6DED4" stroke="#E2603A" stroke-width="2.5"/>
+            <text x="90" y="36" font-family="Inter Tight" font-weight="700" font-size="18" text-anchor="middle" fill="#111113">Cross-View</text>
+            <text x="90" y="56" font-family="Inter Tight" font-weight="700" font-size="18" text-anchor="middle" fill="#111113">Attention</text>
+            <text x="90" y="112" font-family="JetBrains Mono" font-size="14" text-anchor="middle" fill="#E2603A">resolves metric scale</text>
+          </g>
+          <line x1="655" y1="90" x2="715" y2="90" stroke="#111113" stroke-width="2" marker-end="url(#ar)"/>
+          <!-- 3D field -->
+          <g transform="translate(720,52)">
+            <rect width="160" height="76" fill="#fff" stroke="#111113" stroke-width="2"/>
+            <text x="80" y="36" font-family="Inter Tight" font-weight="700" font-size="18" text-anchor="middle" fill="#111113">3D Field</text>
+            <text x="80" y="58" font-family="JetBrains Mono" font-size="13" text-anchor="middle" fill="#9A9AA0">anisotropic splats</text>
+            <text x="80" y="112" font-family="JetBrains Mono" font-size="14" text-anchor="middle" fill="#55555A">~60k primitives</text>
+          </g>
+          <line x1="880" y1="90" x2="940" y2="90" stroke="#111113" stroke-width="2" marker-end="url(#ar)"/>
+          <!-- render -->
+          <g transform="translate(945,52)">
+            <rect width="170" height="76" fill="#fff" stroke="#111113" stroke-width="2"/>
+            <text x="85" y="36" font-family="Inter Tight" font-weight="700" font-size="18" text-anchor="middle" fill="#111113">Differentiable</text>
+            <text x="85" y="56" font-family="Inter Tight" font-weight="700" font-size="18" text-anchor="middle" fill="#111113">Renderer</text>
+            <text x="85" y="112" font-family="JetBrains Mono" font-size="14" text-anchor="middle" fill="#55555A">novel views + depth</text>
+          </g>
+          <!-- loss feedback -->
+          <path d="M1030 175 L1030 215 L335 215 L335 138" fill="none" stroke="#9A9AA0" stroke-width="1.5" stroke-dasharray="5 5" marker-end="url(#ar)"/>
+          <text x="690" y="235" font-family="JetBrains Mono" font-size="13" text-anchor="middle" fill="#9A9AA0">photometric + depth loss (training only)</text>
+        </svg>
+        <div class="cap">Figure 1. Sparse views are encoded independently, fused by cross-view attention to fix metric scale, decoded into an anisotropic-splat 3D field, and rendered differentiably. The whole pipeline runs feed-forward at test time.</div>
+      </section>
+
+      <!-- Qualitative (span 2) -->
+      <section class="panel qual span2 rv">
+        <div class="bar">Qualitative results — CT-Scenes-Hard (3 views)</div>
+        <div class="grid">
+          <div class="plate"><span class="tab">REFERENCE</span><div class="scene" data-scene="ref"></div></div>
+          <div class="plate ours"><span class="tab">OURS</span><div class="scene" data-scene="ours"></div></div>
+          <div class="plate"><span class="tab">FELINEGS</span><div class="scene" data-scene="b1"></div></div>
+          <div class="plate"><span class="tab">PAWSPLAT</span><div class="scene" data-scene="b2"></div></div>
+          <div class="plate"><span class="tab">REFERENCE</span><div class="scene" data-scene="ref2"></div></div>
+          <div class="plate ours"><span class="tab">OURS</span><div class="scene" data-scene="ours2"></div></div>
+          <div class="plate"><span class="tab">FELINEGS</span><div class="scene" data-scene="b3"></div></div>
+          <div class="plate"><span class="tab">PAWSPLAT</span><div class="scene" data-scene="b4"></div></div>
+        </div>
+      </section>
+
+      <!-- Quantitative table (span 1) -->
+      <section class="panel rv">
+        <div class="bar">Quantitative — CT-Scenes-Hard</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th class="name">Method</th><th>PSNR↑</th><th>LPIPS↓</th><th>Time↓</th></tr></thead>
+            <tbody>
+              <tr><td class="name">Meowtrics-NeRF</td><td>24.10</td><td>0.171</td><td>38 m</td></tr>
+              <tr><td class="name">PawSplat</td><td>26.30</td><td>0.124</td><td>4.2 s</td></tr>
+              <tr><td class="name">Yarn-3R</td><td>26.78</td><td>0.115</td><td>1.1 s</td></tr>
+              <tr><td class="name">FelineGS</td><td>27.05</td><td>0.108</td><td>1.6 s</td></tr>
+              <tr><td class="name">TabbyFormer</td><td>27.42</td><td>0.097</td><td>1.0 s</td></tr>
+              <tr class="ours"><td class="name">WhiskerSplat</td><td><b>28.41</b></td><td><b>0.087</b></td><td><b>0.9 s</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Ablation: view count bars (span 1) -->
+      <section class="panel rv" id="ablpanel">
+        <div class="bar">Ablation — input view count</div>
+        <div class="cbars" id="cbars">
+          <div class="cbar"><span class="cl">2 views</span><span class="track"><span class="fill" style="--w:79%"></span></span><span class="cv">26.90</span></div>
+          <div class="cbar ours"><span class="cl">3 views</span><span class="track"><span class="fill" style="--w:88%"></span></span><span class="cv">28.41</span></div>
+          <div class="cbar"><span class="cl">5 views</span><span class="track"><span class="fill" style="--w:95%"></span></span><span class="cv">29.80</span></div>
+          <div class="cbar"><span class="cl">9 views</span><span class="track"><span class="fill" style="--w:100%"></span></span><span class="cv">30.60</span></div>
+        </div>
+        <div class="cbars" style="padding-top:0">
+          <div class="cbar"><span class="cl">w/o cross-attn</span><span class="track"><span class="fill" style="--w:81%"></span></span><span class="cv">27.10</span></div>
+          <div class="cbar"><span class="cl">w/o depth sup.</span><span class="track"><span class="fill" style="--w:84%"></span></span><span class="cv">27.60</span></div>
+          <div class="cbar ours"><span class="cl">full model</span><span class="track"><span class="fill" style="--w:88%"></span></span><span class="cv">28.41</span></div>
+        </div>
+      </section>
+
+      <!-- Conclusion (span 1) -->
+      <section class="panel rv">
+        <div class="bar">Conclusion</div>
+        <div class="pad concl">
+          <p>Cross-view attention makes feed-forward, optimization-free 3D reconstruction from sparse unposed views practical and accurate.</p>
+          <p><b>Future work:</b> dynamic scenes, in-the-wild lighting, and on-device inference.</p>
+        </div>
+      </section>
+
+      <!-- References -->
+      <section class="panel refs rv">
+        <div class="bar">References (selected)</div>
+        <div class="pad">
+          <ol>
+            <li>K. Park, Y. Kim, C. Lee, M. Choi. <i>WhiskerSplat: Feed-Forward Neural 3D Reconstruction from Sparse Views.</i> PURRCV 2026. <span style="font-family:var(--font-mono)">arXiv:2608.04217</span></li>
+            <li>Y. Kim et&nbsp;al. <i>Meowtrics-NeRF: Optimization-Based Neural Fields for Indoor Scenes.</i> PURRCV 2025.</li>
+            <li>C. Lee, S. Han. <i>FelineGS: Real-Time Gaussian Splatting for Sparse Capture.</i> Whiskr Tech Report, 2025.</li>
+            <li>T. Seo et&nbsp;al. <i>CT-Scenes: A Benchmark for Sparse-View 3D Reconstruction.</i> 2025.</li>
+          </ol>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- FOOTER STRIP -->
+    <footer class="foot">
+      <div class="qr" id="qr" aria-label="QR code (fictional) linking to the project page"></div>
+      <div class="fmeta">
+        <b>Project page</b> &nbsp; cattower.github.io/whiskersplat<br>
+        <b>arXiv</b> &nbsp; arXiv:2608.04217 &nbsp;·&nbsp; <b>Code</b> &nbsp; github.com/cattower/whiskersplat<br>
+        <b>Dataset</b> &nbsp; CT-Scenes &nbsp;·&nbsp; <b>Contact</b> &nbsp; kitty.park@cattower.example
+      </div>
+      <div class="disc">
+        Demo page generated from themes/research-poster.md (research-designer).<br>
+        All people, companies, products, and figures are fictional.<br>
+        No affiliation with any real entity.
+      </div>
+    </footer>
+
+  </div>
+ </div>
+</div>
+
+<script>
+(function(){
+  var REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var poster = document.getElementById("poster");
+  var fit = document.getElementById("fit");
+
+  /* ---- scale poster to fit viewport width ---- */
+  function layout(){
+    poster.style.transform = "none";          // measure natural size
+    var natW = poster.offsetWidth, natH = poster.offsetHeight;
+    var avail = window.innerWidth - 48;        // matches .stage horizontal padding
+    var f = Math.min(1, avail / natW);
+    document.documentElement.style.setProperty("--fit", f);
+    poster.style.transform = "scale(" + f + ")";
+    fit.style.width = (natW * f) + "px";
+    fit.style.height = (natH * f) + "px";
+  }
+  layout();
+  addEventListener("resize", layout, { passive:true });
+  // fonts can change metrics; relayout when ready
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+
+  /* ---- print ---- */
+  document.getElementById("print").addEventListener("click", function(){ window.print(); });
+
+  /* ---- self-made QR-like matrix (deterministic, fictional) ---- */
+  (function buildQR(){
+    var N = 25, qr = document.getElementById("qr");
+    function finder(r,c){ return (r<7&&c<7)||(r<7&&c>=N-7)||(r>=N-7&&c<7); }
+    function finderOn(r,c){
+      var br=r, bc=c; if(c>=N-7) bc=c-(N-7); if(r>=N-7) br=r-(N-7);
+      var edge = br===0||br===6||bc===0||bc===6;
+      var core = br>=2&&br<=4&&bc>=2&&bc<=4;
+      return edge||core;
+    }
+    var frag = document.createDocumentFragment();
+    for(var r=0;r<N;r++){ for(var c=0;c<N;c++){
+      var cell = document.createElement("i");
+      var on;
+      if(finder(r,c)) on = finderOn(r,c);
+      else { var h=(r*31+c*17+((r*c)%7)*13); on = (h%3===0)||((r+c)%5===0&&h%2===0); }
+      if(!on) cell.className="off";
+      frag.appendChild(cell);
+    }}
+    qr.appendChild(frag);
+  })();
+
+  /* ---- false-color synthetic "renders" (self-made, no external images) ---- */
+  (function scenes(){
+    function paint(el, seedA, seedB, blur){
+      var dots = [];
+      for(var i=0;i<44;i++){
+        var x=((i*37 + seedA)%100), y=((i*53 + seedB)%100), s=(i%3)+1;
+        dots.push("radial-gradient(circle at "+x+"% "+y+"%, rgba(244,244,242,.5) "+s+"px, transparent "+(s+1)+"px)");
+      }
+      var fields = [
+        "radial-gradient(60% 70% at "+seedA+"% 35%, rgba(42,47,107,.92), transparent 60%)",
+        "radial-gradient(55% 60% at "+seedB+"% 72%, rgba(31,143,134,.85), transparent 62%)",
+        "radial-gradient(45% 50% at 80% 25%, rgba(204,187,68,.7), transparent 60%)",
+        "linear-gradient(160deg,#1b2233,#101013)"
+      ];
+      el.style.backgroundImage = dots.concat(fields).join(",");
+      el.style.backgroundColor = "#101013";
+      if(blur) el.style.filter = "blur("+blur+"px) saturate(.85)";
+    }
+    document.querySelectorAll(".scene").forEach(function(el){
+      var k = el.getAttribute("data-scene");
+      var isBaseline = /^b\d/.test(k);
+      var a = (k.charCodeAt(0)*7 + k.length*11) % 70 + 15;
+      var b = (k.charCodeAt(k.length-1)*5 + 23) % 70 + 15;
+      paint(el, a, b, isBaseline ? 1.1 : 0);   // baselines look slightly degraded
+    });
+  })();
+
+  /* ---- comparison bars grow once on scroll-into-view (final state under reduced motion) ---- */
+  if (!REDUCE){
+    var ab = document.getElementById("ablpanel");
+    var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ ab.querySelectorAll(".cbars").forEach(function(g){g.classList.add("reveal-bars");}); io.disconnect(); } }); }, {threshold:.2});
+    io.observe(ab);
+  } else {
+    document.querySelectorAll(".cbars").forEach(function(g){g.classList.add("reveal-bars");});
+  }
+})();
+</script>
+</body>
+</html>

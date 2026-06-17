@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhiskerSplat — Feed-Forward Neural 3D Reconstruction (fictional project page)</title>
+<meta name="description" content="Fictional demo project page for the research-project-page theme (research-designer). Interactive 3D teaser, results, BibTeX.">
+
+<!-- Fonts: SIL OFL only -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=Instrument+Serif:ital@1&family=Lora:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<!-- three.js (MIT) + Motion (MIT), pinned. +esm files skip SRI per jsDelivr. -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
+    "motion": "https://cdn.jsdelivr.net/npm/motion@12.40.0/+esm"
+  }
+}
+</script>
+
+<style>
+:root{
+  --bg:#FFFFFF; --bg-warm:#F7F4ED; --text:#242424; --text-soft:#6B6B6B; --border:#D9D6CE;
+  --accent:#5266EB; --mark:#F2DD4E; --ink-btn:#242424;
+  --s1:#4477AA; --s2:#EE6677; --s3:#228833; --s4:#CCBB44; --s5:#66CCEE; --s6:#AA3377; --s7:#BBBBBB;
+  --radius-xs:2px; --radius-sm:4px; --radius-md:8px; --radius-lg:16px;
+  --font-display:"Archivo",sans-serif; --font-serif-accent:"Instrument Serif",serif;
+  --font-body:"Lora",serif; --font-mono:"JetBrains Mono",monospace; --font-ui:"Archivo",sans-serif;
+  --measure:680px; --breakout:1080px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{ background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:18px; line-height:1.6;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+a{color:var(--accent); text-decoration:none}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px}
+h1,h2,h3{font-family:var(--font-display); color:var(--text); line-height:1.15; letter-spacing:-.01em}
+
+/* progress */
+.progress{position:fixed; top:0; left:0; height:3px; width:100%; background:var(--accent); transform:scaleX(0); transform-origin:0 50%; z-index:50}
+@supports (animation-timeline: scroll()){
+  .progress{animation:grow linear both; animation-timeline:scroll(root)}
+  @keyframes grow{to{transform:scaleX(1)}}
+}
+
+.wrap{max-width:var(--measure); margin:0 auto; padding:0 24px}
+.breakout{max-width:var(--breakout); margin:0 auto; padding:0 24px}
+.mono{font-family:var(--font-mono)}
+.stamp{font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-soft)}
+
+/* ---- title block ---- */
+.titleblock{text-align:center; padding:64px 0 28px}
+.venue{display:inline-block; font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:.1em;
+  border:1px solid var(--border); border-radius:999px; padding:5px 12px; color:var(--text-soft); margin-bottom:22px}
+h1.title{font-size:clamp(32px,5vw,56px); font-weight:700; margin:0 auto; max-width:16ch}
+h1.title .ser{font-family:var(--font-serif-accent); font-style:italic; font-weight:400; letter-spacing:0}
+.authors{font-family:var(--font-ui); font-size:19px; color:var(--text); margin:26px 0 0; line-height:1.7}
+.authors a{color:var(--text)} .authors a:hover{color:var(--accent)}
+.authors sup{color:var(--accent); font-size:.68em}
+.affil{font-family:var(--font-ui); font-size:15px; color:var(--text-soft); margin:10px 0 0}
+.corr{font-family:var(--font-mono); font-size:13px; color:var(--text-soft); margin-top:6px}
+
+/* link row */
+.links{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:28px 0 0}
+.lk{display:inline-flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:14px; font-weight:500; color:var(--text);
+  border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 15px; transition:border-color .2s, color .2s, background .2s}
+.lk:hover{border-color:var(--accent); color:var(--accent)}
+.lk svg{width:16px; height:16px}
+.lk.primary{background:var(--ink-btn); color:#fff; border-color:var(--ink-btn)}
+.lk.primary:hover{background:#000; color:#fff}
+
+/* ---- teaser / 3D viewer ---- */
+.teaser{margin:34px auto 0}
+.viewer{position:relative; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; background:#0E1116; aspect-ratio:16/9}
+#gl{display:block; width:100%; height:100%}
+.viewer .vstamp{position:absolute; top:10px; left:12px; font-family:var(--font-mono); font-size:11px; letter-spacing:.05em; color:#A7B1C2; z-index:3}
+.viewer .vhint{position:absolute; bottom:10px; right:12px; font-family:var(--font-mono); font-size:11px; color:#A7B1C2; z-index:3; display:flex; gap:7px; align-items:center}
+.viewer .vhint svg{width:14px;height:14px;stroke:#A7B1C2}
+.viewer .fallback{position:absolute; inset:0; display:none}
+.viewer.no-webgl #gl{display:none}
+.viewer.no-webgl .fallback{display:block}
+.viewer.no-webgl .vfb-note{position:absolute; bottom:10px; left:12px; font-family:var(--font-mono); font-size:11px; color:#cfd6e0; z-index:3}
+.tcap{font-family:var(--font-ui); font-size:14px; color:var(--text-soft); margin:12px auto 0; text-align:center; max-width:60ch}
+
+/* ---- headline metrics ---- */
+.metrics{display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin:38px auto 0}
+.metric{text-align:center; border-top:2px solid var(--text); padding-top:14px}
+.metric .num{font-family:var(--font-mono); font-size:clamp(30px,4vw,48px); font-weight:500; color:var(--text); font-variant-numeric:tabular-nums; line-height:1}
+.metric .num.acc{color:var(--accent)}
+.metric .lab{font-family:var(--font-ui); font-size:13px; color:var(--text-soft); margin-top:8px}
+
+/* ---- sections ---- */
+section{padding:54px 0}
+.sec-head{margin-bottom:18px}
+.sec-head h2{font-size:clamp(26px,3.4vw,34px); font-weight:700; margin:8px 0 0}
+.abstract p{font-size:20px}
+.warmband{background:var(--bg-warm); border-top:1px solid var(--border); border-bottom:1px solid var(--border)}
+
+/* contributions */
+.tldr{list-style:none; margin:0; padding:0}
+.tldr li{position:relative; padding:14px 0 14px 30px; border-bottom:1px solid var(--border); font-size:18px}
+.tldr li::before{content:""; position:absolute; left:0; top:22px; width:12px; height:12px; background:var(--accent)}
+.tldr li b{font-family:var(--font-ui); font-weight:700}
+
+/* method figure */
+.method svg{width:100%; height:auto; display:block; background:var(--bg-warm); border:1px solid var(--border); border-radius:var(--radius-md)}
+figure{margin:0}
+figcaption{font-family:var(--font-ui); font-size:14px; color:var(--text-soft); margin-top:12px; text-align:center}
+
+/* before/after slider */
+.ba{position:relative; aspect-ratio:16/9; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; user-select:none}
+.ba .layer{position:absolute; inset:0}
+.ba .gt{}
+.ba .pred{clip-path:inset(0 0 0 var(--split,50%))}
+.ba .tagL,.ba .tagR{position:absolute; top:10px; font-family:var(--font-mono); font-size:11px; color:#fff; background:rgba(0,0,0,.55); padding:3px 8px; z-index:4; letter-spacing:.04em}
+.ba .tagL{left:10px} .ba .tagR{right:10px}
+.ba .divider{position:absolute; top:0; bottom:0; left:var(--split,50%); width:2px; background:#fff; z-index:5; transform:translateX(-1px)}
+.ba .knob{position:absolute; top:50%; left:var(--split,50%); width:34px; height:34px; border-radius:999px; background:#fff; border:2px solid var(--text);
+  transform:translate(-50%,-50%); z-index:6; display:grid; place-items:center}
+.ba .knob svg{width:18px;height:18px;stroke:var(--text)}
+.ba input[type=range]{position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:ew-resize; z-index:7; margin:0}
+
+/* qualitative gallery */
+.gallery{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+.scard{border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden}
+.scard .plate{position:relative; aspect-ratio:4/3; background:#0E1116}
+.scard .plate .ours,.scard .plate .base{position:absolute; inset:0; transition:opacity .3s ease}
+.scard .plate .base{opacity:0}
+.scard:hover .plate .base{opacity:1}
+.scard:hover .plate .ours{opacity:0}
+.scard .meta{display:flex; justify-content:space-between; padding:9px 12px; font-family:var(--font-mono); font-size:11px; color:var(--text-soft)}
+.scard .meta .hov{color:var(--accent)}
+
+/* tables */
+.tablewrap{overflow-x:auto}
+table.data{width:100%; border-collapse:collapse; font-family:var(--font-ui); font-size:15px}
+table.data th, table.data td{padding:9px 12px; text-align:right; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums}
+table.data th{font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-soft); font-weight:600}
+table.data td.name, table.data th.name{text-align:left}
+table.data td.num{font-family:var(--font-mono)}
+table.data tr.ours{background:rgba(82,102,235,.06)}
+table.data tr.ours td{font-weight:700}
+table.data tr.ours td b{color:var(--accent)}
+.tnote{font-family:var(--font-ui); font-size:13px; color:var(--text-soft); margin-top:10px}
+
+/* bibtex */
+.bibtex{background:var(--bg-warm); border:1px solid var(--border); border-radius:var(--radius-md); position:relative}
+.bibtex pre{margin:0; padding:20px 22px; overflow-x:auto; font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--text)}
+.bibtex .copy{position:absolute; top:12px; right:12px; display:inline-flex; align-items:center; gap:6px; font-family:var(--font-ui); font-size:13px;
+  border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); padding:6px 11px; cursor:pointer; color:var(--text)}
+.bibtex .copy:hover{border-color:var(--accent); color:var(--accent)}
+.bibtex .copy svg{width:14px;height:14px}
+
+/* acks + footer */
+.acks p{font-size:16px; color:var(--text-soft)}
+footer{border-top:1px solid var(--border); padding:40px 0 64px; margin-top:20px}
+footer .disc{font-family:var(--font-mono); font-size:11px; line-height:1.8; color:var(--text-soft)}
+
+/* reveal: default visible; JS hides+reveals only when motion allowed (screenshot-safe by default) */
+.rv{opacity:1; transform:none}
+body.reveal-on .rv{opacity:0; transform:translateY(10px); transition:opacity .55s ease, transform .55s ease}
+body.reveal-on .rv.in{opacity:1; transform:none}
+
+@media (max-width:760px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .gallery{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important; transition:none !important; scroll-behavior:auto !important}
+  .progress{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="progress" aria-hidden="true"></div>
+
+<main>
+  <!-- TITLE BLOCK -->
+  <header class="titleblock wrap">
+    <span class="venue">PURRCV 2026 · Oral</span>
+    <h1 class="title">WhiskerSplat: Feed-Forward Neural 3D Reconstruction from <span class="ser">Sparse Views</span></h1>
+    <p class="authors">
+      <a href="#">Kitty Park</a><sup>1</sup>,
+      <a href="#">Ya-ong Kim</a><sup>1,2</sup>,
+      <a href="#">Calico Lee</a><sup>1</sup>,
+      <a href="#">Mittens Choi</a><sup>1</sup>
+    </p>
+    <p class="affil"><sup>1</sup> CatTower Vision Lab &nbsp;·&nbsp; <sup>2</sup> Whiskr Inc</p>
+    <p class="corr">✉ corresponding: kitty.park@cattower.example</p>
+
+    <nav class="links" aria-label="Resource links">
+      <a class="lk primary" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>Paper</a>
+      <a class="lk" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>arXiv</a>
+      <a class="lk" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>Code</a>
+      <a class="lk" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4z"/></svg>Video</a>
+      <a class="lk" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>Dataset</a>
+      <a class="lk" href="#bibtex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21v-4a4 4 0 0 1 4-4h4M3 7l4-4 4 4M7 3v10"/><path d="M14 8h7M14 13h7M14 18h7"/></svg>BibTeX</a>
+    </nav>
+  </header>
+
+  <!-- TEASER (interactive 3D) -->
+  <section class="teaser breakout" style="padding-top:0">
+    <div class="viewer" id="viewer">
+      <canvas id="gl" aria-label="Interactive 3D point-cloud reconstruction of a fictional scene"></canvas>
+      <div class="fallback" id="fallback" aria-hidden="true"></div>
+      <span class="vstamp">RECONSTRUCTION · CT-Scenes / living-room-07 · 3 input views</span>
+      <span class="vhint"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3"/></svg>drag to rotate</span>
+      <span class="vfb-note">Interactive 3D requires WebGL — showing a static depth render.</span>
+    </div>
+    <p class="tcap">Figure 1. A live point-cloud reconstruction (≈45k splats) predicted feed-forward from 3 unposed views. Drag to orbit. All scenes fictional.</p>
+
+    <!-- headline metrics -->
+    <div class="metrics" id="metrics">
+      <div class="metric"><div class="num acc" data-to="28.41" data-dec="2">28.41</div><div class="lab">PSNR (dB) ↑</div></div>
+      <div class="metric"><div class="num" data-to="0.912" data-dec="3">0.912</div><div class="lab">SSIM ↑</div></div>
+      <div class="metric"><div class="num" data-to="0.087" data-dec="3">0.087</div><div class="lab">LPIPS ↓</div></div>
+      <div class="metric"><div class="num" data-to="0.9" data-dec="1" data-suffix="s">0.9s</div><div class="lab">per scene ↓</div></div>
+    </div>
+  </section>
+
+  <!-- ABSTRACT -->
+  <section class="abstract wrap rv">
+    <div class="sec-head"><span class="stamp">Abstract</span></div>
+    <p>Reconstructing 3D scenes from a handful of casual photos typically demands known camera poses and minutes of
+      per-scene optimization. We present <b>WhiskerSplat</b>, a feed-forward model that predicts a metric-scale
+      anisotropic-splat 3D field from as few as <b>three unposed RGB views</b> in a single pass — about
+      <b>0.9&nbsp;seconds</b> per scene, with no test-time optimization. A cross-view attention module resolves the
+      scale ambiguity that otherwise requires pose supervision. On the CT-Scenes-Hard sparse-view benchmark,
+      WhiskerSplat improves novel-view PSNR by <b>+0.99&nbsp;dB</b> over the strongest baseline while running ~40×
+      faster than optimization-based methods.</p>
+  </section>
+
+  <!-- CONTRIBUTIONS -->
+  <section class="wrap rv" style="padding-top:0">
+    <div class="sec-head"><span class="stamp">Contributions</span><h2>What's new</h2></div>
+    <ul class="tldr">
+      <li><b>Feed-forward reconstruction.</b> A single encoder maps sparse, unposed views to a metric 3D field — no per-scene fitting.</li>
+      <li><b>Cross-view attention</b> resolves metric-scale ambiguity across views, replacing explicit pose supervision.</li>
+      <li><b>State of the art on CT-Scenes-Hard</b> at 0.9&nbsp;s/scene, ~40× faster than optimization baselines.</li>
+    </ul>
+  </section>
+
+  <!-- METHOD -->
+  <section class="warmband">
+    <div class="breakout rv">
+      <div class="sec-head"><span class="stamp">FIG. 02 — Method</span><h2>Feed-forward reconstruction pipeline</h2></div>
+      <figure class="method">
+        <svg viewBox="0 0 1180 250" role="img" aria-label="Pipeline diagram: three input views into a shared encoder, cross-view attention, a 3D field, and a differentiable renderer.">
+          <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#242424"/></marker></defs>
+          <g transform="translate(30,80)">
+            <rect x="0" y="0" width="86" height="60" fill="#cfe0e6" stroke="#242424"/>
+            <rect x="13" y="13" width="86" height="60" fill="#dbe7d6" stroke="#242424"/>
+            <rect x="26" y="26" width="86" height="60" fill="#e9ddc8" stroke="#242424"/>
+            <text x="56" y="135" font-family="JetBrains Mono" font-size="14" text-anchor="middle" fill="#6B6B6B">3 unposed views</text>
+          </g>
+          <line x1="170" y1="110" x2="232" y2="110" stroke="#242424" stroke-width="2" marker-end="url(#ar)"/>
+          <g transform="translate(236,74)"><rect width="150" height="72" fill="#fff" stroke="#242424" stroke-width="2"/>
+            <text x="75" y="34" font-family="Archivo" font-weight="700" font-size="17" text-anchor="middle" fill="#242424">View Encoder</text>
+            <text x="75" y="55" font-family="JetBrains Mono" font-size="12" text-anchor="middle" fill="#6B6B6B">ViT-B · shared</text></g>
+          <line x1="386" y1="110" x2="446" y2="110" stroke="#242424" stroke-width="2" marker-end="url(#ar)"/>
+          <g transform="translate(450,74)"><rect width="170" height="72" fill="#E7EAFF" stroke="#5266EB" stroke-width="2.5"/>
+            <text x="85" y="33" font-family="Archivo" font-weight="700" font-size="17" text-anchor="middle" fill="#242424">Cross-View Attn</text>
+            <text x="85" y="55" font-family="JetBrains Mono" font-size="12" text-anchor="middle" fill="#5266EB">resolves metric scale</text></g>
+          <line x1="620" y1="110" x2="680" y2="110" stroke="#242424" stroke-width="2" marker-end="url(#ar)"/>
+          <g transform="translate(684,74)"><rect width="150" height="72" fill="#fff" stroke="#242424" stroke-width="2"/>
+            <text x="75" y="34" font-family="Archivo" font-weight="700" font-size="17" text-anchor="middle" fill="#242424">3D Field</text>
+            <text x="75" y="55" font-family="JetBrains Mono" font-size="12" text-anchor="middle" fill="#6B6B6B">~45k splats</text></g>
+          <line x1="834" y1="110" x2="894" y2="110" stroke="#242424" stroke-width="2" marker-end="url(#ar)"/>
+          <g transform="translate(898,74)"><rect width="170" height="72" fill="#fff" stroke="#242424" stroke-width="2"/>
+            <text x="85" y="34" font-family="Archivo" font-weight="700" font-size="17" text-anchor="middle" fill="#242424">Diff. Renderer</text>
+            <text x="85" y="55" font-family="JetBrains Mono" font-size="12" text-anchor="middle" fill="#6B6B6B">views + depth</text></g>
+          <path d="M983 160 L983 205 L311 205 L311 150" fill="none" stroke="#9A9AA0" stroke-width="1.5" stroke-dasharray="5 5" marker-end="url(#ar)"/>
+          <text x="650" y="226" font-family="JetBrains Mono" font-size="13" text-anchor="middle" fill="#9A9AA0">photometric + depth loss (training only)</text>
+        </svg>
+        <figcaption>Figure 2. The pipeline is feed-forward at test time; the dashed path is supervision used only during training.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- BEFORE / AFTER -->
+  <section class="breakout rv">
+    <div class="sec-head"><span class="stamp">FIG. 03 — Novel view</span><h2>Rendered vs. ground truth</h2></div>
+    <figure>
+      <div class="ba" id="ba">
+        <div class="layer gt" id="ba-gt"></div>
+        <div class="layer pred" id="ba-pred"></div>
+        <span class="tagL">OURS (RENDERED)</span>
+        <span class="tagR">GROUND TRUTH</span>
+        <div class="divider" id="ba-div"></div>
+        <div class="knob" id="ba-knob"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-4 5 4 5M16 7l4 5-4 5"/></svg></div>
+        <input type="range" id="ba-range" min="0" max="100" value="50" aria-label="Reveal slider between rendered and ground-truth views">
+      </div>
+      <figcaption>Figure 3. Drag the divider: WhiskerSplat's rendered novel view (left) vs. held-out ground truth (right). Fictional scene.</figcaption>
+    </figure>
+  </section>
+
+  <!-- QUALITATIVE -->
+  <section class="breakout rv">
+    <div class="sec-head"><span class="stamp">FIG. 04 — Qualitative</span><h2>Reconstructions on CT-Scenes-Hard</h2></div>
+    <div class="gallery" id="gallery"></div>
+    <p class="tnote">Hover a card to swap WhiskerSplat → FelineGS baseline on the same scene. All renders are synthetic stand-ins (self-made, CC0).</p>
+  </section>
+
+  <!-- QUANTITATIVE -->
+  <section class="breakout rv">
+    <div class="sec-head"><span class="stamp">Table 1 — Comparison</span><h2>Quantitative results (3 views, CT-Scenes-Hard)</h2></div>
+    <div class="tablewrap">
+      <table class="data">
+        <thead><tr><th class="name">Method</th><th>PSNR ↑</th><th>SSIM ↑</th><th>LPIPS ↓</th><th>Chamfer-L1 ↓</th><th>Time ↓</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Meowtrics-NeRF</td><td class="num">24.10</td><td class="num">0.842</td><td class="num">0.171</td><td class="num">0.092</td><td class="num">38 min</td></tr>
+          <tr><td class="name">PawSplat</td><td class="num">26.30</td><td class="num">0.881</td><td class="num">0.124</td><td class="num">0.063</td><td class="num">4.2 s</td></tr>
+          <tr><td class="name">Yarn-3R</td><td class="num">26.78</td><td class="num">0.889</td><td class="num">0.115</td><td class="num">0.058</td><td class="num">1.1 s</td></tr>
+          <tr><td class="name">FelineGS</td><td class="num">27.05</td><td class="num">0.894</td><td class="num">0.108</td><td class="num">0.055</td><td class="num">1.6 s</td></tr>
+          <tr><td class="name">TabbyFormer</td><td class="num">27.42</td><td class="num">0.901</td><td class="num">0.097</td><td class="num">0.049</td><td class="num">1.0 s</td></tr>
+          <tr class="ours"><td class="name">WhiskerSplat (ours)</td><td class="num"><b>28.41</b></td><td class="num"><b>0.912</b></td><td class="num"><b>0.087</b></td><td class="num"><b>0.041</b></td><td class="num"><b>0.9 s</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tnote">↑ higher is better, ↓ lower is better. Best per column in <b style="color:var(--accent)">bold</b>. All numbers fictional.</p>
+  </section>
+
+  <!-- ABLATION -->
+  <section class="breakout rv">
+    <div class="sec-head"><span class="stamp">Table 2 — Ablations</span><h2>What matters</h2></div>
+    <div class="tablewrap">
+      <table class="data">
+        <thead><tr><th class="name">Variant</th><th>PSNR ↑</th><th>LPIPS ↓</th><th>Δ PSNR</th></tr></thead>
+        <tbody>
+          <tr><td class="name">2 input views</td><td class="num">26.90</td><td class="num">0.118</td><td class="num">−1.51</td></tr>
+          <tr><td class="name">w/o cross-view attention</td><td class="num">27.10</td><td class="num">0.112</td><td class="num">−1.31</td></tr>
+          <tr><td class="name">w/o depth supervision</td><td class="num">27.60</td><td class="num">0.101</td><td class="num">−0.81</td></tr>
+          <tr class="ours"><td class="name">full model (3 views)</td><td class="num"><b>28.41</b></td><td class="num"><b>0.087</b></td><td class="num">—</td></tr>
+          <tr><td class="name">5 input views</td><td class="num">29.80</td><td class="num">0.071</td><td class="num">+1.39</td></tr>
+          <tr><td class="name">9 input views</td><td class="num">30.60</td><td class="num">0.063</td><td class="num">+2.19</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- BIBTEX -->
+  <section class="breakout rv" id="bibtex">
+    <div class="sec-head"><span class="stamp">Citation</span><h2>BibTeX</h2></div>
+    <div class="bibtex">
+      <button class="copy" id="copybib" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copy</span></button>
+<pre id="bibtext">@inproceedings{park2026whiskersplat,
+  title     = {WhiskerSplat: Feed-Forward Neural 3D Reconstruction from Sparse Views},
+  author    = {Park, Kitty and Kim, Ya-ong and Lee, Calico and Choi, Mittens},
+  booktitle = {Proceedings of PURRCV},
+  year      = {2026},
+  note      = {Fictional demo citation}
+}</pre>
+    </div>
+  </section>
+
+  <!-- ACKNOWLEDGEMENTS -->
+  <section class="wrap acks rv">
+    <div class="sec-head"><span class="stamp">Acknowledgements</span></div>
+    <p>We thank the CatTower Vision Lab for compute on the fictional Meowtrics cluster, and Whiskr Inc for capture
+      hardware. This page, its authors, dataset, venue, and every number on it are fictional.</p>
+  </section>
+
+  <footer class="wrap">
+    <p class="disc">Demo page generated from themes/research-project-page.md (research-designer).<br>
+    All people, companies, products, and figures are fictional.<br>
+    No affiliation with any real entity.</p>
+  </footer>
+</main>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { animate } from "motion";
+
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- false-color synthetic plates (shared with gallery + fallback + slider) ---------- */
+function plateBG(seedA, seedB, degrade){
+  const dots = [];
+  for(let i=0;i<46;i++){ const x=((i*37+seedA)%100), y=((i*53+seedB)%100), s=(i%3)+1;
+    dots.push(`radial-gradient(circle at ${x}% ${y}%, rgba(244,244,242,.5) ${s}px, transparent ${s+1}px)`); }
+  const fields = [
+    `radial-gradient(60% 70% at ${seedA}% 35%, rgba(68,119,170,.92), transparent 60%)`,
+    `radial-gradient(55% 60% at ${seedB}% 72%, rgba(34,136,51,.8), transparent 62%)`,
+    `radial-gradient(45% 50% at 80% 25%, rgba(204,187,68,.7), transparent 60%)`,
+    `linear-gradient(160deg,#1b2233,#0b0d12)`
+  ];
+  return { backgroundImage: dots.concat(fields).join(","), filter: degrade?"blur(1.2px) saturate(.82)":"none" };
+}
+function applyPlate(el, a, b, degrade){ const s=plateBG(a,b,degrade); el.style.backgroundImage=s.backgroundImage; el.style.backgroundColor="#0b0d12"; el.style.filter=s.filter; }
+
+/* ---------- gallery ---------- */
+(function gallery(){
+  const g = document.getElementById("gallery");
+  const scenes = [["kitchen-02",14,61],["living-room-07",38,22],["office-11",70,40],["bedroom-05",26,70],["hallway-09",55,30],["studio-03",80,58]];
+  scenes.forEach(([name,a,b])=>{
+    const card=document.createElement("article"); card.className="scard";
+    card.innerHTML=`<div class="plate"><div class="ours"></div><div class="base"></div></div>
+      <div class="meta"><span>CT-Scenes / ${name}</span><span class="hov">ours ⇄ FelineGS</span></div>`;
+    g.appendChild(card);
+    applyPlate(card.querySelector(".ours"), a, b, false);
+    applyPlate(card.querySelector(".base"), (a+19)%90+5, (b+13)%90+5, true);
+  });
+})();
+
+/* ---------- before/after slider ---------- */
+(function beforeAfter(){
+  const ba=document.getElementById("ba"), range=document.getElementById("ba-range");
+  applyPlate(document.getElementById("ba-pred"), 30, 60, false);
+  applyPlate(document.getElementById("ba-gt"), 33, 58, false);
+  function set(v){ ba.style.setProperty("--split", v+"%"); }
+  range.addEventListener("input", ()=> set(range.value));
+  set(50);
+})();
+
+/* ---------- headline metric count-up (on view, motion only) ---------- */
+(function metricsCountUp(){
+  if (REDUCE) return;
+  const strip=document.getElementById("metrics");
+  const io=new IntersectionObserver((es)=>{ es.forEach(e=>{ if(e.isIntersecting){
+    strip.querySelectorAll(".num").forEach(el=>{
+      const to=parseFloat(el.dataset.to), dec=parseInt(el.dataset.dec||"0",10), suf=el.dataset.suffix||"";
+      animate(0, to, { duration:0.8, ease:"easeOut", onUpdate:v=>{ el.textContent=v.toFixed(dec)+suf; } });
+    });
+    io.disconnect();
+  }});}, {threshold:0.4});
+  io.observe(strip);
+})();
+
+/* ---------- section reveal (default visible; enhance only when motion allowed) ---------- */
+if (!REDUCE){
+  document.body.classList.add("reveal-on");
+  const io=new IntersectionObserver((es)=>{ es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target);} }); }, {threshold:0.12, rootMargin:"0px 0px -6% 0px"});
+  document.querySelectorAll(".rv").forEach(el=>io.observe(el));
+}
+
+/* ---------- progress fallback ---------- */
+(function progressFallback(){
+  if (CSS.supports && CSS.supports("animation-timeline: scroll()")) return;
+  const bar=document.querySelector(".progress");
+  const on=()=>{ const h=document.documentElement; bar.style.transform="scaleX("+(h.scrollTop/Math.max(1,h.scrollHeight-h.clientHeight))+")"; };
+  addEventListener("scroll", on, {passive:true}); on();
+})();
+
+/* ---------- copy bibtex ---------- */
+document.getElementById("copybib").addEventListener("click", async ()=>{
+  const txt=document.getElementById("bibtext").textContent;
+  const btn=document.getElementById("copybib"), lab=btn.querySelector("span");
+  try{ await navigator.clipboard.writeText(txt); lab.textContent="Copied"; }
+  catch(e){ lab.textContent="Select & copy"; }
+  setTimeout(()=>{ lab.textContent="Copy"; }, 1600);
+});
+
+/* ---------- Tier 2: interactive point-cloud viewer ---------- */
+function hasWebGL(){ try{ const c=document.createElement("canvas"); return !!(window.WebGLRenderingContext && (c.getContext("webgl2")||c.getContext("webgl"))); }catch(e){ return false; } }
+
+const viewer=document.getElementById("viewer");
+(function fallbackPlate(){ applyPlate(document.getElementById("fallback"), 36, 30, false); })();
+
+if(!hasWebGL()){ viewer.classList.add("no-webgl"); }
+else { try{ initViewer(); }catch(e){ console.warn("3D viewer failed, using static fallback:", e); viewer.classList.add("no-webgl"); } }
+
+function initViewer(){
+  const canvas=document.getElementById("gl");
+  const renderer=new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1, 2));
+  const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0E1116);
+  const camera=new THREE.PerspectiveCamera(50, 16/9, 0.1, 100);
+  camera.position.set(3.4, 2.0, 4.4);
+
+  // ---- build a stylized interior point cloud ----
+  const N=45000;
+  const pos=new Float32Array(N*3), col=new Float32Array(N*3);
+  const c=new THREE.Color();
+  // false-color by height: blue(low) -> teal -> yellow(high)
+  function setColor(i, t){
+    // t in [0,1]
+    const lo=new THREE.Color(0x2A2F6B), mid=new THREE.Color(0x1F8F86), hi=new THREE.Color(0xCCBB44);
+    if(t<0.5){ c.copy(lo).lerp(mid, t/0.5); } else { c.copy(mid).lerp(hi, (t-0.5)/0.5); }
+    c.offsetHSL(0,0,(Math.random()-0.5)*0.06);
+    col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b;
+  }
+  function rnd(a,b){ return a+Math.random()*(b-a); }
+  let i=0;
+  function put(x,y,z){ if(i>=N) return; pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z; setColor(i,(y+1.4)/3.2); i++; }
+  // floor
+  for(let k=0;k<14000;k++){ put(rnd(-3,3), -1.4+rnd(-0.03,0.03), rnd(-3,3)); }
+  // back wall
+  for(let k=0;k<9000;k++){ put(rnd(-3,3), rnd(-1.4,1.6), -3+rnd(-0.03,0.03)); }
+  // left wall
+  for(let k=0;k<7000;k++){ put(-3+rnd(-0.03,0.03), rnd(-1.4,1.6), rnd(-3,3)); }
+  // sofa block
+  for(let k=0;k<7000;k++){ put(rnd(-2.4,-0.6), rnd(-1.4,-0.4), rnd(0.6,2.2)); }
+  // table cluster
+  for(let k=0;k<4500;k++){ const a=rnd(0,Math.PI*2), r=rnd(0,0.9); put(1.1+Math.cos(a)*r, rnd(-1.4,-0.7), 0.4+Math.sin(a)*r); }
+  // lamp / floating object
+  for(let k=0;k<3500;k++){ const a=rnd(0,Math.PI*2), b=rnd(0,Math.PI); const r=0.5; put(1.6+r*Math.sin(b)*Math.cos(a), 0.7+r*Math.cos(b), -1.4+r*Math.sin(b)*Math.sin(a)); }
+  // fill remainder as ambient motes
+  while(i<N){ put(rnd(-3,3), rnd(-1.4,1.6), rnd(-3,3)); }
+
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos,3));
+  geo.setAttribute("color", new THREE.BufferAttribute(col,3));
+  const mat=new THREE.PointsMaterial({ size:0.035, sizeAttenuation:true, vertexColors:true, transparent:true, opacity:0.92, depthWrite:true });
+  const points=new THREE.Points(geo, mat);
+  scene.add(points);
+
+  const controls=new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0,-0.3,0);
+  controls.enableDamping=false;        // render-on-demand → screenshot-safe static first frame
+  controls.autoRotate=false;
+  controls.minDistance=2.2; controls.maxDistance=9;
+  controls.enablePan=false;
+
+  function size(){
+    const w=viewer.clientWidth, h=viewer.clientHeight;
+    renderer.setSize(w,h,false);
+    camera.aspect=w/Math.max(1,h); camera.updateProjectionMatrix();
+    render();
+  }
+  function render(){ if(document.hidden) return; renderer.render(scene,camera); }
+  controls.addEventListener("change", render);
+  addEventListener("resize", size, {passive:true});
+  size();           // one static framed view on load
+  render();
+}
+</script>
+</body>
+</html>

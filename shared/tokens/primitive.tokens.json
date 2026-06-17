@@ -1,0 +1,57 @@
+{
+  "color": {
+    "$type": "color",
+    "neutral": {
+      "0":    { "$value": "#0F0F0F", "$description": "near-black canvas (dark editorial)" },
+      "1":    { "$value": "#1A1A1A", "$description": "raised surface / card" },
+      "2":    { "$value": "#262626", "$description": "hairline edge" },
+      "3":    { "$value": "#2A2A2A", "$description": "chip fill" },
+      "hi":   { "$value": "#F2F2F0", "$description": "primary text on dark" },
+      "mid":  { "$value": "#9C9C98", "$description": "secondary text" },
+      "low":  { "$value": "#6B6B67", "$description": "tertiary text / meta" },
+      "paper":{ "$value": "#FFFFFF", "$description": "light reading canvas" },
+      "warm": { "$value": "#F7F4ED", "$description": "warm figure mat / band" },
+      "ink":  { "$value": "#242424", "$description": "primary text on light" }
+    },
+    "accent": {
+      "indigo":    { "$value": "#5266EB", "$description": "project-page links / focus" },
+      "frost":     { "$value": "#88C0D0", "$description": "dashboard accent (imagery)" },
+      "amber":     { "$value": "#D97A2B", "$description": "editorial imagery only" },
+      "persimmon": { "$value": "#E2603A", "$description": "poster key numbers / one series" },
+      "red":       { "$value": "#E8474D", "$description": "eval selected / active" },
+      "green":     { "$value": "#1A7F37", "$description": "ok / done" }
+    }
+  },
+  "duration": {
+    "$type": "duration",
+    "instant": { "$value": "0ms",   "$description": "reduced-motion collapse target" },
+    "fast":    { "$value": "120ms", "$description": "hover / focus / press" },
+    "base":    { "$value": "240ms", "$description": "panels / toggles / reflow" },
+    "slow":    { "$value": "600ms", "$description": "scroll reveals / mounts" }
+  },
+  "easing": {
+    "$type": "cubicBezier",
+    "out":    { "$value": [0.2, 0.7, 0.2, 1] },
+    "in-out": { "$value": [0.4, 0, 0.2, 1] },
+    "spring": { "$value": [0.34, 1.56, 0.64, 1] },
+    "linear": { "$value": [0, 0, 1, 1] }
+  },
+  "radius": {
+    "$type": "dimension",
+    "xs":   { "$value": "2px" },
+    "sm":   { "$value": "4px" },
+    "md":   { "$value": "8px" },
+    "lg":   { "$value": "12px" },
+    "xl":   { "$value": "16px" },
+    "pill": { "$value": "9999px" }
+  },
+  "space": {
+    "$type": "dimension",
+    "1": { "$value": "4px" },
+    "2": { "$value": "8px" },
+    "3": { "$value": "12px" },
+    "4": { "$value": "16px" },
+    "5": { "$value": "24px" },
+    "6": { "$value": "32px" }
+  }
+}

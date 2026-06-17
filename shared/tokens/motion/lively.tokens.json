@@ -1,0 +1,8 @@
+{
+  "duration": {
+    "$type": "duration",
+    "fast": { "$value": "90ms" },
+    "base": { "$value": "160ms" },
+    "slow": { "$value": "360ms" }
+  }
+}

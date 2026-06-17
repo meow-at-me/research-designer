@@ -1,0 +1,36 @@
+{
+  "surface": {
+    "$type": "color",
+    "canvas": { "$value": "{color.neutral.0}" },
+    "card":   { "$value": "{color.neutral.1}" },
+    "edge":   { "$value": "{color.neutral.2}" }
+  },
+  "text": {
+    "$type": "color",
+    "hi":  { "$value": "{color.neutral.hi}" },
+    "mid": { "$value": "{color.neutral.mid}" },
+    "low": { "$value": "{color.neutral.low}" }
+  },
+  "accent": {
+    "$type": "color",
+    "primary": { "$value": "{color.accent.indigo}", "$description": "interactive: links, focus, active" },
+    "imagery": { "$value": "{color.accent.amber}",  "$description": "figure interiors only — never UI chrome" }
+  },
+  "motion": {
+    "feedback": {
+      "$description": "hover, focus, press",
+      "duration": { "$type": "duration",    "$value": "{duration.fast}" },
+      "easing":   { "$type": "cubicBezier",  "$value": "{easing.out}" }
+    },
+    "layout": {
+      "$description": "panels, toggles, reflow",
+      "duration": { "$type": "duration",    "$value": "{duration.base}" },
+      "easing":   { "$type": "cubicBezier",  "$value": "{easing.in-out}" }
+    },
+    "entrance": {
+      "$description": "scroll reveals, mounts",
+      "duration": { "$type": "duration",    "$value": "{duration.slow}" },
+      "easing":   { "$type": "cubicBezier",  "$value": "{easing.spring}" }
+    }
+  }
+}

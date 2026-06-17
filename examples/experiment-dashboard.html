@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhiskerSplat — Experiment Dashboard (fictional) · CatTower Vision Lab</title>
+<meta name="description" content="Fictional demo dashboard for the experiment-dashboard theme (research-designer). Training curves, ablations, run comparison.">
+
+<!-- Fonts: SIL OFL only -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<!-- Motion (MIT), pinned. +esm skips SRI per jsDelivr. -->
+<script type="importmap">
+{ "imports": { "motion": "https://cdn.jsdelivr.net/npm/motion@12.40.0/+esm" } }
+</script>
+
+<style>
+:root{
+  --bg:#242933; --bg-panel:#2E3440; --bg-raised:#3B4252; --line:#434C5E;
+  --text:#ECEFF4; --text-dim:#A7B1C2; --accent:#88C0D0;
+  --s1:#88C0D0; --s2:#A3BE8C; --s3:#EBCB8B; --s4:#D08770; --s5:#B48EAD; --s6:#BF616A;
+  --running:#88C0D0; --finished:#A3BE8C; --failed:#BF616A; --queued:#A7B1C2;
+  --radius:6px;
+  --font-sans:"IBM Plex Sans",system-ui,sans-serif; --font-mono:"IBM Plex Mono",monospace;
+}
+[data-theme="light"]{
+  --bg:#ECEFF4; --bg-panel:#FFFFFF; --bg-raised:#E5E9F0; --line:#D8DEE9;
+  --text:#2E3440; --text-dim:#5B677A; --accent:#3B7C8F;
+}
+*{box-sizing:border-box}
+html,body{margin:0; height:100%}
+body{ background:var(--bg); color:var(--text); font-family:var(--font-sans); font-size:13px; line-height:1.45;
+  -webkit-font-smoothing:antialiased; }
+.mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+button{font-family:inherit; color:inherit; cursor:pointer}
+
+/* ---- app frame ---- */
+.app{display:grid; grid-template-columns:236px 1fr; grid-template-rows:48px 1fr; height:100vh; min-height:560px}
+.topbar{grid-column:1 / 3; display:flex; align-items:center; gap:14px; padding:0 14px; background:var(--bg-panel); border-bottom:1px solid var(--line)}
+.sidebar{background:var(--bg-panel); border-right:1px solid var(--line); overflow-y:auto; padding:12px 0}
+.canvas{overflow-y:auto; padding:14px}
+
+/* topbar */
+.brand{display:flex; align-items:center; gap:9px; font-weight:600; font-size:14px}
+.brand .mk{width:16px; height:16px; border-radius:4px; background:linear-gradient(135deg,var(--accent),#5E81AC)}
+.proj{display:flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:12px; color:var(--text-dim); border:1px solid var(--line); border-radius:var(--radius); padding:5px 10px}
+.proj svg{width:13px;height:13px}
+.search{flex:1; max-width:300px; display:flex; align-items:center; gap:8px; background:var(--bg-raised); border:1px solid var(--line); border-radius:var(--radius); padding:6px 10px; color:var(--text-dim)}
+.search input{flex:1; background:none; border:0; color:var(--text); font-family:var(--font-mono); font-size:12px; outline:none}
+.search svg{width:14px;height:14px}
+.tb-spacer{margin-left:auto}
+.fict{font-family:var(--font-mono); font-size:11px; color:#2E3440; background:var(--s3); padding:4px 9px; border-radius:var(--radius); letter-spacing:.02em}
+.tbtn{display:inline-flex; align-items:center; gap:6px; background:var(--bg-raised); border:1px solid var(--line); border-radius:var(--radius); padding:6px 10px; font-size:12px}
+.tbtn svg{width:14px;height:14px}
+.elapsed{font-family:var(--font-mono); font-size:12px; color:var(--text-dim)}
+
+/* sidebar */
+.navgroup{padding:6px 14px 2px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); margin-top:8px}
+.navitem{display:flex; align-items:center; gap:9px; padding:7px 14px; color:var(--text-dim); font-size:13px}
+.navitem svg{width:15px;height:15px}
+.navitem.active{color:var(--text); box-shadow:inset 2px 0 0 var(--accent); background:var(--bg-raised)}
+.runlist{margin-top:6px}
+.run{display:flex; align-items:center; gap:8px; padding:6px 14px; cursor:pointer; border:0; background:none; width:100%; text-align:left}
+.run:hover{background:var(--bg-raised)}
+.run.sel{background:var(--bg-raised); box-shadow:inset 2px 0 0 var(--accent)}
+.dot{width:8px; height:8px; border-radius:999px; flex:none}
+.run .rid{font-family:var(--font-mono); font-size:12px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1}
+.pill{font-family:var(--font-mono); font-size:10px; padding:1px 6px; border-radius:999px; color:var(--bg); flex:none}
+.pulse{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* canvas grid */
+.kpis{display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:12px}
+.kpi{background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:11px 12px; position:relative; overflow:hidden}
+.kpi .klab{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim)}
+.kpi .kval{font-family:var(--font-mono); font-size:26px; font-weight:500; margin-top:6px}
+.kpi .kdelta{font-family:var(--font-mono); font-size:11px; margin-top:3px}
+.kdelta.up{color:var(--s2)} .kdelta.down{color:var(--s6)}
+.kpi .spark{position:absolute; right:0; bottom:0; width:70%; height:42%; opacity:.5}
+
+.row{display:grid; gap:10px; margin-bottom:12px}
+.row.r2{grid-template-columns:1.6fr 1fr}
+.row.r2b{grid-template-columns:1fr 1fr}
+.panel{background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px}
+.panel h3{margin:0 0 2px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim); font-weight:600; display:flex; align-items:center; justify-content:space-between}
+.panel h3 .cur{font-family:var(--font-mono); color:var(--text); font-size:13px; text-transform:none; letter-spacing:0}
+.chartbox{position:relative}
+.chartbox svg{width:100%; height:auto; display:block}
+.legend{display:flex; flex-wrap:wrap; gap:12px; margin-top:6px}
+.legitem{display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:11px; color:var(--text-dim); cursor:pointer; user-select:none}
+.legitem .sw{width:10px; height:10px; border-radius:2px}
+.legitem.off{opacity:.4}
+.tooltip{position:absolute; pointer-events:none; background:#1c2027; border:1px solid var(--line); border-radius:4px; padding:7px 9px; font-family:var(--font-mono); font-size:11px; color:var(--text); opacity:0; transform:translate(-50%,-110%); white-space:nowrap; z-index:9}
+.tooltip .tt-row{display:flex; align-items:center; gap:6px}
+.tooltip .sw{width:8px;height:8px;border-radius:2px;display:inline-block}
+
+/* bars */
+.bars .bar{display:grid; grid-template-columns:118px 1fr 52px; align-items:center; gap:10px; margin:7px 0; font-size:12px}
+.bars .bl{color:var(--text-dim); font-family:var(--font-mono); text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.bars .track{height:16px; background:var(--bg-raised); border-radius:3px; overflow:hidden}
+.bars .fill{height:100%; width:0; border-radius:3px}
+.bars .bv{font-family:var(--font-mono); text-align:right}
+.bars .bar.ours .bv{color:var(--accent)}
+
+/* runs table */
+.tablepanel{overflow-x:auto}
+table.runs{width:100%; border-collapse:collapse; font-size:12px}
+table.runs th, table.runs td{padding:7px 10px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; font-family:var(--font-mono)}
+table.runs th{font-family:var(--font-sans); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-dim); cursor:pointer; position:sticky; top:0; background:var(--bg-panel)}
+table.runs th.name, table.runs td.name{text-align:left; position:sticky; left:0; background:var(--bg-panel)}
+table.runs tbody tr{cursor:pointer}
+table.runs tbody tr:hover{background:var(--bg-raised)}
+table.runs tbody tr:hover td.name{background:var(--bg-raised)}
+table.runs tr.sel{box-shadow:inset 2px 0 0 var(--accent)}
+table.runs tr.sel td, table.runs tr.sel td.name{background:rgba(136,192,208,.10)}
+.statuscell{display:inline-flex; align-items:center; gap:6px; justify-content:flex-end}
+
+/* config panel */
+.kv{display:grid; grid-template-columns:auto 1fr; gap:0 14px}
+.kv .k{color:var(--text-dim); padding:5px 0; border-bottom:1px solid var(--line)}
+.kv .v{font-family:var(--font-mono); text-align:right; padding:5px 0; border-bottom:1px solid var(--line)}
+
+/* scatter labels */
+.sc-pt-label{font-family:var(--font-mono); font-size:10px; fill:var(--text-dim)}
+
+footer{padding:14px; color:var(--text-dim); font-family:var(--font-mono); font-size:11px; line-height:1.7; border-top:1px solid var(--line); margin-top:6px}
+
+@media (max-width:1100px){ .kpis{grid-template-columns:repeat(3,1fr)} .row.r2,.row.r2b{grid-template-columns:1fr} }
+@media (max-width:760px){ .app{grid-template-columns:1fr} .sidebar{display:none} .kpis{grid-template-columns:1fr 1fr} }
+@media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important} }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <span class="brand"><span class="mk" aria-hidden="true"></span>Meowtrics</span>
+    <span class="proj"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg>whiskersplat</span>
+    <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input type="text" placeholder="filter runs…" aria-label="Filter runs"></label>
+    <span class="tb-spacer"></span>
+    <span class="elapsed" id="elapsed">live · 00:00:00</span>
+    <span class="fict">FICTIONAL DATA</span>
+    <button class="tbtn" id="refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Refresh</button>
+    <button class="tbtn" id="theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>Theme</button>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="navgroup">Workspace</div>
+    <div class="navitem active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Overview</div>
+    <div class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 14l3-3 3 2 4-5"/></svg>Compare</div>
+    <div class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v4H3zM3 10h18v4H3zM3 17h18v4H3z"/></svg>Ablations</div>
+    <div class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="1"/><rect x="2" y="14" width="20" height="8" rx="1"/><path d="M6 6h.01M6 18h.01"/></svg>System</div>
+    <div class="navgroup">Runs <span id="runcount" style="color:var(--text-dim)"></span></div>
+    <div class="runlist" id="runlist"></div>
+  </aside>
+
+  <!-- CANVAS -->
+  <main class="canvas">
+    <!-- KPI strip -->
+    <section class="kpis" id="kpis"></section>
+
+    <!-- charts row 1 -->
+    <div class="row r2">
+      <section class="panel">
+        <h3>Training — PSNR vs step <span class="cur" id="cur-psnr"></span></h3>
+        <div class="chartbox" id="chart-psnr"></div>
+        <div class="legend" id="leg-psnr"></div>
+      </section>
+      <section class="panel">
+        <h3>Validation — LPIPS vs epoch <span class="cur" id="cur-lpips"></span></h3>
+        <div class="chartbox" id="chart-lpips"></div>
+        <div class="legend" id="leg-lpips"></div>
+      </section>
+    </div>
+
+    <!-- charts row 2 -->
+    <div class="row r2b">
+      <section class="panel bars">
+        <h3>Method comparison — PSNR (dB) ↑</h3>
+        <div id="bars-psnr"></div>
+      </section>
+      <section class="panel">
+        <h3>Tradeoff — PSNR vs inference time</h3>
+        <div class="chartbox" id="chart-scatter"></div>
+      </section>
+    </div>
+
+    <!-- runs table + config -->
+    <div class="row r2">
+      <section class="panel tablepanel">
+        <h3>Runs</h3>
+        <table class="runs" id="runstable">
+          <thead><tr>
+            <th class="name" data-k="id">Run</th>
+            <th data-k="views">Views</th>
+            <th data-k="backbone">Backbone</th>
+            <th data-k="psnr">PSNR↑</th>
+            <th data-k="ssim">SSIM↑</th>
+            <th data-k="lpips">LPIPS↓</th>
+            <th data-k="gpuh">GPU-h</th>
+            <th data-k="status">Status</th>
+          </tr></thead>
+          <tbody id="runsbody"></tbody>
+        </table>
+      </section>
+      <section class="panel">
+        <h3>Config <span class="cur" id="cfg-id"></span></h3>
+        <div class="kv" id="config"></div>
+      </section>
+    </div>
+
+    <footer>
+      Demo page generated from themes/experiment-dashboard.md (research-designer).<br>
+      All people, companies, products, runs, and figures are fictional. No affiliation with any real entity.
+    </footer>
+  </main>
+</div>
+
+<script type="module">
+import { animate } from "motion";
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SERIES=["#88C0D0","#A3BE8C","#EBCB8B","#D08770","#B48EAD","#BF616A"];
+
+/* ---------------- deterministic fictional data ---------------- */
+const runs=[
+  {id:"whiskersplat-L-3view", views:3, backbone:"ViT-L", psnr:28.41, ssim:0.912, lpips:0.087, gpuh:412, status:"finished", color:SERIES[0],
+   cfg:{lr:"2e-4", batch:16, optimizer:"AdamW", steps:"50k", augment:"flip+crop", depth_sup:"on"}},
+  {id:"whiskersplat-B-3view", views:3, backbone:"ViT-B", psnr:27.86, ssim:0.903, lpips:0.096, gpuh:188, status:"finished", color:SERIES[1],
+   cfg:{lr:"3e-4", batch:24, optimizer:"AdamW", steps:"50k", augment:"flip+crop", depth_sup:"on"}},
+  {id:"whiskersplat-L-5view", views:5, backbone:"ViT-L", psnr:29.78, ssim:0.927, lpips:0.071, gpuh:286, status:"running", color:SERIES[2],
+   cfg:{lr:"2e-4", batch:12, optimizer:"AdamW", steps:"38k / 50k", augment:"flip+crop", depth_sup:"on"}},
+  {id:"felinegs-baseline", views:3, backbone:"—", psnr:27.05, ssim:0.894, lpips:0.108, gpuh:96, status:"finished", color:SERIES[4],
+   cfg:{lr:"1e-3", batch:8, optimizer:"Adam", steps:"opt 30k", augment:"none", depth_sup:"off"}},
+  {id:"pawsplat-repro", views:3, backbone:"—", psnr:26.30, ssim:0.881, lpips:0.124, gpuh:54, status:"failed", color:SERIES[5],
+   cfg:{lr:"1e-3", batch:8, optimizer:"Adam", steps:"OOM @ 22k", augment:"none", depth_sup:"off"}},
+];
+const STATUS_COLOR={running:"var(--running)", finished:"var(--finished)", failed:"var(--failed)", queued:"var(--queued)"};
+
+// PSNR-vs-step training curves (deterministic), 26 points 0..50k
+function curve(target, noiseSeed, fail){
+  const pts=[]; const n=26;
+  for(let i=0;i<n;i++){
+    const t=i/(n-1);
+    let v = target*(1-Math.exp(-3.2*t)) + 14*Math.exp(-3.2*t);   // rises from ~14 to target
+    v += Math.sin(i*1.7+noiseSeed)*0.12;                          // deterministic wobble
+    if(fail && i> n*0.45){ pts.push(null); continue; }            // failed run stops
+    pts.push(+v.toFixed(2));
+  }
+  return pts;
+}
+const stepLabels=Array.from({length:26},(_,i)=>Math.round(i/25*50)+"k");
+const psnrSeries=[
+  {name:"L-3view", color:SERIES[0], data:curve(28.41,0.3,false)},
+  {name:"B-3view", color:SERIES[1], data:curve(27.86,1.1,false)},
+  {name:"L-5view", color:SERIES[2], data:curve(29.78,2.0,false), running:true},
+  {name:"felinegs", color:SERIES[4], data:curve(27.05,0.7,false)},
+  {name:"pawsplat", color:SERIES[5], data:curve(26.30,1.6,true)},
+];
+// LPIPS-vs-epoch (lower better)
+function dcurve(target, seed){ const n=20, pts=[]; for(let i=0;i<n;i++){ const t=i/(n-1); let v=target+(0.34-target)*Math.exp(-3.0*t)+Math.sin(i*1.3+seed)*0.004; pts.push(+v.toFixed(3)); } return pts; }
+const epochLabels=Array.from({length:20},(_,i)=>i+1);
+const lpipsSeries=[
+  {name:"L-3view", color:SERIES[0], data:dcurve(0.087,0.2)},
+  {name:"L-5view", color:SERIES[2], data:dcurve(0.071,1.0), running:true},
+  {name:"felinegs", color:SERIES[4], data:dcurve(0.108,0.6)},
+];
+
+/* ---------------- generic line chart (inline SVG) ---------------- */
+const W=540, H=232, PADL=46, PADR=14, PADT=12, PADB=30;
+function niceTicks(min,max,count){
+  const span=max-min||1; const step=Math.pow(10,Math.floor(Math.log10(span/count)));
+  const err=(span/count)/step; const mult=err>=5?10:err>=2?5:err>=1?2:1; const s=mult*step;
+  const lo=Math.floor(min/s)*s, hi=Math.ceil(max/s)*s; const t=[]; for(let v=lo; v<=hi+1e-9; v+=s) t.push(+v.toFixed(6)); return {ticks:t, lo, hi};
+}
+function lineChart(boxEl, legEl, series, xlabels, opts){
+  opts=opts||{};
+  const all=series.flatMap(s=>s.data.filter(v=>v!=null));
+  let dmin=Math.min(...all), dmax=Math.max(...all);
+  const {ticks, lo, hi}=niceTicks(dmin, dmax, 4);
+  const x0=PADL, x1=W-PADR, y0=PADT, y1=H-PADB;
+  const sx=i=>x0+(i/(xlabels.length-1))*(x1-x0);
+  const sy=v=>y1-((v-lo)/(hi-lo))*(y1-y0);
+  let g="";
+  // gridlines + y labels
+  ticks.forEach(t=>{ const y=sy(t); g+=`<line x1="${x0}" y1="${y.toFixed(1)}" x2="${x1}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;
+    g+=`<text x="${x0-7}" y="${(y+3).toFixed(1)}" text-anchor="end" font-family="IBM Plex Mono" font-size="10" fill="var(--text-dim)">${opts.fmt?opts.fmt(t):t}</text>`; });
+  // x labels (sparse)
+  const skip=Math.ceil(xlabels.length/6);
+  xlabels.forEach((lb,i)=>{ if(i%skip!==0 && i!==xlabels.length-1) return; const x=sx(i);
+    g+=`<text x="${x.toFixed(1)}" y="${H-10}" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text-dim)">${lb}</text>`; });
+  // series polylines
+  series.forEach((s,si)=>{
+    let pts=""; s.data.forEach((v,i)=>{ if(v==null) return; pts+=`${sx(i).toFixed(1)},${sy(v).toFixed(1)} `; });
+    g+=`<polyline class="ser ser-${si}" data-si="${si}" points="${pts.trim()}" fill="none" stroke="${s.color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>`;
+    if(s.running){ // marker at last point
+      let li=s.data.length-1; while(li>0 && s.data[li]==null) li--;
+      g+=`<circle cx="${sx(li).toFixed(1)}" cy="${sy(s.data[li]).toFixed(1)}" r="3" fill="${s.color}"/>`;
+    }
+  });
+  boxEl.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.aria||'line chart'}">${g}</svg>
+    <div class="tooltip" role="status"></div>`;
+  const svg=boxEl.querySelector("svg"), tip=boxEl.querySelector(".tooltip");
+
+  // draw-in animation (final state already in DOM)
+  if(!REDUCE){
+    boxEl.querySelectorAll("polyline.ser").forEach(pl=>{
+      const len=pl.getTotalLength(); pl.style.strokeDasharray=len; pl.style.strokeDashoffset=len;
+      animate(len, 0, {duration:0.8, ease:"easeOut", onUpdate:v=>{ pl.style.strokeDashoffset=v; }});
+    });
+  }
+  // legend
+  if(legEl){
+    legEl.innerHTML="";
+    series.forEach((s,si)=>{ const it=document.createElement("span"); it.className="legitem"; it.innerHTML=`<span class="sw" style="background:${s.color}"></span>${s.name}`;
+      it.addEventListener("click", ()=>{ it.classList.toggle("off"); const pl=svg.querySelector(`.ser-${si}`); pl.style.display=it.classList.contains("off")?"none":""; });
+      legEl.appendChild(it); });
+  }
+  // crosshair tooltip
+  let cross=document.createElementNS("http://www.w3.org/2000/svg","line");
+  cross.setAttribute("stroke","var(--text-dim)"); cross.setAttribute("stroke-width","1"); cross.setAttribute("stroke-dasharray","3 3"); cross.style.opacity="0"; svg.appendChild(cross);
+  svg.addEventListener("pointermove",(e)=>{
+    const r=svg.getBoundingClientRect(); const px=(e.clientX-r.left)/r.width*W;
+    let i=Math.round((px-x0)/(x1-x0)*(xlabels.length-1)); i=Math.max(0,Math.min(xlabels.length-1,i));
+    const x=sx(i); cross.setAttribute("x1",x); cross.setAttribute("x2",x); cross.setAttribute("y1",y0); cross.setAttribute("y2",y1); cross.style.opacity="1";
+    let rows=`<div style="color:var(--text-dim);margin-bottom:3px">${xlabels[i]}</div>`;
+    series.forEach((s,si)=>{ const it=legEl&&legEl.children[si]; if(it&&it.classList.contains("off")) return; const v=s.data[i]; if(v==null) return;
+      rows+=`<div class="tt-row"><span class="sw" style="background:${s.color}"></span>${s.name}: ${opts.fmt?opts.fmt(v):v}</div>`; });
+    tip.innerHTML=rows; tip.style.left=(x/W*100)+"%"; tip.style.top=(y0/H*100)+"%"; tip.style.opacity="1";
+  });
+  svg.addEventListener("pointerleave",()=>{ cross.style.opacity="0"; tip.style.opacity="0"; });
+}
+
+/* ---------------- horizontal bars ---------------- */
+function bars(el, data){
+  const max=Math.max(...data.map(d=>d.v)), min=Math.min(...data.map(d=>d.v))-1;
+  el.innerHTML="";
+  data.forEach(d=>{
+    const w=((d.v-min)/(max-min))*100;
+    const row=document.createElement("div"); row.className="bar"+(d.ours?" ours":"");
+    row.innerHTML=`<span class="bl">${d.label}</span><span class="track"><span class="fill" style="background:${d.color}"></span></span><span class="bv">${d.v.toFixed(2)}</span>`;
+    el.appendChild(row);
+    const fill=row.querySelector(".fill");
+    if(REDUCE){ fill.style.width=w+"%"; }
+    else animate(0, w, {duration:0.7, ease:"easeOut", onUpdate:v=>{ fill.style.width=v+"%"; }});
+  });
+}
+
+/* ---------------- scatter (PSNR vs time) ---------------- */
+function scatter(el, pts){
+  const x0=PADL, x1=W-PADR, y0=PADT, y1=H-PADB;
+  const xs=pts.map(p=>Math.log10(p.t)), ys=pts.map(p=>p.psnr);
+  const xmin=Math.min(...xs)-0.2, xmax=Math.max(...xs)+0.2;
+  const {lo,hi,ticks}=niceTicks(Math.min(...ys), Math.max(...ys), 4);
+  const sx=v=>x0+((Math.log10(v)-xmin)/(xmax-xmin))*(x1-x0);
+  const sy=v=>y1-((v-lo)/(hi-lo))*(y1-y0);
+  let g="";
+  ticks.forEach(t=>{ const y=sy(t); g+=`<line x1="${x0}" y1="${y.toFixed(1)}" x2="${x1}" y2="${y.toFixed(1)}" stroke="var(--line)"/>`;
+    g+=`<text x="${x0-7}" y="${(y+3).toFixed(1)}" text-anchor="end" font-family="IBM Plex Mono" font-size="10" fill="var(--text-dim)">${t}</text>`; });
+  [0.9,2,5,40].forEach(tk=>{ if(tk< Math.pow(10,xmin)||tk>Math.pow(10,xmax)) return; const x=sx(tk);
+    g+=`<text x="${x.toFixed(1)}" y="${H-10}" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text-dim)">${tk<60?tk+'s':''}</text>`; });
+  g+=`<text x="${(x1)}" y="${H-10}" text-anchor="end" font-family="IBM Plex Mono" font-size="10" fill="var(--text-dim)">slower →</text>`;
+  pts.forEach(p=>{ const x=sx(p.t), y=sy(p.psnr); const r=p.ours?6:4.5;
+    g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${p.color}" fill-opacity="0.85" ${p.ours?'stroke="var(--text)" stroke-width="1.5"':''}/>`;
+    g+=`<text class="sc-pt-label" x="${(x+9).toFixed(1)}" y="${(y+3).toFixed(1)}">${p.label}</text>`; });
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Scatter of PSNR versus inference time; WhiskerSplat is most accurate and fastest.">${g}</svg>`;
+}
+
+/* ---------------- KPI tiles ---------------- */
+const kpis=[
+  {lab:"Best PSNR", val:28.41, dec:2, delta:"+0.99", up:true},
+  {lab:"SSIM", val:0.912, dec:3, delta:"+0.011", up:true},
+  {lab:"LPIPS", val:0.087, dec:3, delta:"−0.010", up:true},
+  {lab:"GPU-hours", val:1284, dec:0, delta:"+96", up:false},
+  {lab:"Throughput", val:1.11, dec:2, delta:"+0.20 sc/s", up:true},
+  {lab:"Active runs", val:1, dec:0, delta:"running", up:true},
+];
+function renderKpis(){
+  const wrap=document.getElementById("kpis"); wrap.innerHTML="";
+  kpis.forEach(k=>{
+    const el=document.createElement("div"); el.className="kpi";
+    el.innerHTML=`<div class="klab">${k.lab}</div><div class="kval" data-to="${k.val}" data-dec="${k.dec}">${k.val.toFixed(k.dec)}</div>
+      <div class="kdelta ${k.up?'up':'down'}">${k.delta}</div>`;
+    wrap.appendChild(el);
+    const v=el.querySelector(".kval");
+    if(!REDUCE) animate(0, k.val, {duration:0.7, ease:"easeOut", onUpdate:x=>{ v.textContent=x.toFixed(k.dec); }});
+  });
+}
+
+/* ---------------- sidebar run list ---------------- */
+function renderRunList(){
+  const rl=document.getElementById("runlist"); rl.innerHTML="";
+  document.getElementById("runcount").textContent=runs.length;
+  runs.forEach((r,idx)=>{
+    const b=document.createElement("button"); b.className="run"+(idx===selected?" sel":""); b.dataset.idx=idx;
+    b.innerHTML=`<span class="dot ${r.status==='running'?'pulse':''}" style="background:${STATUS_COLOR[r.status]}"></span>
+      <span class="rid">${r.id}</span>
+      <span class="pill" style="background:${STATUS_COLOR[r.status]}">${r.status}</span>`;
+    b.addEventListener("click",()=>select(idx));
+    rl.appendChild(b);
+  });
+}
+
+/* ---------------- runs table ---------------- */
+let sortKey="psnr", sortDir=-1, selected=0;
+function renderTable(){
+  const body=document.getElementById("runsbody"); body.innerHTML="";
+  const order=runs.map((r,i)=>i).sort((a,b)=>{ const va=runs[a][sortKey], vb=runs[b][sortKey];
+    if(typeof va==="number") return (va-vb)*sortDir; return String(va).localeCompare(String(vb))*sortDir; });
+  order.forEach(i=>{ const r=runs[i]; const tr=document.createElement("tr"); if(i===selected) tr.className="sel"; tr.dataset.idx=i;
+    tr.innerHTML=`<td class="name">${r.id}</td><td>${r.views}</td><td>${r.backbone}</td>
+      <td>${r.psnr.toFixed(2)}</td><td>${r.ssim.toFixed(3)}</td><td>${r.lpips.toFixed(3)}</td><td>${r.gpuh}</td>
+      <td><span class="statuscell"><span class="dot ${r.status==='running'?'pulse':''}" style="background:${STATUS_COLOR[r.status]}"></span>${r.status}</span></td>`;
+    tr.addEventListener("click",()=>select(i)); body.appendChild(tr); });
+}
+document.querySelectorAll("#runstable th").forEach(th=>{ th.addEventListener("click",()=>{ const k=th.dataset.k; if(k===sortKey) sortDir*=-1; else { sortKey=k; sortDir=(k==="lpips")?1:-1; } renderTable(); }); });
+
+/* ---------------- config panel ---------------- */
+function renderConfig(){
+  const r=runs[selected]; document.getElementById("cfg-id").textContent=r.id;
+  const cfg=document.getElementById("config"); cfg.innerHTML="";
+  const fields={views:r.views, backbone:r.backbone, ...r.cfg, "gpu-hours":r.gpuh};
+  Object.entries(fields).forEach(([k,v])=>{ cfg.innerHTML+=`<div class="k">${k}</div><div class="v">${v}</div>`; });
+}
+
+function select(i){ selected=i; renderRunList(); renderTable(); renderConfig(); }
+
+/* ---------------- build everything ---------------- */
+function buildCharts(){
+  document.getElementById("cur-psnr").textContent="best 28.41 dB";
+  document.getElementById("cur-lpips").textContent="best 0.071";
+  lineChart(document.getElementById("chart-psnr"), document.getElementById("leg-psnr"), psnrSeries, stepLabels, {fmt:v=>v.toFixed(1), aria:"PSNR versus training step for five runs."});
+  lineChart(document.getElementById("chart-lpips"), document.getElementById("leg-lpips"), lpipsSeries, epochLabels, {fmt:v=>v.toFixed(3), aria:"LPIPS versus epoch."});
+  bars(document.getElementById("bars-psnr"), [
+    {label:"Meowtrics-NeRF", v:24.10, color:SERIES[3]},
+    {label:"PawSplat", v:26.30, color:SERIES[5]},
+    {label:"Yarn-3R", v:26.78, color:SERIES[4]},
+    {label:"FelineGS", v:27.05, color:SERIES[1]},
+    {label:"TabbyFormer", v:27.42, color:SERIES[2]},
+    {label:"WhiskerSplat", v:28.41, color:SERIES[0], ours:true},
+  ]);
+  scatter(document.getElementById("chart-scatter"), [
+    {label:"Meowtrics-NeRF", t:2280, psnr:24.10, color:SERIES[3]},
+    {label:"PawSplat", t:4.2, psnr:26.30, color:SERIES[5]},
+    {label:"FelineGS", t:1.6, psnr:27.05, color:SERIES[1]},
+    {label:"TabbyFormer", t:1.0, psnr:27.42, color:SERIES[2]},
+    {label:"WhiskerSplat", t:0.9, psnr:28.41, color:SERIES[0], ours:true},
+  ]);
+}
+
+renderKpis(); renderRunList(); renderTable(); renderConfig(); buildCharts();
+
+/* refresh re-runs the entrance animations */
+document.getElementById("refresh").addEventListener("click",()=>{ renderKpis(); buildCharts(); });
+document.getElementById("theme").addEventListener("click",()=>{ document.documentElement.toggleAttribute && (document.documentElement.dataset.theme = document.documentElement.dataset.theme==="light"?"":"light"); });
+
+/* ---------------- live elapsed clock + running-run tick ---------------- */
+(function live(){
+  let secs=0; const el=document.getElementById("elapsed");
+  function fmt(s){ const h=String(Math.floor(s/3600)).padStart(2,"0"), m=String(Math.floor(s%3600/60)).padStart(2,"0"), x=String(s%60).padStart(2,"0"); return `${h}:${m}:${x}`; }
+  if(REDUCE){ el.textContent="live · "+fmt(0); return; }
+  setInterval(()=>{ if(document.hidden) return; secs+=1; el.textContent="live · "+fmt(secs); }, 1000);
+})();
+</script>
+</body>
+</html>

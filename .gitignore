@@ -1,0 +1,20 @@
+# Claude Code local files
+.claude/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+
+# Node (only if a build/tooling step is ever added)
+node_modules/
+dist/
+.cache/
+
+# Headless-capture scratch (chrome profile, temp DOM dumps)
+.tmp/
+*.tmp
+
+# NOTE: examples/ is intentionally NOT ignored — the live motion/3D demos are the product
+# and are published (GitHub Pages). Static screenshots can't convey them.
