@@ -96,6 +96,20 @@ Scale: 11 / 12 / 13 / 15 / 20 / 28 — nothing larger; this is a tool, not a pos
 | 9 | Selected-run config panel | key-value hyperparameters |
 | 10 | Footer | mandatory disclaimer |
 
+## 5c. Source provenance (hover → file:line) — REQUIRED
+
+Every plotted datum is traceable to where it came from. Each chart point, bar, scatter marker, and table row binds source metadata — the **file path and line number** of the log/record that produced it — and the existing hover tooltip / readout surfaces it as `path:line` beside the value.
+
+| Aspect | Spec |
+|---|---|
+| Data model | each series/point carries `{ value, file, line }` (or a `src:"path:line"` string); a training curve maps step *i* → a deterministic line in that run's log |
+| Reveal | extend the existing crosshair tooltip — append `file:line` in mono, muted vs. the value; no new chrome |
+| Example | hovering the PSNR point at 38k shows `29.6 · runs/whiskersplat-L-5view/train.log:1453` |
+| Affordance | optional click-to-copy / link target; never required. Instant (no animation), like every hover here |
+| Scope | a standing default for **every** data surface in this collection — not opt-in |
+
+A number on screen must be traceable back to the exact line that produced it.
+
 ## 6. Motion (detailed)
 
 | Target | Effect | Tier / technique |

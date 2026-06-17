@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PULSE — CatTower Sensor Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--sans:'SF Pro Text',-apple-system,BlinkMacSystemFont,'Google Sans',Figtree,Inter,system-ui,sans-serif;--disp:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Google Sans',Figtree,Inter,system-ui,sans-serif;--s1:#0072B2;--s2:#E69F00;--s3:#009E73;--s4:#D55E00;--s5:#CC79A7;--s6:#56B4E9;
+  --good:#009E73;--watch:#E69F00;--alert:#D55E00;--spring:cubic-bezier(.16,1.3,.3,1)}
+[data-theme="light"]{--bg:#F2F4F6;--panel:#FFFFFF;--line:#E5E8EB;--text:#191F28;--dim:#6B7684;
+  --accent:#3182F6;--accent-soft:#E8F3FF;--shadow:0 2px 8px rgba(25,31,40,.06);--border:transparent}
+[data-theme="dark"]{--bg:#101418;--panel:#1B2026;--line:#2A3138;--text:#ECEFF1;--dim:#8B95A1;
+  --accent:#4593FC;--accent-soft:#1B3A5C;--shadow:none;--border:var(--line)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:400 14px/1.5 var(--sans);transition:background .22s,color .22s}
+.wrap{max-width:960px;margin:0 auto;padding:24px 16px 56px;display:flex;flex-direction:column;gap:16px}
+svg.icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* header */
+.head{display:flex;align-items:center;gap:12px}
+.head h1{font:800 22px var(--disp)}
+.head .date{color:var(--dim);font-size:13px}
+.head .spacer{flex:1}
+.iconbtn{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--text);
+  display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow)}
+.iconbtn:active{transform:scale(.94)}
+.iconbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* cards */
+.card{background:var(--panel);border-radius:20px;box-shadow:var(--shadow);border:1px solid var(--border);padding:20px;min-width:0}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:640px){.row3{grid-template-columns:1fr}}
+.ctitle{font:700 15px var(--disp);display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.csub{color:var(--dim);font-size:12px}
+
+/* hero */
+.hero{position:relative;overflow:hidden;padding:24px 24px 0;min-height:190px}
+.hero .label{display:flex;align-items:center;gap:8px;color:var(--dim);font-weight:500}
+.hero .big{font:800 44px/1.1 var(--disp);font-variant-numeric:tabular-nums;margin-top:6px}
+.hero .big .unit{font-size:22px;color:var(--dim);opacity:0;transition:opacity .3s}
+.hero .big .unit.in{opacity:1}
+.hero .status{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font:600 12px var(--sans);color:var(--good);
+  background:color-mix(in srgb,var(--good) 12%,transparent);border-radius:999px;padding:4px 12px}
+.hero svg.bgchart{position:absolute;left:0;right:0;bottom:0;width:100%;height:96px;display:block}
+
+/* stat cards */
+.stat .val{font:800 26px var(--disp);font-variant-numeric:tabular-nums;margin-top:2px}
+.stat .val small{font:600 13px var(--sans);color:var(--dim)}
+.delta{display:inline-flex;align-items:center;gap:4px;font:600 11px var(--sans);border-radius:999px;padding:3px 9px;margin-top:8px;
+  opacity:0;transform:translateY(8px);transition:.3s var(--spring)}
+.delta.in{opacity:1;transform:none}
+.delta.up{color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
+.delta.dn{color:var(--alert);background:color-mix(in srgb,var(--alert) 12%,transparent)}
+.stat svg.spark{width:100%;height:36px;margin-top:10px}
+
+/* chart bits */
+.tick{font:500 11px var(--sans);fill:var(--dim);font-variant-numeric:tabular-nums}
+.gline{stroke:var(--line)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
+.chip{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 13px;border-radius:999px;cursor:pointer;
+  font:600 12px var(--sans);border:1.5px solid transparent;color:#fff;transition:.18s var(--spring)}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:#fff}
+.chip[aria-pressed="false"]{background:transparent !important;color:var(--dim);border-color:var(--line)}
+.chip[aria-pressed="false"] .dot{background:var(--dim)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tooltip{position:fixed;z-index:50;display:none;pointer-events:none;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;box-shadow:0 8px 24px rgba(25,31,40,.16);padding:10px 13px;font-size:12px;min-width:150px}
+.tooltip .h{color:var(--dim);font-weight:600;margin-bottom:5px}
+.tooltip .r{display:flex;justify-content:space-between;gap:14px;padding:1px 0}
+.tooltip .r .l{display:flex;gap:7px;align-items:center;color:var(--dim)}
+.tooltip .sw{width:9px;height:9px;border-radius:50%}
+.tooltip .v{font-weight:600;font-variant-numeric:tabular-nums}
+.tooltip .src{color:var(--dim);opacity:.85;font-size:10.5px;margin-top:6px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+
+/* device list */
+.dev{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--line)}
+.dev:last-child{border-bottom:none}
+.dev .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.dev .nm{font-weight:600}
+.dev .id{color:var(--dim);font-size:12px}
+.dev .spacer{flex:1}
+.dev .v{font:700 14px var(--disp);font-variant-numeric:tabular-nums}
+.dev .t{color:var(--dim);font-size:11px;width:64px;text-align:right}
+
+/* entrance */
+.rise{opacity:0;transform:translateY(24px)}
+.rise.in{opacity:1;transform:none;transition:opacity .56s var(--spring),transform .56s var(--spring)}
+.dev{opacity:0}.dev.in{opacity:1;transition:opacity .3s ease-out}
+@media(prefers-reduced-motion:reduce){
+  .rise,.dev{opacity:1;transform:none}.rise.in,.dev.in{transition:none}
+  .delta{opacity:1;transform:none}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── collapsible sidebar (Streamlit-style) ── */
+.shell2{display:flex;min-height:100vh;align-items:stretch}
+.sbmain{flex:1;min-width:0}
+.sb{width:236px;flex:none;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:2px;
+  padding:14px 10px;background:var(--panel);border-right:1px solid var(--line);overflow:hidden;
+  transition:width .25s cubic-bezier(.22,1,.36,1),padding .25s}
+body.sbc .sb{width:58px;padding:14px 9px}
+.sb-label{white-space:nowrap;opacity:1;transition:opacity .15s}
+body.sbc .sb .sb-label{opacity:0;pointer-events:none}
+.sb-top{display:flex;align-items:center;gap:10px;padding:2px 4px;margin-bottom:12px;min-height:34px}
+body.sbc .sb-top{flex-direction:column;gap:8px;padding:2px 0}
+.sb-logo{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.sb-mark{background:var(--accent);color:#fff;border-radius:10px;width:30px;height:30px;display:grid;place-items:center;flex:none;font:700 14px var(--disp)}
+.sb-name{display:flex;flex-direction:column;line-height:1.15;font:700 13px var(--disp)}
+.sb-name small{font:400 10.5px var(--sans);color:var(--dim)}
+.sb-toggle{border:none;background:none;color:var(--dim);width:30px;height:30px;display:grid;place-items:center;cursor:pointer;flex:none}
+.sb-toggle:hover{color:var(--text,var(--ink))}
+.sb-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sb-item{color:var(--dim);border-radius:12px;display:flex;align-items:center;gap:10px;width:100%;height:36px;padding:0 10px;
+  border:none;background:none;cursor:pointer;text-align:left;font:500 12.5px var(--sans)}
+.sb-item:hover{background:var(--accent-soft);color:var(--text)}
+.sb-item.active{background:var(--accent-soft);color:var(--accent)}
+.sb-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+body.sbc .sb-item{justify-content:center;padding:0}
+.sb-sec{font:600 10px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin:14px 8px 4px}
+.sb-foot{margin-top:auto;padding:10px 4px 0;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.sb-ava{width:28px;height:28px;flex:none;display:grid;place-items:center;font:700 11px var(--disp);background:var(--accent);color:#fff;border-radius:10px}
+.sb-foot .sb-name{font:600 12px var(--sans)}
+
+@media(prefers-reduced-motion:reduce){.sb{transition:none}}
+</style>
+</head>
+<body>
+<div class="shell2">
+<aside class="sb" aria-label="Sidebar">
+  <div class="sb-top">
+    <div class="sb-logo"><span class="sb-mark">P</span><span class="sb-name sb-label">Pulse Home<small>CatTower family</small></span></div>
+    <button class="sb-toggle" id="sbToggle" aria-label="Toggle sidebar" aria-expanded="true"><svg class="icon" viewBox="0 0 20 20"><rect x="3" y="3.5" width="14" height="13" rx="1.5"/><path d="M8 3.5v13"/></svg></button>
+  </div>
+<button class="sb-item active" title="Home"><svg class="icon" viewBox="0 0 20 20"><path d="M3 9.5 10 3l7 6.5"/><path d="M5 8.5V17h10V8.5"/></svg><span class="sb-label">Home</span></button>
+<button class="sb-item" title="Rooms"><svg class="icon" viewBox="0 0 20 20"><rect x="5" y="3" width="10" height="14" rx="1"/><circle cx="12" cy="10" r=".9"/></svg><span class="sb-label">Rooms</span></button>
+<button class="sb-item" title="Energy"><svg class="icon" viewBox="0 0 20 20"><path d="M11 2 4 12h5l-1 6 7-10h-5z"/></svg><span class="sb-label">Energy</span></button>
+<button class="sb-item" title="Devices"><svg class="icon" viewBox="0 0 20 20"><rect x="5" y="5" width="10" height="10" rx="1.5"/><path d="M8 2v3M12 2v3M8 15v3M12 15v3M2 8h3M2 12h3M15 8h3M15 12h3"/></svg><span class="sb-label">Devices</span></button>
+<div class="sb-sec sb-label">More</div>
+<button class="sb-item" title="Automations"><svg class="icon" viewBox="0 0 20 20"><path d="M4 16 13 7M12 3l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7zM16 11l.5 1.3L17.8 13l-1.3.5L16 14.8l-.5-1.3-1.3-.5 1.3-.5z"/></svg><span class="sb-label">Automations</span></button>
+  <div class="sb-foot">
+    <span class="sb-ava">CL</span>
+    <span class="sb-name sb-label">Calico Lee<small>with Kitty &amp; Ya-ong</small></span>
+  </div>
+</aside>
+<div class="sbmain">
+<div class="wrap">
+  <header class="head rise">
+    <div>
+      <h1 id="greet">Good evening, Calico</h1>
+      <div class="date">Friday, June 12 · CatTower Sensor Home · shared with Kitty Park, Ya-ong Kim</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="refreshBtn" aria-label="Refresh readings">
+      <svg class="icon" id="refIcon" viewBox="0 0 20 20"><path d="M16 10a6 6 0 1 1-1.8-4.3M16 3v3h-3"/></svg></button>
+    <button class="iconbtn" id="themeBtn" aria-label="Toggle theme">
+      <svg class="icon" id="iMoon" viewBox="0 0 20 20"><path d="M16 11.5A6.5 6.5 0 0 1 8.5 4 6.5 6.5 0 1 0 16 11.5z"/></svg>
+      <svg class="icon" id="iSun" viewBox="0 0 20 20" style="display:none"><circle cx="10" cy="10" r="3.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.4 1.4M14.3 14.3l1.4 1.4M15.7 4.3l-1.4 1.4M5.7 14.3l-1.4 1.4"/></svg></button>
+  </header>
+
+  <!-- hero -->
+  <section class="card hero rise" aria-label="Living room temperature">
+    <div class="label"><svg class="icon" viewBox="0 0 20 20"><path d="M8 3a2 2 0 0 1 4 0v8a4 4 0 1 1-4 0z"/><circle cx="10" cy="14.5" r="1.4"/></svg>Living room · temperature</div>
+    <div class="big" title="living room · 23.4 °C — source sensors/living-room-t1.log:1423"><span id="heroVal" data-count="23.4">0.0</span><span class="unit" id="heroUnit">°C</span></div>
+    <div class="status"><svg class="icon" viewBox="0 0 20 20" style="width:13px;height:13px"><path d="M4 10.5l4 4 8-9"/></svg>Comfortable range · all sensors reporting</div>
+    <svg class="bgchart" id="heroChart" preserveAspectRatio="none" viewBox="0 0 960 96" aria-hidden="true"></svg>
+  </section>
+
+  <!-- stat cards -->
+  <div class="row3">
+    <section class="card stat rise"><div class="ctitle"><svg class="icon" viewBox="0 0 20 20"><path d="M10 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z"/></svg>Humidity</div>
+      <div class="val" title="humidity · 48 % — source metrics/daily.csv:57"><span data-count="48" data-dec="0">0</span><small> %</small></div>
+      <span class="delta up"><svg class="icon" viewBox="0 0 20 20" style="width:12px;height:12px"><path d="M10 15V5M5 10l5-5 5 5"/></svg>+3% vs yesterday</span>
+      <svg class="spark" data-seed="5" data-color="var(--s1)" preserveAspectRatio="none" viewBox="0 0 100 36"></svg></section>
+    <section class="card stat rise"><div class="ctitle"><svg class="icon" viewBox="0 0 20 20"><path d="M3 8h9a2.5 2.5 0 1 0-2.5-2.5M3 12h11a2.5 2.5 0 1 1-2.5 2.5"/></svg>CO₂</div>
+      <div class="val" title="CO₂ · 612 ppm — source metrics/daily.csv:58"><span data-count="612" data-dec="0">0</span><small> ppm</small></div>
+      <span class="delta up"><svg class="icon" viewBox="0 0 20 20" style="width:12px;height:12px"><path d="M10 5v10M5 10l5 5 5-5"/></svg>−40 ppm after airing</span>
+      <svg class="spark" data-seed="9" data-color="var(--s3)" preserveAspectRatio="none" viewBox="0 0 100 36"></svg></section>
+    <section class="card stat rise"><div class="ctitle"><svg class="icon" viewBox="0 0 20 20"><path d="M11 2L4 11h5l-1 7 7-9h-5z"/></svg>Power · today</div>
+      <div class="val" title="power today · 3.82 kWh — source metrics/energy-daily.csv:19"><span data-count="3.82" data-dec="2">0</span><small> kWh</small></div>
+      <span class="delta dn"><svg class="icon" viewBox="0 0 20 20" style="width:12px;height:12px"><path d="M10 15V5M5 10l5-5 5 5"/></svg>+0.4 kWh vs avg</span>
+      <svg class="spark" data-seed="13" data-color="var(--s2)" preserveAspectRatio="none" viewBox="0 0 100 36"></svg></section>
+  </div>
+
+  <!-- 24h multi-line -->
+  <section class="card rise">
+    <div class="ctitle"><svg class="icon" viewBox="0 0 20 20"><path d="M3 14l4-6 3 4 3-7 4 9"/></svg>Last 24 hours</div>
+    <div class="csub">Tap a sensor chip to show or hide it. Daily min and max are marked on the chart.</div>
+    <div class="chips" id="chips" role="group" aria-label="Sensor toggles"></div>
+    <div id="bigChart"></div>
+  </section>
+
+  <!-- energy bars -->
+  <section class="card rise">
+    <div class="ctitle"><svg class="icon" viewBox="0 0 20 20"><path d="M4 16V9M9 16V4M14 16v-6"/></svg>Hourly energy</div>
+    <div class="csub">feeder-plug + tower-base, watt-hours per hour</div>
+    <div id="energyChart"></div>
+  </section>
+
+  <!-- devices -->
+  <section class="card rise">
+    <div class="ctitle"><svg class="icon" viewBox="0 0 20 20"><path d="M3 9a10 10 0 0 1 14 0M5.5 12a6.5 6.5 0 0 1 9 0M8 14.8a3 3 0 0 1 4 0"/><circle cx="10" cy="17" r=".8"/></svg>Devices</div>
+    <div id="devList"></div>
+  </section>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+<div class="sr" aria-live="polite" id="live"></div>
+
+</div></div>
+<script>
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const tt=document.getElementById('tooltip'),live=document.getElementById('live');
+function showTT(html,x,y,plain){tt.innerHTML=html;tt.style.display='block';
+  const w=tt.offsetWidth,h=tt.offsetHeight;
+  tt.style.left=(x+16+w>innerWidth?x-16-w:x+16)+'px';
+  tt.style.top=Math.min(Math.max(8,y-h/2),innerHeight-h-8)+'px';
+  if(plain)live.textContent=plain}
+function hideTT(){tt.style.display='none'}
+function niceTicks(min,max,n=4){if(min===max){min-=1;max+=1}
+  const s0=(max-min)/n,mag=10**Math.floor(Math.log10(Math.abs(s0))),norm=s0/mag;
+  const st=(norm<1.5?1:norm<3?2:norm<7?5:10)*mag;
+  const lo=Math.floor(min/st)*st,hi=Math.ceil(max/st)*st,t=[];
+  for(let v=lo;v<=hi+st*1e-6;v+=st)t.push(+v.toFixed(10));return t}
+function rng(seed){let s=seed;return()=>((s=(s*16807)%2147483647)/2147483647)}
+const hh=i=>String(i%24).padStart(2,'0')+':00';
+
+/* ── hero count-up + area ── */
+function countEl(el){
+  const t=parseFloat(el.dataset.count),dec=+(el.dataset.dec??(String(t).includes('.')?1:0));
+  const t0=performance.now(),D=reduced?0:900;
+  (function fr(now){const p=D?Math.min(1,(now-t0)/D):1,e=1-(1-p)**3;
+    el.textContent=(t*e).toFixed(dec);if(p<1)requestAnimationFrame(fr)})(t0);
+}
+(function hero(){
+  const r=rng(2),pts=[...Array(48)].map((_,i)=>22+Math.sin(i/7)*1.8+(r()-.5)*0.8);
+  const lo=Math.min(...pts),hi=Math.max(...pts);
+  const X=i=>i/47*960,Y=v=>10+(1-(v-lo)/(hi-lo))*76;
+  const d='M'+pts.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('L');
+  const svg=document.getElementById('heroChart');
+  svg.innerHTML=`<defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--accent)" stop-opacity=".22"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+    <path id="hfill" d="${d}L960,96L0,96Z" fill="url(#hg)" opacity="0"/>
+    <path id="hline" d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  const ln=svg.querySelector('#hline'),fl=svg.querySelector('#hfill');
+  if(!reduced){const L=ln.getTotalLength();ln.style.strokeDasharray=L;ln.style.strokeDashoffset=L;
+    ln.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:900,delay:200,easing:'ease-out',fill:'forwards'});
+    fl.animate([{opacity:0},{opacity:1}],{duration:300,delay:800,fill:'forwards'});
+  }else{fl.style.opacity=1}
+})();
+
+/* ── sparks ── */
+document.querySelectorAll('svg.spark').forEach(s=>{
+  const r=rng(+s.dataset.seed),pts=[...Array(30)].map(()=>8+r()*22);
+  const d='M'+pts.map((v,i)=>`${(i/29*100).toFixed(1)},${(36-v).toFixed(1)}`).join('L');
+  s.innerHTML=`<path d="${d}L100,36L0,36Z" fill="${s.dataset.color}" opacity=".12"/>
+    <path d="${d}" fill="none" stroke="${s.dataset.color}" stroke-width="2"/>`;
+});
+
+/* ── 24h multi-line with chips, min/max markers ── */
+(function(){
+  const r1=rng(31),r2=rng(7),r3=rng(17);
+  const series=[
+    {name:'living-room-t1',unit:'°C',color:'var(--s1)',hex:'#0072B2',data:[...Array(25)].map((_,i)=>21.5+Math.sin((i-3)/4.5)*2.4+(r1()-.5)*.5),log:'sensors/living-room-t1.log',line0:1208,lineStep:9},
+    {name:'cat-room-h2',unit:'°C',color:'var(--s2)',hex:'#E69F00',data:[...Array(25)].map((_,i)=>23+Math.sin((i-6)/5)*1.6+(r2()-.5)*.5),log:'sensors/cat-room-h2.log',line0:880,lineStep:9},
+    {name:'balcony-t3',unit:'°C',color:'var(--s4)',hex:'#D55E00',data:[...Array(25)].map((_,i)=>17+Math.sin((i-4)/3.8)*5+(r3()-.5)*.8),log:'sensors/balcony-t3.log',line0:341,lineStep:7},
+  ];
+  const srcLine=(s,i)=>`${s.log}:${s.line0+i*s.lineStep}`;
+  const visible=series.map(()=>true);
+  const chips=document.getElementById('chips');
+  series.forEach((s,i)=>{
+    const b=document.createElement('button');b.className='chip';b.style.background=s.hex;b.setAttribute('aria-pressed','true');
+    b.innerHTML=`<span class="dot"></span>${s.name} · <span class="lv">${s.data[24].toFixed(1)}${s.unit}</span>`;
+    b.onclick=()=>{visible[i]=!visible[i];b.setAttribute('aria-pressed',visible[i]);draw(false)};
+    chips.appendChild(b);
+  });
+  const el=document.getElementById('bigChart');
+  const W=900,H=280,m={t:14,r:14,b:30,l:42};
+  let svg;
+  function draw(animate){
+    const vis=series.filter((_,i)=>visible[i]);
+    if(!vis.length){el.innerHTML=`<div style="padding:40px;text-align:center;color:var(--dim)">All sensors hidden — tap a chip to show one.</div>`;return}
+    const all=vis.flatMap(s=>s.data),pad=(Math.max(...all)-Math.min(...all))*.12;
+    const ticks=niceTicks(Math.min(...all)-pad,Math.max(...all)+pad,4);
+    const lo=ticks[0],hi=ticks.at(-1);
+    const X=i=>m.l+i/24*(W-m.l-m.r),Y=v=>m.t+(1-(v-lo)/(hi-lo))*(H-m.t-m.b);
+    let g='';
+    ticks.forEach(t=>g+=`<line class="gline" x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tick" x="${m.l-8}" y="${Y(t)+4}" text-anchor="end">${t}°</text>`);
+    for(let i=0;i<=24;i+=4)g+=`<text class="tick" x="${X(i)}" y="${H-8}" text-anchor="middle">${hh(i)}</text>`;
+    series.forEach((s,si)=>{
+      if(!visible[si])return;
+      const pts=s.data.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`);
+      g+=`<path class="ln" data-i="${si}" d="M${pts.join('L')}" fill="none" stroke="${s.hex}" stroke-width="2.4" stroke-linejoin="round"/>`;
+    });
+    /* min/max markers for first visible series */
+    const p=vis[0];
+    const mi=p.data.indexOf(Math.min(...p.data)),ma=p.data.indexOf(Math.max(...p.data));
+    [[mi,'min'],[ma,'max']].forEach(([idx,lab])=>{
+      g+=`<circle cx="${X(idx)}" cy="${Y(p.data[idx])}" r="4" fill="${p.hex}" stroke="var(--panel)" stroke-width="2"/>
+        <text class="tick" x="${X(idx)}" y="${Y(p.data[idx])+(lab==='min'?16:-9)}" text-anchor="middle" font-weight="600">${lab} ${p.data[idx].toFixed(1)}°</text>`;
+    });
+    g+=`<line id="xh" y1="${m.t}" y2="${H-m.b}" stroke="var(--dim)" stroke-dasharray="3 3" style="display:none"/>`;
+    series.forEach((s,i)=>g+=`<circle data-dot="${i}" r="4" fill="${s.hex}" stroke="var(--panel)" stroke-width="2" style="display:none"/>`);
+    el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="24 hour temperatures">${g}</svg>`;
+    svg=el.querySelector('svg');
+    if(animate&&!reduced)svg.querySelectorAll('.ln').forEach(pth=>{
+      const L=pth.getTotalLength();pth.style.strokeDasharray=L;pth.style.strokeDashoffset=L;
+      pth.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:900,delay:300,easing:'ease-out',fill:'forwards'})});
+    svg.addEventListener('mousemove',ev=>{
+      const r=svg.getBoundingClientRect(),sx=(ev.clientX-r.left)/r.width*W;
+      const i=Math.max(0,Math.min(24,Math.round((sx-m.l)/(W-m.l-m.r)*24)));
+      const xh=svg.querySelector('#xh');xh.style.display='';xh.setAttribute('x1',X(i));xh.setAttribute('x2',X(i));
+      let rows='',srcs='',plain=hh(i);
+      series.forEach((s,k)=>{const dot=svg.querySelector(`[data-dot="${k}"]`);
+        if(!visible[k]){dot.style.display='none';return}
+        dot.style.display='';dot.setAttribute('cx',X(i));dot.setAttribute('cy',Y(s.data[i]));
+        rows+=`<div class="r"><span class="l"><span class="sw" style="background:${s.hex}"></span>${s.name}</span><span class="v">${s.data[i].toFixed(1)}${s.unit}</span></div>`;
+        srcs+=`<div>${srcLine(s,i)}</div>`;
+        plain+=` ${s.name} ${s.data[i].toFixed(1)} degrees from ${srcLine(s,i)}.`});
+      showTT(`<div class="h">${hh(i)}</div>${rows}<div class="src">↗ source log<br>${srcs}</div>`,ev.clientX,ev.clientY,plain);
+    });
+    svg.addEventListener('mouseleave',()=>{hideTT();svg.querySelector('#xh').style.display='none';
+      svg.querySelectorAll('[data-dot]').forEach(d=>d.style.display='none')});
+  }
+  draw(true);
+})();
+
+/* ── energy bars ── */
+(function(){
+  const r=rng(23),data=[...Array(24)].map((_,i)=>60+Math.max(0,Math.sin((i-7)/3))*220+r()*70);
+  const ENERGY_LOG='logs/energy-plug.log',ENERGY_LINE0=512,ENERGY_LINESTEP=6;
+  const energySrc=i=>`${ENERGY_LOG}:${ENERGY_LINE0+i*ENERGY_LINESTEP}`;
+  const W=900,H=220,m={t:10,r:14,b:30,l:46};
+  const ticks=niceTicks(0,Math.max(...data),4),hi=ticks.at(-1);
+  const bw=(W-m.l-m.r)/24,Y=v=>m.t+(1-v/hi)*(H-m.t-m.b);
+  let g='';
+  ticks.forEach(t=>g+=`<line class="gline" x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tick" x="${m.l-8}" y="${Y(t)+4}" text-anchor="end">${t} Wh</text>`);
+  data.forEach((v,i)=>{
+    const x=m.l+i*bw+bw*.2;
+    g+=`<rect data-i="${i}" x="${x}" y="${Y(v)}" width="${bw*.6}" height="${H-m.b-Y(v)}" rx="5" fill="var(--s2)"
+      style="transform-origin:${x+bw*.3}px ${H-m.b}px;cursor:pointer"><title>${hh(i)}–${hh(i+1)} · ${Math.round(v)} Wh — source ${energySrc(i)}</title></rect>`;
+    if(i%4===0)g+=`<text class="tick" x="${m.l+i*bw+bw/2}" y="${H-8}" text-anchor="middle">${hh(i)}</text>`;
+  });
+  const el=document.getElementById('energyChart');
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="hourly energy">${g}</svg>`;
+  el.querySelectorAll('rect').forEach((rc,i)=>{
+    if(!reduced)rc.animate([{transform:'scaleY(0)'},{transform:'scaleY(1.05)',offset:.78},{transform:'scaleY(1)'}],
+      {duration:560,delay:350+i*14,easing:'cubic-bezier(.16,1.3,.3,1)',fill:'backwards'});
+    rc.addEventListener('mousemove',e=>{rc.style.filter='brightness(1.12)';
+      showTT(`<div class="h">${hh(i)}–${hh(i+1)}</div><div class="r"><span class="l"><span class="sw" style="background:#E69F00"></span>energy</span><span class="v">${Math.round(data[i])} Wh</span></div><div class="src">↗ source log<br>${energySrc(i)}</div>`,e.clientX,e.clientY,`${hh(i)} to ${hh(i+1)}, ${Math.round(data[i])} watt-hours from ${energySrc(i)}.`)});
+    rc.addEventListener('mouseleave',()=>{rc.style.filter='';hideTT()});
+  });
+})();
+
+/* ── devices ── */
+const devices=[
+  ['good','Living room sensor','living-room-t1','23.4 °C','just now','logs/devices.log:204'],
+  ['good','Cat room sensor','cat-room-h2','48 %','1 min ago','logs/devices.log:211'],
+  ['good','Tower base CO₂','tower-base-co2','612 ppm','2 min ago','logs/devices.log:217'],
+  ['watch','Feeder smart plug','feeder-plug','41 W','6 min ago','logs/devices.log:233'],
+  ['alert','Balcony sensor','balcony-t3','low battery','38 min ago','logs/devices.log:298'],
+];
+const colors={good:'var(--good)',watch:'var(--watch)',alert:'var(--alert)'};
+document.getElementById('devList').innerHTML=devices.map(d=>`
+  <div class="dev" title="${d[1]} · ${d[3]} — source ${d[5]}"><span class="dot" style="background:${colors[d[0]]}"></span>
+  <div><div class="nm">${d[1]}</div><div class="id">${d[2]}</div></div>
+  <div class="spacer"></div><div class="v">${d[3]}</div><div class="t">${d[4]}</div></div>`).join('');
+
+/* ── entrance orchestration ── */
+document.querySelectorAll('.rise').forEach((c,i)=>setTimeout(()=>c.classList.add('in'),reduced?0:100+i*70));
+setTimeout(()=>{
+  document.querySelectorAll('[data-count]').forEach(countEl);
+  document.getElementById('heroUnit').classList.add('in');
+  setTimeout(()=>document.querySelectorAll('.delta').forEach(d=>d.classList.add('in')),450);
+},reduced?0:250);
+document.querySelectorAll('.dev').forEach((d,i)=>setTimeout(()=>d.classList.add('in'),reduced?0:700+i*30));
+
+/* refresh: spin + recount */
+document.getElementById('refreshBtn').onclick=()=>{
+  const ic=document.getElementById('refIcon');
+  if(!reduced)ic.animate([{transform:'rotate(0)'},{transform:'rotate(360deg)'}],{duration:600,easing:'cubic-bezier(.22,1,.36,1)'});
+  document.querySelectorAll('[data-count]').forEach(countEl);
+};
+/* theme */
+document.getElementById('themeBtn').onclick=()=>{
+  const r=document.documentElement,d=r.dataset.theme==='dark';
+  r.dataset.theme=d?'light':'dark';
+  document.getElementById('iMoon').style.display=d?'':'none';
+  document.getElementById('iSun').style.display=d?'none':'';
+};
+/* greeting by hour */
+const h=new Date().getHours();
+document.getElementById('greet').textContent=
+  h<12?'Good morning, Calico':h<18?'Good afternoon, Calico':'Good evening, Calico';
+
+/* ── collapsible sidebar ── */
+const sbT=document.getElementById('sbToggle');
+if(sbT){
+  sbT.onclick=()=>{const c=document.body.classList.toggle('sbc');sbT.setAttribute('aria-expanded',String(!c))};
+  if(matchMedia('(max-width:920px)').matches){document.body.classList.add('sbc');sbT.setAttribute('aria-expanded','false');}
+}
+</script>
+<footer style="position:fixed;left:0;right:0;bottom:0;z-index:99;padding:6px 12px;font:400 10px/1.5 system-ui,-apple-system,sans-serif;color:#9A9AA2;text-align:center;background:rgba(127,127,127,.08);backdrop-filter:blur(4px);pointer-events:none">Demo page generated from themes/pulse.md (research-designer). Hover any value, chart point, bar, or device to see the source log line (file:line) it came from. All people, companies, products, and figures are fictional. No affiliation with any real entity.</footer>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURORA — CatTower Experiment Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--sans:'SF Pro Text',-apple-system,BlinkMacSystemFont,'Google Sans',Figtree,Inter,system-ui,sans-serif;--disp:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Google Sans',Figtree,Inter,system-ui,sans-serif;--r:14px;
+  --s1:#6929C4;--s2:#1192E8;--s3:#005D5D;--s4:#9F1853;--s5:#FA4D56;--s6:#570408;--s7:#198038;--s8:#B28600;
+  --ok:#198038;--bad:#FA4D56;--neutral:#878D96;}
+[data-theme="light"]{
+  --bg:#F7F8FC;--panel:#FFFFFF;--side:#191B2B;--line:#E4E7F2;--text:#1C2033;--dim:#6B7290;
+  --accent:#6929C4;--accent-soft:#F1EBFB;
+  --shadow:0 1px 2px rgba(28,32,51,.06),0 8px 24px rgba(28,32,51,.06);}
+[data-theme="dark"]{
+  --bg:#13141F;--panel:#1C1E2E;--side:#101120;--line:#2C2F45;--text:#EDEEF7;--dim:#9AA0BF;
+  --accent:#BE95FF;--accent-soft:#2A2342;--shadow:none;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:400 13px/1.5 var(--sans);
+  transition:background .2s,color .2s;display:flex;min-height:100vh}
+h1,h2,.metric{font-family:var(--disp)}
+svg.icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ── sidebar ── */
+.side{width:232px;background:var(--side);color:#C9CCE3;padding:20px 14px;flex:none;display:flex;flex-direction:column;gap:4px;
+  transform:translateX(-100%);animation:slideIn .24s ease-out .05s forwards}
+@keyframes slideIn{to{transform:none}}
+.logo{display:flex;align-items:center;gap:10px;color:#fff;font:700 15px var(--disp);padding:4px 8px;margin-bottom:18px}
+.logo .mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6929C4,#1192E8);display:grid;place-items:center;color:#fff}
+.nav-group{font:600 10px var(--sans);letter-spacing:.08em;color:#7B7FA3;text-transform:uppercase;margin:14px 8px 4px}
+.nav{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:#C9CCE3;text-decoration:none;font-weight:500;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-size:13px}
+.nav:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav.active{background:var(--accent);color:#fff}
+.nav:focus-visible{outline:2px solid #BE95FF;outline-offset:2px}
+
+/* ── main ── */
+.main{flex:1;min-width:0;padding:20px 26px 40px;max-width:1180px}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.proj{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;height:38px;padding:0 14px;font-weight:600;box-shadow:var(--shadow)}
+.topbar .spacer{flex:1}
+.btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel);color:var(--text);font:500 13px var(--sans);cursor:pointer;box-shadow:var(--shadow)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#FA4D56,#B28600);color:#fff;display:grid;place-items:center;font:600 12px var(--sans)}
+
+h1{font-size:22px;margin-bottom:4px}
+.sub{color:var(--dim);margin-bottom:20px}
+
+.grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;min-width:0;grid-column:span 12}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c7{grid-column:span 7}
+@media(max-width:1000px){.c3{grid-column:span 6}.c4{grid-column:span 12}.c5,.c7{grid-column:span 12}}
+@media(max-width:560px){.c3{grid-column:span 12}.side{display:none}}
+.card h2{font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2 .q{color:var(--dim);font:600 10px var(--sans);border:1px solid var(--line);border-radius:50%;width:15px;height:15px;display:grid;place-items:center;cursor:help}
+
+/* KPI */
+.klabel{color:var(--dim);font-weight:500;font-size:12px;margin-bottom:6px}
+.metric{font-size:30px;font-weight:700}
+.delta{display:inline-flex;align-items:center;gap:4px;font:600 11px var(--sans);border-radius:999px;padding:3px 9px;margin-top:8px;
+  opacity:0;transform:scale(.8)}
+.delta.up{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.delta.down{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.delta.pop{opacity:1;transform:scale(1);transition:.25s cubic-bezier(.34,1.56,.64,1)}
+
+/* charts */
+.tick{font:500 11px var(--sans);fill:var(--dim)}
+.gline{stroke:var(--line)}
+.tooltip{position:fixed;z-index:50;pointer-events:none;display:none;background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;padding:9px 12px;font-size:12px;box-shadow:0 10px 30px rgba(28,32,51,.18);min-width:150px}
+.tooltip .h{color:var(--dim);margin-bottom:5px;font-weight:600}
+.tooltip .row{display:flex;justify-content:space-between;gap:14px;padding:1px 0}
+.tooltip .row .l{display:flex;gap:7px;align-items:center;color:var(--dim)}
+.tooltip .sw{width:9px;height:9px;border-radius:3px}
+.tooltip .v{font-weight:600;font-variant-numeric:tabular-nums}
+.tooltip .src{margin-top:6px;padding-top:5px;border-top:1px solid var(--line);
+  font:400 10.5px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--dim);
+  display:flex;gap:5px;align-items:center}
+.tooltip .src svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:.8}
+
+/* donut legend */
+.donut-wrap{display:flex;gap:14px;align-items:center}
+.dleg{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+.dleg button{display:flex;align-items:center;gap:8px;border:none;background:none;color:var(--text);font:400 12px var(--sans);
+  cursor:pointer;padding:3px 4px;border-radius:6px;text-align:left;width:100%}
+.dleg button:hover{background:var(--accent-soft)}
+.dleg button:focus-visible{outline:2px solid var(--accent)}
+.dleg .sw{width:10px;height:10px;border-radius:3px;flex:none}
+.dleg .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dleg .pc{color:var(--dim);font-variant-numeric:tabular-nums}
+.dleg button.off{opacity:.35}
+
+/* entrance */
+.rise{opacity:0;transform:translateY(18px)}
+.rise.in{opacity:1;transform:none;transition:opacity .5s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1)}
+@media(prefers-reduced-motion:reduce){.rise{opacity:1;transform:none}.rise.in{transition:none}.side{animation:none;transform:none}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ── collapsible sidebar ── */
+.side{transition:width .25s cubic-bezier(.22,1,.36,1),padding .25s}
+body.sbc .side{width:64px;padding:20px 10px}
+.sb-label{white-space:nowrap;opacity:1;transition:opacity .15s}
+body.sbc .sb-label{opacity:0;pointer-events:none}
+body.sbc .nav{justify-content:center;padding:8px 0}
+body.sbc .logo{justify-content:center;padding:4px 0}
+.sb-toggle{border:none;background:none;color:#C9CCE3;width:28px;height:28px;display:grid;place-items:center;
+  cursor:pointer;flex:none;border-radius:7px;margin-left:auto}
+.sb-toggle:hover{background:rgba(255,255,255,.08);color:#fff}
+.sb-toggle:focus-visible{outline:2px solid #BE95FF;outline-offset:2px}
+body.sbc .sb-toggle{margin:0 auto}
+.sb-foot{margin-top:auto;padding-top:12px;border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px;color:#C9CCE3}
+.sb-ava{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6929C4,#1192E8);
+  display:grid;place-items:center;color:#fff;font:700 11px var(--disp);flex:none}
+.sb-foot .nm{display:flex;flex-direction:column;line-height:1.15;font:600 12px var(--sans)}
+.sb-foot .nm small{font:400 10.5px var(--sans);color:#7B7FA3}
+@media(prefers-reduced-motion:reduce){.side{transition:none}}
+</style>
+</head>
+<body>
+<aside class="side">
+  <div class="logo"><span class="mark"><svg class="icon" viewBox="0 0 20 20"><path d="M4 13c0-4 2.5-7 6-7s6 3 6 7M7 6l-1.5-3M13 6l1.5-3"/></svg></span><span class="sb-label">experiment studio</span><button class="sb-toggle" id="sbToggle" aria-label="Toggle sidebar" aria-expanded="true"><svg class="icon" viewBox="0 0 20 20"><rect x="3" y="3.5" width="14" height="13" rx="1.5"/><path d="M8 3.5v13"/></svg></button></div>
+  <button class="nav active"><svg class="icon" viewBox="0 0 20 20"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg><span class="sb-label">Dashboard</span></button>
+  <button class="nav"><svg class="icon" viewBox="0 0 20 20"><path d="M4 16l4-8 3 5 2-3 3 6z"/><path d="M3 16h14"/></svg><span class="sb-label">Project stats</span></button>
+  <div class="nav-group sb-label">Workflow</div>
+  <button class="nav"><svg class="icon" viewBox="0 0 20 20"><path d="M8 3h4v4l3 7a2 2 0 0 1-2 3H7a2 2 0 0 1-2-3l3-7z"/></svg><span class="sb-label">Research</span></button>
+  <button class="nav"><svg class="icon" viewBox="0 0 20 20"><path d="M10 3a5 5 0 0 1 3 9v2H7v-2a5 5 0 0 1 3-9zM8 17h4"/></svg><span class="sb-label">Ideas &amp; hypotheses</span></button>
+  <button class="nav"><svg class="icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6"/><circle cx="10" cy="10" r="2"/></svg><span class="sb-label">Experiments</span></button>
+  <button class="nav"><svg class="icon" viewBox="0 0 20 20"><path d="M6 3h8l3 3v11H6z"/><path d="M9 10h5M9 13h5"/></svg><span class="sb-label">Reports</span></button>
+  <div class="nav-group sb-label">Collaboration</div>
+  <button class="nav"><svg class="icon" viewBox="0 0 20 20"><path d="M4 5h12v8H9l-3 3v-3H4z"/></svg><span class="sb-label">Discussion</span></button>
+  <button class="nav"><svg class="icon" viewBox="0 0 20 20"><path d="M5 6h10M5 10h10M5 14h6"/></svg><span class="sb-label">To-do lists</span></button>
+  <div class="nav-group sb-label">Insights</div>
+  <button class="nav"><svg class="icon" viewBox="0 0 20 20"><path d="M3 14l4-5 3 3 4-6 3 4"/></svg><span class="sb-label">Roadmap</span></button>
+  <button class="nav"><svg class="icon" viewBox="0 0 20 20"><circle cx="9" cy="9" r="5"/><path d="M13 13l4 4"/></svg><span class="sb-label">Query engine</span></button>
+  <div class="sb-foot"><span class="sb-ava">YK</span><span class="nm sb-label">Ya-ong Kim<small>growth team · v4.1</small></span></div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="proj">whisker-onboarding-v2 <svg class="icon" viewBox="0 0 20 20" style="width:14px;height:14px"><path d="M6 8l4 4 4-4"/></svg></div>
+    <button class="btn primary"><svg class="icon" viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg>New experiment</button>
+    <div class="spacer"></div>
+    <button class="btn" id="themeBtn" aria-label="Toggle theme">
+      <svg class="icon" id="iMoon" viewBox="0 0 20 20"><path d="M16 11.5A6.5 6.5 0 0 1 8.5 4 6.5 6.5 0 1 0 16 11.5z"/></svg>
+      <svg class="icon" id="iSun" viewBox="0 0 20 20" style="display:none"><circle cx="10" cy="10" r="3.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.4 1.4M14.3 14.3l1.4 1.4M15.7 4.3l-1.4 1.4M5.7 14.3l-1.4 1.4"/></svg>
+    </button>
+    <button class="btn" aria-label="Notifications"><svg class="icon" viewBox="0 0 20 20"><path d="M6 13V9a4 4 0 0 1 8 0v4l1.5 2h-11zM8.5 15a1.5 1.5 0 0 0 3 0"/></svg></button>
+    <div class="avatar" title="Ya-ong Kim">YK</div>
+  </div>
+
+  <h1>Good morning, Ya-ong</h1>
+  <p class="sub">CatTower LTD · 12 experiments running · reviewers Kitty Park and Calico Lee</p>
+
+  <div class="grid" style="margin-bottom:16px">
+    <div class="card c3 rise" data-kpi="68 experiments" data-src="reports/q2_summary.csv:12"><div class="klabel">Experiments launched</div><div class="metric" data-count="68">0</div><span class="delta up"><svg class="icon" viewBox="0 0 20 20" style="width:12px;height:12px"><path d="M10 15V5M5 10l5-5 5 5"/></svg>+12% vs last quarter</span></div>
+    <div class="card c3 rise" data-kpi="34% win rate" data-src="eval/outcomes.csv:57"><div class="klabel">Win rate</div><div class="metric" data-count="34" data-suffix="%">0</div><span class="delta up"><svg class="icon" viewBox="0 0 20 20" style="width:12px;height:12px"><path d="M10 15V5M5 10l5-5 5 5"/></svg>+4 pts</span></div>
+    <div class="card c3 rise" data-kpi="9.4 days" data-src="logs/decisions.log:884"><div class="klabel">Avg. days to decision</div><div class="metric" data-count="9.4" data-dec="1">0</div><span class="delta down"><svg class="icon" viewBox="0 0 20 20" style="width:12px;height:12px"><path d="M10 5v10M5 10l5 5 5-5"/></svg>+1.2 days slower</span></div>
+    <div class="card c3 rise" data-kpi="127 ideas" data-src="reports/backlog.csv:3"><div class="klabel">Ideas in backlog</div><div class="metric" data-count="127">0</div><span class="delta up"><svg class="icon" viewBox="0 0 20 20" style="width:12px;height:12px"><path d="M10 15V5M5 10l5-5 5 5"/></svg>+23 new</span></div>
+  </div>
+
+  <div class="grid" style="margin-bottom:16px">
+    <div class="card c7 rise"><h2>Experiments per month <span class="q" title="Launched experiments, trailing 12 months">?</span></h2><div id="chBars"></div></div>
+    <div class="card c5 rise"><h2>Decision velocity <span class="q" title="Median days from launch to decision">?</span></h2><div id="chLine"></div></div>
+  </div>
+
+  <div class="grid">
+    <div class="card c4 rise"><h2>Experiment outcomes</h2><div id="d1"></div></div>
+    <div class="card c4 rise"><h2>Pages tested on</h2><div id="d2"></div></div>
+    <div class="card c4 rise"><h2>Variables tested</h2><div id="d3"></div></div>
+  </div>
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const tt=document.getElementById('tooltip'),live=document.getElementById('live');
+function showTT(html,x,y,plain){tt.innerHTML=html;tt.style.display='block';
+  const w=tt.offsetWidth,h=tt.offsetHeight;
+  tt.style.left=(x+14+w>innerWidth?x-14-w:x+14)+'px';
+  tt.style.top=Math.min(Math.max(8,y-h/2),innerHeight-h-8)+'px';
+  if(plain)live.textContent=plain}
+function hideTT(){tt.style.display='none'}
+/* source-provenance readout: every datum traces to file:line of the record that produced it */
+function srcLine(src){return src?`<div class="src"><svg viewBox="0 0 20 20"><path d="M7 3h6l3 3v11H4V3z"/><path d="M8 11h5M8 14h3"/></svg>${src}</div>`:''}
+function niceTicks(min,max,n=4){if(min===max){min-=1;max+=1}
+  const s0=(max-min)/n,mag=10**Math.floor(Math.log10(s0)),norm=s0/mag;
+  const st=(norm<1.5?1:norm<3?2:norm<7?5:10)*mag;
+  const lo=Math.floor(min/st)*st,hi=Math.ceil(max/st)*st,t=[];
+  for(let v=lo;v<=hi+st*1e-6;v+=st)t.push(+v.toFixed(10));return t}
+const MONTHS=['Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan'];
+
+/* ── monthly bars ── */
+(function(){
+  const data=[5,7,6,8,9,4,5,6,3,7,8,9];
+  const LOG='logs/launches.log',line0=128,lineStep=24;       // bar i → LOG:line0+i*lineStep
+  const W=620,H=240,m={t:10,r:8,b:30,l:34};
+  const ticks=niceTicks(0,Math.max(...data),4),hi=ticks.at(-1);
+  const bw=(W-m.l-m.r)/12;
+  const Y=v=>m.t+(1-v/hi)*(H-m.t-m.b);
+  let g='';
+  ticks.forEach(t=>g+=`<line class="gline" x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tick" x="${m.l-8}" y="${Y(t)+4}" text-anchor="end">${t}</text>`);
+  data.forEach((v,i)=>{
+    const x=m.l+i*bw+bw*0.22;
+    g+=`<rect data-i="${i}" x="${x}" y="${Y(v)}" width="${bw*0.56}" height="${H-m.b-Y(v)}" rx="6"
+      fill="var(--s1)" style="transform-origin:${x+bw*0.28}px ${H-m.b}px;cursor:pointer"/>`;
+    g+=`<text class="tick" x="${m.l+i*bw+bw/2}" y="${H-14}" text-anchor="middle">${MONTHS[i]}</text>`;
+    g+=`<text class="tick" x="${m.l+i*bw+bw/2}" y="${H-3}" text-anchor="middle" opacity=".7">${i<11?'’25':'’26'}</text>`;
+  });
+  const el=document.getElementById('chBars');
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="experiments per month">${g}</svg>`;
+  el.querySelectorAll('rect').forEach((r,i)=>{
+    if(!reduced)r.animate([{transform:'scaleY(0)'},{transform:'scaleY(1.04)',offset:.8},{transform:'scaleY(1)'}],
+      {duration:600,delay:300+i*18,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'});
+    r.addEventListener('mousemove',e=>{r.style.filter='brightness(1.12)';
+      const d=i?data[i]-data[i-1]:0,sign=d>0?'+':'';
+      const src=`${LOG}:${line0+i*lineStep}`;
+      showTT(`<div class="h">${MONTHS[i]} ${i<11?2025:2026}</div>
+        <div class="row"><span class="l"><span class="sw" style="background:var(--s1)"></span>launched</span><span class="v">${data[i]}</span></div>
+        <div class="row"><span class="l">vs prev</span><span class="v">${i?sign+d:'—'}</span></div>${srcLine(src)}`,e.clientX,e.clientY,
+        `${MONTHS[i]}: ${data[i]} experiments — ${src}`)});
+    r.addEventListener('mouseleave',()=>{r.style.filter='';hideTT()});
+  });
+})();
+
+/* ── velocity line ── */
+(function(){
+  const data=[14,13.2,12.1,12.8,11.4,10.9,11.6,10.2,9.8,10.4,9.9,9.4];
+  const LOG='eval/metrics.csv',line0=44,lineStep=18;          // point i → LOG:line0+i*lineStep
+  const W=460,H=240,m={t:10,r:10,b:30,l:36};
+  const lo0=Math.min(...data),hi0=Math.max(...data),pad=(hi0-lo0)*.15;
+  const ticks=niceTicks(lo0-pad,hi0+pad,4),lo=ticks[0],hi=ticks.at(-1);
+  const X=i=>m.l+i/11*(W-m.l-m.r),Y=v=>m.t+(1-(v-lo)/(hi-lo))*(H-m.t-m.b);
+  let g='';
+  ticks.forEach(t=>g+=`<line class="gline" x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tick" x="${m.l-8}" y="${Y(t)+4}" text-anchor="end">${t}d</text>`);
+  data.forEach((_,i)=>{if(i%2===0)g+=`<text class="tick" x="${X(i)}" y="${H-10}" text-anchor="middle">${MONTHS[i]}</text>`});
+  const pts=data.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`);
+  g+=`<path d="M${pts.join('L')}L${X(11)},${Y(lo)}L${X(0)},${Y(lo)}Z" fill="var(--s2)" opacity=".10"/>`;
+  g+=`<path class="ln" d="M${pts.join('L')}" fill="none" stroke="var(--s2)" stroke-width="2.4" stroke-linejoin="round"/>`;
+  g+=`<line id="xh2" y1="${m.t}" y2="${H-m.b}" stroke="var(--dim)" stroke-dasharray="3 3" style="display:none"/>`;
+  g+=`<circle id="dot2" r="4" fill="var(--s2)" stroke="var(--panel)" stroke-width="2" style="display:none"/>`;
+  const el=document.getElementById('chLine');
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="decision velocity">${g}</svg>`;
+  const svg=el.querySelector('svg'),ln=svg.querySelector('.ln');
+  if(!reduced){const L=ln.getTotalLength();ln.style.strokeDasharray=L;ln.style.strokeDashoffset=L;
+    ln.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:800,delay:350,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'})}
+  svg.addEventListener('mousemove',e=>{
+    const r=svg.getBoundingClientRect(),sx=(e.clientX-r.left)/r.width*W;
+    const i=Math.max(0,Math.min(11,Math.round((sx-m.l)/(W-m.l-m.r)*11)));
+    const xh=svg.querySelector('#xh2'),dot=svg.querySelector('#dot2');
+    xh.style.display='';dot.style.display='';
+    xh.setAttribute('x1',X(i));xh.setAttribute('x2',X(i));
+    dot.setAttribute('cx',X(i));dot.setAttribute('cy',Y(data[i]));
+    const src=`${LOG}:${line0+i*lineStep}`;
+    showTT(`<div class="h">${MONTHS[i]} ${i<11?2025:2026}</div><div class="row"><span class="l"><span class="sw" style="background:var(--s2)"></span>median</span><span class="v">${data[i]} days</span></div>${srcLine(src)}`,e.clientX,e.clientY,`${MONTHS[i]}: ${data[i]} days — ${src}`);
+  });
+  svg.addEventListener('mouseleave',()=>{hideTT();svg.querySelector('#xh2').style.display='none';svg.querySelector('#dot2').style.display='none'});
+})();
+
+/* ── donuts ── */
+function donut(elId,segs,delay){
+  const el=document.getElementById(elId);
+  const visible=segs.map(()=>true);
+  el.innerHTML=`<div class="donut-wrap"><div class="dchart" style="position:relative;width:150px;flex:none"></div><div class="dleg"></div></div>`;
+  const chart=el.querySelector('.dchart'),leg=el.querySelector('.dleg');
+
+  segs.forEach((s,i)=>{
+    const b=document.createElement('button');b.setAttribute('aria-pressed','true');
+    b.innerHTML=`<span class="sw" style="background:${s.color}"></span><span class="nm">${s.name}</span><span class="pc"></span>`;
+    b.onclick=()=>{visible[i]=!visible[i];b.classList.toggle('off',!visible[i]);b.setAttribute('aria-pressed',visible[i]);draw(false)};
+    b.onmouseenter=()=>hover(i);b.onmouseleave=()=>hover(-1);
+    leg.appendChild(b);
+  });
+
+  let paths=[];
+  function hover(idx){
+    paths.forEach((p,i)=>{if(!p)return;
+      p.style.transform=i===idx?'scale(1.05)':'';
+      p.style.opacity=idx<0||i===idx?1:.3});
+    const c=chart.querySelector('.center');
+    if(c){const tot=segs.reduce((a,s,i)=>a+(visible[i]?s.value:0),0);
+      if(idx>=0&&visible[idx]){c.querySelector('.cv').textContent=Math.round(segs[idx].value/tot*100)+'%';c.querySelector('.cl').textContent=segs[idx].name}
+      else{c.querySelector('.cv').textContent=tot;c.querySelector('.cl').textContent='total'}}
+  }
+  function draw(animate){
+    const R=60,r0=38,C=75;
+    const tot=segs.reduce((a,s,i)=>a+(visible[i]?s.value:0),0)||1;
+    let a0=-90,g='';paths=[];
+    segs.forEach((s,i)=>{
+      leg.children[i].querySelector('.pc').textContent=visible[i]?Math.round(s.value/tot*100)+'%':'—';
+      if(!visible[i]){paths.push(null);return}
+      const ang=s.value/tot*360,a1=a0+ang;
+      const p0=[C+R*Math.cos(a0*Math.PI/180),C+R*Math.sin(a0*Math.PI/180)];
+      const p1=[C+R*Math.cos(a1*Math.PI/180),C+R*Math.sin(a1*Math.PI/180)];
+      const q0=[C+r0*Math.cos(a1*Math.PI/180),C+r0*Math.sin(a1*Math.PI/180)];
+      const q1=[C+r0*Math.cos(a0*Math.PI/180),C+r0*Math.sin(a0*Math.PI/180)];
+      const big=ang>180?1:0;
+      g+=`<path data-i="${i}" d="M${p0}A${R} ${R} 0 ${big} 1 ${p1}L${q0}A${r0} ${r0} 0 ${big} 0 ${q1}Z" fill="${s.color}"
+        style="transform-origin:${C}px ${C}px;transition:transform .14s ease-out,opacity .14s ease-out;cursor:pointer"
+        tabindex="0" role="img" aria-label="${s.name}: ${s.value} (${Math.round(s.value/tot*100)}%)${s.src?' — source '+s.src:''}"><title>${s.name}: ${s.value} — source ${s.src||'n/a'}</title></path>`;
+      a0=a1;
+    });
+    chart.innerHTML=`<svg viewBox="0 0 150 150">${g}</svg>
+      <div class="center" style="position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none">
+        <div class="cv" style="font:700 20px var(--disp)">${segs.reduce((a,s,i)=>a+(visible[i]?s.value:0),0)}</div>
+        <div class="cl" style="font:500 10px var(--sans);color:var(--dim)">total</div></div>`;
+    const svg=chart.querySelector('svg');
+    let pi=0;
+    segs.forEach((s,i)=>{
+      if(!visible[i]){return}
+      const p=svg.querySelector(`[data-i="${i}"]`);paths[i]=p;
+      p.addEventListener('mousemove',e=>{hover(i);
+        const totN=segs.reduce((a,x,k)=>a+(visible[k]?x.value:0),0);
+        showTT(`<div class="h">${s.name}</div><div class="row"><span class="l"><span class="sw" style="background:${s.color}"></span>count</span><span class="v">${s.value}</span></div><div class="row"><span class="l">share</span><span class="v">${Math.round(s.value/totN*100)}%</span></div>${srcLine(s.src)}`,e.clientX,e.clientY,`${s.name} ${s.value}${s.src?' — '+s.src:''}`)});
+      p.addEventListener('mouseleave',()=>{hover(-1);hideTT()});
+      p.addEventListener('focus',()=>hover(i));p.addEventListener('blur',()=>hover(-1));
+    });
+    if(animate&&!reduced){
+      svg.style.clipPath='circle(0% at 50% 0%)';
+      svg.animate([{clipPath:'circle(0% at 50% 50%)',transform:'rotate(-40deg)'},{clipPath:'circle(75% at 50% 50%)',transform:'rotate(0deg)'}],
+        {duration:700,delay,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'});
+      svg.style.clipPath='';
+    }
+  }
+  draw(true);
+}
+donut('d1',[
+  {name:'Successful',value:21,color:'var(--ok)',src:'eval/outcomes.csv:8'},
+  {name:'Unsuccessful',value:33,color:'var(--bad)',src:'eval/outcomes.csv:9'},
+  {name:'Inconclusive',value:14,color:'var(--neutral)',src:'eval/outcomes.csv:10'}],450);
+donut('d2',[
+  {name:'paw-checkout',value:18,color:'var(--s1)',src:'reports/pages.csv:21'},
+  {name:'whisker-onboarding',value:14,color:'var(--s2)',src:'reports/pages.csv:22'},
+  {name:'nyang-pricing',value:11,color:'var(--s3)',src:'reports/pages.csv:23'},
+  {name:'tower-landing',value:9,color:'var(--s8)',src:'reports/pages.csv:24'},
+  {name:'other pages',value:6,color:'var(--neutral)',src:'reports/pages.csv:25'}],570);
+donut('d3',[
+  {name:'headline copy',value:16,color:'var(--s4)',src:'reports/variables.csv:4'},
+  {name:'CTA placement',value:13,color:'var(--s2)',src:'reports/variables.csv:5'},
+  {name:'pricing layout',value:10,color:'var(--s7)',src:'reports/variables.csv:6'},
+  {name:'imagery',value:8,color:'var(--s8)',src:'reports/variables.csv:7'},
+  {name:'form length',value:5,color:'var(--s1)',src:'reports/variables.csv:8'}],690);
+
+/* ── KPI count-up & entrance ── */
+function countUp(elm){
+  const t=parseFloat(elm.dataset.count),dec=+(elm.dataset.dec||0),suf=elm.dataset.suffix||'';
+  const t0=performance.now(),D=reduced?0:650;
+  (function fr(now){const p=D?Math.min(1,(now-t0)/D):1,e=1-(1-p)**3;
+    elm.textContent=(t*e).toFixed(dec)+suf;
+    if(p<1)requestAnimationFrame(fr)})(t0);
+}
+document.querySelectorAll('.rise').forEach((c,i)=>setTimeout(()=>c.classList.add('in'),reduced?0:150+i*60));
+/* KPI tiles: hover any metric to trace its value to the record line that produced it */
+document.querySelectorAll('.card[data-src]').forEach(card=>{
+  const src=card.dataset.src,lab=card.querySelector('.klabel').textContent,kpi=card.dataset.kpi||'';
+  const m=card.querySelector('.metric');
+  m.style.cursor='help';
+  m.addEventListener('mousemove',e=>showTT(`<div class="h">${lab}</div><div class="row"><span class="l">value</span><span class="v">${m.textContent}</span></div>${srcLine(src)}`,e.clientX,e.clientY,`${lab}: ${kpi} — ${src}`));
+  m.addEventListener('mouseleave',hideTT);
+});
+setTimeout(()=>{document.querySelectorAll('.metric').forEach(countUp);
+  setTimeout(()=>document.querySelectorAll('.delta').forEach(d=>d.classList.add('pop')),400)},reduced?0:280);
+
+/* theme */
+document.getElementById('themeBtn').onclick=()=>{
+  const r=document.documentElement,d=r.dataset.theme==='dark';
+  r.dataset.theme=d?'light':'dark';
+  document.getElementById('iMoon').style.display=d?'':'none';
+  document.getElementById('iSun').style.display=d?'none':'';
+};
+
+/* ── collapsible sidebar ── */
+const sbT=document.getElementById('sbToggle');
+if(sbT){
+  sbT.onclick=()=>{const c=document.body.classList.toggle('sbc');sbT.setAttribute('aria-expanded',String(!c))};
+  if(matchMedia('(max-width:920px)').matches){document.body.classList.add('sbc');sbT.setAttribute('aria-expanded','false');}
+}
+</script>
+<footer style="position:fixed;left:0;right:0;bottom:0;z-index:99;padding:6px 12px;font:400 10px/1.5 system-ui,-apple-system,sans-serif;color:#9A9AA2;text-align:center;background:rgba(127,127,127,.08);backdrop-filter:blur(4px);pointer-events:none">Demo page generated from themes/aurora.md (research-designer). Hover any KPI, bar, line point, or donut segment to see the source log line (file:line) it came from. All people, companies, products, and figures are fictional. No affiliation with any real entity.</footer>
+</body>
+</html>

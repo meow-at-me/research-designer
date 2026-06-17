@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRAPHITE — CatTower Plant Fleet Console</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--sans:'SF Pro Text',-apple-system,BlinkMacSystemFont,'Google Sans',Figtree,Inter,system-ui,sans-serif;--disp:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Google Sans',Figtree,Inter,system-ui,sans-serif;--r:8px;--gut:10px}
+[data-theme="dark"]{
+  --bg:#161618;--panel:#1D1D20;--raised:#26262A;--line:#313136;
+  --text:#E8E8EA;--dim:#9A9AA2;--accent:#58A6FF;--shadow:none;
+  --s1:#58A6FF;--s2:#3FB950;--s3:#D29922;--s4:#F85149;--s5:#BC8CFF;--s6:#39C5CF;
+  --ok:#3FB950;--warn:#D29922;--crit:#F85149;
+}
+[data-theme="light"]{
+  --bg:#F6F6F7;--panel:#FFFFFF;--raised:#EFEFF1;--line:#E0E0E3;
+  --text:#1B1B1E;--dim:#5C5C66;--accent:#0969DA;--shadow:0 1px 2px rgba(27,27,30,.08);
+  --s1:#0969DA;--s2:#1A7F37;--s3:#9A6700;--s4:#CF222E;--s5:#8250C8;--s6:#1B7C83;
+  --ok:#1A7F37;--warn:#9A6700;--crit:#CF222E;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font:400 12px/1.5 var(--sans);transition:background .2s,color .2s}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+svg.icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ── shell: rail + main ── */
+.shell{display:flex;min-height:100vh}
+.rail{width:232px;flex:none;background:var(--raised);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;gap:4px;padding:12px 10px;position:sticky;top:0;height:100vh;overflow:hidden;
+  transform:translateX(-232px);animation:railIn .2s ease-out forwards;
+  transition:width .25s cubic-bezier(.22,1,.36,1),padding .25s}
+body.sbc .rail{width:56px;padding:12px 8px}
+.sb-label{white-space:nowrap;opacity:1;transition:opacity .15s}
+body.sbc .sb-label{opacity:0;pointer-events:none}
+.lg{display:flex;align-items:center;gap:10px;padding:0 4px;margin-bottom:10px;min-height:34px}
+body.sbc .lg{justify-content:center;padding:0}
+.lgt{display:flex;flex-direction:column;line-height:1.15;font:700 13px var(--disp);color:var(--text)}
+.lgt small{font:400 10.5px var(--sans);color:var(--dim)}
+.sb-foot{margin-top:8px;padding:10px 4px 0;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+body.sbc .sb-foot{justify-content:center;padding:10px 0 0}
+.sb-ava{width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--panel);
+  display:grid;place-items:center;font:700 11px var(--disp);flex:none}
+.sb-foot .nm{display:flex;flex-direction:column;line-height:1.15;font:600 12px var(--sans);color:var(--text)}
+.sb-foot .nm small{font:400 10.5px var(--sans);color:var(--dim)}
+@keyframes railIn{to{transform:none}}
+.rail .logo{width:32px;height:32px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;
+  font:700 14px var(--disp);flex:none}
+.navbtn{width:100%;height:38px;border:none;background:none;color:var(--dim);border-radius:8px;
+  display:flex;align-items:center;gap:10px;padding:0 10px;cursor:pointer;position:relative;
+  font:500 12.5px var(--sans);text-align:left}
+body.sbc .navbtn{justify-content:center;padding:0}
+.navbtn:hover{background:var(--panel);color:var(--text)}
+.navbtn.active{color:var(--accent)}
+.navbtn.active::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--accent)}
+.navbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.main{flex:1;min-width:0}
+
+/* ── topbar ── */
+.topbar{height:48px;display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.crumb{display:flex;align-items:center;gap:8px;font:700 14px var(--disp)}
+.crumb .dim{color:var(--dim);font:400 12px var(--sans)}
+.spacer{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--panel);color:var(--text);cursor:pointer;font:500 12px var(--sans);transition:background .15s}
+.btn:hover{background:var(--raised)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ── grid / panels ── */
+.wrap{padding:var(--gut) 16px 28px;max-width:1240px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gut);margin-top:var(--gut)}
+.panel{grid-column:span 12;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:14px;min-width:0;opacity:0;transform:translateY(14px)}
+.panel.in{animation:rise .46s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.p8{grid-column:span 8}.p6{grid-column:span 6}.p4{grid-column:span 4}
+@media(max-width:920px){.p8,.p6,.p4{grid-column:span 12}}
+.ptitle{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);
+  margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ink{filter:grayscale(1) opacity(.7)}
+.ink.on{transition:filter .35s ease;filter:grayscale(0) opacity(1)}
+
+/* ── KPI ── */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gut);margin-top:var(--gut)}
+@media(max-width:920px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);
+  padding:12px 14px;opacity:0;transform:translateY(14px)}
+.kpi.in{animation:rise .46s cubic-bezier(.22,1,.36,1) forwards}
+.kpi .lab{font-size:11px;color:var(--dim);letter-spacing:.04em;text-transform:uppercase}
+.kpi .val{font:700 27px var(--disp);font-variant-numeric:tabular-nums;margin:2px 0 4px}
+.kpi .val small{font:500 13px var(--disp);color:var(--dim)}
+.badge{display:inline-flex;align-items:center;gap:3px;font:500 10px 'IBM Plex Mono';padding:1px 6px;border-radius:99px;
+  opacity:0;transform:scale(.7)}
+.badge.pop{animation:pop .18s ease-out forwards}
+@keyframes pop{to{opacity:1;transform:scale(1)}}
+.badge.up{color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}
+.badge.down{color:var(--crit);background:color-mix(in srgb,var(--crit) 14%,transparent)}
+.badge.flat{color:var(--dim);background:var(--raised)}
+
+/* ── chart bits ── */
+.tick{font:400 10px 'IBM Plex Mono';fill:var(--dim)}
+.gline{stroke:var(--line);stroke-width:1}
+.axis{stroke:var(--line);stroke-width:1}
+.legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.litem{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:none;color:var(--text);
+  font:400 11px var(--sans);height:24px;padding:0 9px;border-radius:99px;cursor:pointer}
+.litem:hover{background:var(--raised)}
+.litem .sw{width:9px;height:9px;border-radius:2px}
+.litem.off{opacity:.45}
+.litem.off .sw{opacity:.35}
+.litem:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ── h-bars ── */
+.hrow{display:grid;grid-template-columns:74px 1fr 52px;align-items:center;gap:8px;padding:5px 4px;border-radius:6px}
+.hrow:hover{background:var(--raised)}
+.hrow .nm{font:400 11px 'IBM Plex Mono';color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .track{height:10px;background:var(--raised);border-radius:5px;overflow:hidden}
+.hrow .fill{height:100%;border-radius:5px;transform-origin:left;transform:scaleX(0)}
+.hrow .fill.go{transition:transform .6s cubic-bezier(.22,1,.36,1);transform:scaleX(1)}
+.hrow .v{font:500 11px 'IBM Plex Mono';text-align:right}
+
+/* ── table ── */
+table{width:100%;border-collapse:collapse}
+th{font:600 10px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--dim);text-align:left;
+  padding:6px 10px;border-bottom:1px solid var(--line)}
+td{padding:8px 10px;border-bottom:1px solid var(--line);font-size:12px}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--raised)}
+.st{display:inline-flex;align-items:center;gap:5px;font:500 11px 'IBM Plex Mono';padding:2px 8px;border-radius:99px}
+.st i{width:6px;height:6px;border-radius:50%;background:currentColor;font-style:normal}
+.st.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.st.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent)}
+.st.crit{color:var(--crit);background:color-mix(in srgb,var(--crit) 12%,transparent)}
+.tsrc{font-size:10px;color:var(--dim);margin-left:8px;opacity:0}
+tbody tr:hover .tsrc{opacity:.85}
+
+/* ── tooltip ── */
+#tooltip{position:fixed;display:none;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  box-shadow:0 6px 20px rgba(0,0,0,.30);padding:8px 10px;pointer-events:none;font-size:11px;min-width:130px}
+#tooltip .tt-h{font:500 10px 'IBM Plex Mono';color:var(--dim);margin-bottom:5px}
+#tooltip .tt-r{display:flex;align-items:center;gap:6px;justify-content:space-between;padding:1px 0}
+#tooltip .tt-r b{font:500 11px 'IBM Plex Mono'}
+#tooltip .sw{width:8px;height:8px;border-radius:2px;flex:none}
+#tooltip .tt-src{display:block;font:400 10px 'IBM Plex Mono';color:var(--dim);opacity:.85;margin-top:5px;
+  padding-top:5px;border-top:1px solid var(--line);white-space:nowrap}
+#tooltip .tt-src .arr{opacity:.7}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media(prefers-reduced-motion:reduce){
+  .rail{transition:none}
+  .rail{animation:none;transform:none}
+  .panel,.kpi{opacity:1;transform:none;animation:none}
+  .ink{filter:none}
+  .badge{opacity:1;transform:none}
+  .hrow .fill{transform:scaleX(1)}
+  *{transition:none!important;animation-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav class="rail" aria-label="Primary">
+  <div class="lg"><div class="logo" aria-hidden="true">G</div><span class="lgt sb-label">GRAPHITE<small>CatTower plant fleet</small></span><button class="sb-toggle navbtn" id="sbToggle" aria-label="Toggle sidebar" aria-expanded="true" style="width:30px;height:30px;padding:0;justify-content:center;flex:none;margin-left:auto"><svg class="icon" viewBox="0 0 20 20"><rect x="3" y="3.5" width="14" height="13" rx="1.5"/><path d="M8 3.5v13"/></svg></button></div>
+  <button class="navbtn active" aria-label="Overview"><svg class="icon" viewBox="0 0 20 20"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg><span class="sb-label">Overview</span></button>
+  <button class="navbtn" aria-label="Sensors"><svg class="icon" viewBox="0 0 20 20"><path d="M2 10h4l2-5 4 10 2-5h4"/></svg><span class="sb-label">Sensors</span></button>
+  <button class="navbtn" aria-label="Power"><svg class="icon" viewBox="0 0 20 20"><path d="M11 2 4 12h5l-1 6 7-10h-5z"/></svg><span class="sb-label">Power</span></button>
+  <button class="navbtn" aria-label="Alerts"><svg class="icon" viewBox="0 0 20 20"><path d="M10 3 2.5 16h15zM10 8.5v3.5M10 14.5v.01"/></svg><span class="sb-label">Alerts</span></button>
+  <div style="flex:1"></div>
+  <button class="navbtn" aria-label="Schedule"><svg class="icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="M10 6v4l2.5 2.5"/></svg><span class="sb-label">Schedule</span></button>
+  <div class="sb-foot"><span class="sb-ava">CL</span><span class="nm sb-label">Calico Lee<small>plant engineer · v2.0</small></span></div>
+</nav>
+
+<div class="main">
+  <header class="topbar">
+    <div class="crumb">Plant Fleet Console <span class="dim">/ whisker-line · CatTower LTD</span></div>
+    <div class="spacer"></div>
+    <button class="btn mono" id="rangeBtn"><svg class="icon" style="width:14px;height:14px" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="M10 6v4l2.5 2.5"/></svg>Last 3h</button>
+    <button class="btn" id="refreshBtn" aria-label="Refresh"><svg class="icon" style="width:14px;height:14px" viewBox="0 0 20 20"><path d="M16.5 8A7 7 0 1 0 17 11M17 4v4h-4"/></svg></button>
+    <button class="btn" id="themeBtn" aria-label="Toggle theme"><svg class="icon" style="width:14px;height:14px" viewBox="0 0 20 20" id="themeIcon"><path d="M16 11.5A6.5 6.5 0 1 1 8.5 4 5 5 0 0 0 16 11.5z"/></svg></button>
+  </header>
+
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+
+    <div class="grid">
+      <section class="panel p8">
+        <div class="ptitle"><svg class="icon" style="width:13px;height:13px" viewBox="0 0 20 20"><path d="M2 10h4l2-5 4 10 2-5h4"/></svg>Sensor trends — press-A1</div>
+        <div id="trend" class="ink"></div>
+      </section>
+
+      <section class="panel p4">
+        <div class="ptitle"><svg class="icon" style="width:13px;height:13px" viewBox="0 0 20 20"><path d="M11 2 4 12h5l-1 6 7-10h-5z"/></svg>Power draw by unit (kW)</div>
+        <div id="hbars" class="ink"></div>
+      </section>
+
+      <section class="panel p6">
+        <div class="ptitle"><svg class="icon" style="width:13px;height:13px" viewBox="0 0 20 20"><circle cx="6" cy="13" r="1.6"/><circle cx="10" cy="7" r="1.6"/><circle cx="14" cy="11" r="1.6"/><circle cx="16.5" cy="5" r="1.6"/><path d="M3 17h14M3 17V3"/></svg>Vibration × temperature — all units</div>
+        <div id="scatter" class="ink"></div>
+      </section>
+
+      <section class="panel p6">
+        <div class="ptitle"><svg class="icon" style="width:13px;height:13px" viewBox="0 0 20 20"><path d="M3 16l4-6 3 3 4-8 3 5"/><path d="M3 17h14"/></svg>Line throughput (units/min)</div>
+        <div id="thru" class="ink"></div>
+      </section>
+
+      <section class="panel">
+        <div class="ptitle"><svg class="icon" style="width:13px;height:13px" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 8h14M8 8v9"/></svg>Unit status</div>
+        <table>
+          <thead><tr><th>Unit</th><th>Owner</th><th>Temp</th><th>Vibration</th><th>Power</th><th>Status</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </section>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="tooltip" role="presentation"></div>
+<div class="sr" aria-live="polite" id="ttLive"></div>
+
+<script>
+/* ───────── helpers ───────── */
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function niceTicks(min,max,n=5){
+  if(min===max){min-=1;max+=1}
+  const span=max-min, step0=span/n, mag=10**Math.floor(Math.log10(step0)), norm=step0/mag;
+  const step=(norm<1.5?1:norm<3?2:norm<7?5:10)*mag;
+  const lo=Math.floor(min/step)*step, hi=Math.ceil(max/step)*step, t=[];
+  for(let v=lo;v<=hi+step*1e-6;v+=step) t.push(+v.toFixed(10));
+  return t;
+}
+const si = v => Math.abs(v)>=1e6 ? (v/1e6).toFixed(1)+'M'
+            : Math.abs(v)>=1e3 ? (v/1e3).toFixed(1).replace(/\.0$/,'')+'K'
+            : (Number.isInteger(v)?v:(+v.toFixed(1)).toString());
+const hhmm = m => `${String(Math.floor(m/60)%24).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+function rng(seed){let s=seed;return()=>((s=(s*16807)%2147483647)/2147483647)}
+function genSeries(seed, base, amp, drift=0){
+  const r=rng(seed), out=[];
+  for(let i=0;i<36;i++) out.push(Math.max(0, base + drift*i + Math.sin(i/5+seed)*amp*.5 + (r()-.5)*amp));
+  return out;
+}
+const X0=13*60+30, xs=[...Array(36)].map((_,i)=>X0+i*5); // 13:30 → 16:25
+
+/* ───────── tooltip ───────── */
+const tt=document.getElementById('tooltip'), ttLive=document.getElementById('ttLive');
+function showTT(html,x,y,plain){
+  tt.innerHTML=html;tt.style.display='block';
+  const w=tt.offsetWidth,h=tt.offsetHeight;
+  tt.style.left=(x+14+w>innerWidth ? x-14-w : x+14)+'px';
+  tt.style.top=Math.min(Math.max(8,y-h/2),innerHeight-h-8)+'px';
+  if(plain) ttLive.textContent=plain;
+}
+const hideTT=()=>tt.style.display='none';
+
+/* ───────── ink-in (signature) ───────── */
+function inkIn(el,delay=750){
+  if(reduced){el.classList.remove('ink');return}
+  setTimeout(()=>el.classList.add('on'),delay);
+}
+
+/* ───────── KPI tiles ───────── */
+const KPI=[
+  {lab:'Units online', v:18, of:'/ 20', d:'flat', dt:'±0', src:'logs/fleet/status.log:402'},
+  {lab:'Avg temp', v:61.4, suf:'°C', d:'up', dt:'+1.2', src:'metrics/rollup.csv:57'},
+  {lab:'Avg vibration', v:3.8, suf:' mm/s', d:'down', dt:'-0.4', src:'metrics/rollup.csv:58'},
+  {lab:'Power draw', v:412, suf:' kW', d:'up', dt:'+9', src:'metrics/power.csv:12'},
+  {lab:'Open alerts', v:3, of:'', d:'down', dt:'-2', src:'logs/system.log:88'},
+];
+const kwrap=document.getElementById('kpis');
+KPI.forEach((k,i)=>{
+  const d=document.createElement('div');d.className='kpi';
+  d.title=`${k.lab}: ${k.v}${k.suf||''} ${k.of||''} — source ${k.src}`.replace(/\s+/g,' ').trim();
+  d.innerHTML=`<div class="lab">${k.lab}</div>
+    <div class="val"><span data-cnt="${k.v}">0</span><small>${k.suf||''} ${k.of||''}</small></div>
+    <span class="badge ${k.d}">${k.dt} vs prev 3h</span>`;
+  kwrap.appendChild(d);
+  setTimeout(()=>d.classList.add('in'), reduced?0:i*50);
+});
+function countUps(){
+  document.querySelectorAll('[data-cnt]').forEach(el=>{
+    const target=+el.dataset.cnt, dec=Number.isInteger(target)?0:1, t0=performance.now(), D=650;
+    if(reduced){el.textContent=target.toFixed(dec);return}
+    (function f(t){
+      const p=Math.min(1,(t-t0)/D), e=1-(1-p)**3;
+      el.textContent=(target*e).toFixed(dec);
+      if(p<1) requestAnimationFrame(f);
+    })(t0);
+  });
+  document.querySelectorAll('.badge').forEach((b,i)=>setTimeout(()=>b.classList.add('pop'), reduced?0:770+i*40));
+}
+countUps();
+
+/* panels enter */
+document.querySelectorAll('.panel').forEach((p,i)=>setTimeout(()=>p.classList.add('in'), reduced?0:250+i*50));
+
+/* ───────── line chart ───────── */
+function lineChart(el,{series,unit='',area=false,h=216}){
+  const W=720,H=h,m={t:10,r:12,b:24,l:40};
+  const visible=series.map(()=>true);
+  const root=document.createElement('div');el.appendChild(root);
+  const leg=document.createElement('div');leg.className='legend';el.appendChild(leg);
+  series.forEach((s,i)=>{
+    const b=document.createElement('button');b.className='litem';b.setAttribute('aria-pressed','true');
+    b.innerHTML=`<span class="sw" style="background:${s.color}"></span>${s.name}`;
+    b.onclick=()=>{visible[i]=!visible[i];b.classList.toggle('off',!visible[i]);b.setAttribute('aria-pressed',visible[i]);draw(false)};
+    b.onmouseenter=()=>hl(i);b.onmouseleave=()=>hl(-1);
+    leg.appendChild(b);
+  });
+  let svg;
+  function hl(idx){ if(svg) svg.querySelectorAll('[data-line]').forEach(p=>p.style.opacity = idx<0||+p.dataset.line===idx?1:.22); }
+  function draw(animate=true){
+    const vis=series.filter((_,i)=>visible[i]);
+    if(!vis.length){root.innerHTML=`<div style="height:${H}px;display:grid;place-items:center;color:var(--dim)">All series hidden</div>`;return}
+    const all=vis.flatMap(s=>s.data);
+    const ticksY=niceTicks(Math.min(...all),Math.max(...all),4);
+    const lo=ticksY[0],hi=ticksY.at(-1);
+    const X=t=>m.l+(t-xs[0])/(xs.at(-1)-xs[0])*(W-m.l-m.r);
+    const Y=v=>m.t+(1-(v-lo)/(hi-lo))*(H-m.t-m.b);
+    let g='';
+    ticksY.forEach(t=>{g+=`<line class="gline" x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tick" x="${m.l-6}" y="${Y(t)+3}" text-anchor="end">${si(t)}${unit}</text>`});
+    for(let i=0;i<36;i+=6) g+=`<text class="tick" x="${X(xs[i])}" y="${H-6}" text-anchor="middle">${hhmm(xs[i])}</text>`;
+    g+=`<line class="axis" x1="${m.l}" x2="${W-m.r}" y1="${H-m.b}" y2="${H-m.b}"/>`;
+    series.forEach((s,si_)=>{
+      if(!visible[si_])return;
+      const pts=s.data.map((v,i)=>`${X(xs[i]).toFixed(1)},${Y(v).toFixed(1)}`);
+      if(area) g+=`<path data-line="${si_}" d="M${pts.join('L')}L${X(xs[35])},${Y(lo)}L${X(xs[0])},${Y(lo)}Z" fill="${s.color}" opacity=".15" stroke="none"/>`;
+      g+=`<path data-line="${si_}" class="ln" d="M${pts.join('L')}" fill="none" stroke="${s.color}" stroke-width="1.7" stroke-linejoin="round"/>`;
+    });
+    g+=`<line data-xh x1="0" x2="0" y1="${m.t}" y2="${H-m.b}" stroke="var(--dim)" stroke-dasharray="3 3" style="display:none"/>`;
+    series.forEach((s,i)=>{g+=`<circle data-dot="${i}" r="3" fill="${s.color}" stroke="var(--panel)" stroke-width="1.5" style="display:none"/>`});
+    root.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="${series.map(s=>s.name).join(', ')} over time">${g}</svg>`;
+    svg=root.querySelector('svg');
+    if(animate&&!reduced) svg.querySelectorAll('.ln').forEach(p=>{
+      const L=p.getTotalLength();
+      p.style.strokeDasharray=L;p.style.strokeDashoffset=L;
+      p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:750,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
+    });
+    const xh=svg.querySelector('[data-xh]');
+    svg.addEventListener('mousemove',e=>{
+      const r=svg.getBoundingClientRect(), sx=(e.clientX-r.left)/r.width*W;
+      let bi=0,bd=1e9;
+      xs.forEach((t,i)=>{const d=Math.abs(X(t)-sx);if(d<bd){bd=d;bi=i}});
+      xh.setAttribute('x1',X(xs[bi]));xh.setAttribute('x2',X(xs[bi]));xh.style.display='';
+      let rows='',plain=hhmm(xs[bi]),src='';
+      series.forEach((s,i)=>{
+        const dot=svg.querySelector(`[data-dot="${i}"]`);
+        if(!visible[i]){dot.style.display='none';return}
+        dot.style.display='';dot.setAttribute('cx',X(xs[bi]));dot.setAttribute('cy',Y(s.data[bi]));
+        rows+=`<div class="tt-r"><span style="display:flex;gap:6px;align-items:center"><span class="sw" style="background:${s.color}"></span>${s.name}</span><b>${si(s.data[bi])}${unit}</b></div>`;
+        plain+=` ${s.name} ${si(s.data[bi])}${unit},`;
+        if(s.log && !src){ const ln=s.line0+bi*s.lineStep; src=`<div class="tt-src"><span class="arr">↗</span> ${s.log}:${ln}</div>`; plain+=` source ${s.log} line ${ln}`; }
+      });
+      showTT(`<div class="tt-h">${hhmm(xs[bi])}</div>${rows}${src}`,e.clientX,e.clientY,plain);
+    });
+    svg.addEventListener('mouseleave',()=>{hideTT();xh.style.display='none';svg.querySelectorAll('[data-dot]').forEach(d=>d.style.display='none')});
+  }
+  draw();
+}
+
+lineChart(document.getElementById('trend'),{
+  series:[
+    {name:'temp °C', color:'var(--s4)', data:genSeries(7, 61, 4, .05), log:'logs/press-A1/sensors.log', line0:1180, lineStep:3},
+    {name:'humidity %', color:'var(--s6)', data:genSeries(11, 44, 5), log:'logs/press-A1/sensors.log', line0:1181, lineStep:3},
+    {name:'vibration mm/s', color:'var(--s3)', data:genSeries(23, 4, 1.6), log:'logs/press-A1/sensors.log', line0:1182, lineStep:3},
+  ]
+});
+inkIn(document.getElementById('trend'),900);
+
+lineChart(document.getElementById('thru'),{
+  series:[
+    {name:'whisker-line', color:'var(--s1)', data:genSeries(31, 240, 30), log:'logs/whisker-line/throughput.log', line0:842, lineStep:2},
+    {name:'nyang-line', color:'var(--s5)', data:genSeries(43, 180, 26), log:'logs/nyang-line/throughput.log', line0:756, lineStep:2},
+  ], area:true, h:216
+});
+inkIn(document.getElementById('thru'),1000);
+
+/* ───────── horizontal bars ───────── */
+const UNITS=[
+  {nm:'press-A1', kw:96, c:'var(--s1)', src:'metrics/power.csv:18'},{nm:'press-A2', kw:88, c:'var(--s1)', src:'metrics/power.csv:19'},
+  {nm:'mill-B1', kw:74, c:'var(--s6)', src:'metrics/power.csv:24'},{nm:'mill-B2', kw:69, c:'var(--s6)', src:'metrics/power.csv:25'},
+  {nm:'oven-C1', kw:52, c:'var(--s3)', src:'metrics/power.csv:31'},{nm:'pack-D1', kw:33, c:'var(--s5)', src:'metrics/power.csv:37'},
+];
+const hb=document.getElementById('hbars'), maxKW=niceTicks(0,Math.max(...UNITS.map(u=>u.kw)),4).at(-1);
+UNITS.forEach((u,i)=>{
+  const row=document.createElement('div');row.className='hrow';
+  row.innerHTML=`<span class="nm">${u.nm}</span><div class="track"><div class="fill" style="width:${u.kw/maxKW*100}%;background:${u.c}"></div></div><span class="v">${u.kw} kW</span>`;
+  row.onmousemove=e=>showTT(`<div class="tt-h">${u.nm}</div><div class="tt-r"><span>power</span><b>${u.kw} kW</b></div><div class="tt-r"><span>of scale</span><b>${Math.round(u.kw/maxKW*100)}%</b></div><div class="tt-src"><span class="arr">↗</span> ${u.src}</div>`,e.clientX,e.clientY,`${u.nm} ${u.kw} kilowatts, source ${u.src}`);
+  row.onmouseleave=hideTT;
+  hb.appendChild(row);
+  setTimeout(()=>row.querySelector('.fill').classList.add('go'), reduced?0:500+i*30);
+});
+hb.insertAdjacentHTML('beforeend',`<div style="display:flex;justify-content:space-between;padding:6px 4px 0;color:var(--dim)" class="mono"><span>0</span><span>${maxKW/2}</span><span>${maxKW} kW</span></div>`);
+inkIn(hb,950);
+
+/* ───────── scatter ───────── */
+(function scatter(){
+  const el=document.getElementById('scatter'), W=560,H=230,m={t:10,r:12,b:30,l:40};
+  const r=rng(99), pts=[];
+  const names=['press-A1','press-A2','mill-B1','mill-B2','oven-C1','pack-D1'];
+  for(let i=0;i<24;i++){
+    const temp=48+r()*30, vib=1.5+ (temp-48)*.12 + r()*3;
+    const st = vib>6.2?'crit': vib>4.6?'warn':'ok';
+    const nm=names[i%6];
+    const src=`logs/${nm}/sensors.log:${1100 + (i%6)*120 + Math.floor(i/6)*30}`;
+    pts.push({temp:+temp.toFixed(1), vib:+vib.toFixed(2), st, nm, src});
+  }
+  const tx=niceTicks(Math.min(...pts.map(p=>p.temp)),Math.max(...pts.map(p=>p.temp)),5);
+  const ty=niceTicks(Math.min(...pts.map(p=>p.vib)),Math.max(...pts.map(p=>p.vib)),4);
+  const X=v=>m.l+(v-tx[0])/(tx.at(-1)-tx[0])*(W-m.l-m.r);
+  const Y=v=>m.t+(1-(v-ty[0])/(ty.at(-1)-ty[0]))*(H-m.t-m.b);
+  let g='';
+  ty.forEach(t=>{g+=`<line class="gline" x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tick" x="${m.l-6}" y="${Y(t)+3}" text-anchor="end">${si(t)}</text>`});
+  tx.forEach(t=>{g+=`<text class="tick" x="${X(t)}" y="${H-8}" text-anchor="middle">${si(t)}</text>`});
+  g+=`<line class="axis" x1="${m.l}" x2="${W-m.r}" y1="${H-m.b}" y2="${H-m.b}"/>`;
+  g+=`<text class="tick" x="${W-m.r}" y="${H-m.b+22}" text-anchor="end">temp °C →</text>`;
+  g+=`<text class="tick" x="${m.l}" y="${m.t}" text-anchor="start">vib mm/s ↑</text>`;
+  pts.forEach((p,i)=>{
+    const c=p.st==='ok'?'var(--ok)':p.st==='warn'?'var(--warn)':'var(--crit)';
+    const ring=p.st==='ok'?'':`<circle cx="${X(p.temp)}" cy="${Y(p.vib)}" r="6.5" fill="none" stroke="${c}" stroke-width="1.5" data-pt2="${i}"/>`;
+    g+=`<g data-pt="${i}">${ring}<circle cx="${X(p.temp)}" cy="${Y(p.vib)}" r="4" fill="${c}" fill-opacity=".8"/></g>`;
+  });
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="vibration versus temperature scatter">${g}</svg>`;
+  const svg=el.querySelector('svg');
+  if(!reduced) svg.querySelectorAll('[data-pt]').forEach((gp,i)=>{
+    gp.style.transformOrigin=`${gp.querySelector('circle:last-child').getAttribute('cx')}px ${gp.querySelector('circle:last-child').getAttribute('cy')}px`;
+    gp.animate([{transform:'scale(0)'},{transform:'scale(1)'}],{duration:280,delay:400+i*8,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'});
+  });
+  svg.querySelectorAll('[data-pt]').forEach(gp=>{
+    const p=pts[+gp.dataset.pt];
+    gp.style.cursor='default';
+    gp.addEventListener('mousemove',e=>showTT(
+      `<div class="tt-h">${p.nm}</div>
+       <div class="tt-r"><span>vibration</span><b>${p.vib} mm/s</b></div>
+       <div class="tt-r"><span>temp</span><b>${p.temp} °C</b></div>
+       <div class="tt-r"><span>status</span><b style="color:${p.st==='ok'?'var(--ok)':p.st==='warn'?'var(--warn)':'var(--crit)'}">${p.st}</b></div>
+       <div class="tt-src"><span class="arr">↗</span> ${p.src}</div>`,
+      e.clientX,e.clientY,`${p.nm} vibration ${p.vib}, temperature ${p.temp}, ${p.st}, source ${p.src}`));
+    gp.addEventListener('mouseleave',hideTT);
+  });
+  inkIn(el,1000);
+})();
+
+/* ───────── table ───────── */
+const ROWS=[
+  ['press-A1','Calico Lee','63.2 °C','3.4 mm/s','96 kW','ok','logs/press-A1/sensors.log:1423'],
+  ['press-A2','Calico Lee','61.8 °C','3.9 mm/s','88 kW','ok','logs/press-A2/sensors.log:1388'],
+  ['mill-B1','Kitty Park','66.0 °C','5.1 mm/s','74 kW','warn','logs/mill-B1/sensors.log:1206'],
+  ['mill-B2','Kitty Park','58.4 °C','3.1 mm/s','69 kW','ok','logs/mill-B2/sensors.log:1190'],
+  ['oven-C1','Ya-ong Kim','71.3 °C','6.6 mm/s','52 kW','crit','logs/oven-C1/sensors.log:977'],
+  ['pack-D1','Ya-ong Kim','49.0 °C','2.2 mm/s','33 kW','ok','logs/pack-D1/sensors.log:640'],
+];
+document.getElementById('tbody').innerHTML=ROWS.map(r=>
+  `<tr title="${r[0]} — source ${r[6]}"><td class="mono">${r[0]}</td><td>${r[1]}</td><td class="mono">${r[2]}</td><td class="mono">${r[3]}</td><td class="mono">${r[4]}</td>
+   <td><span class="st ${r[5]}"><i></i>${r[5]}</span><span class="tsrc mono">${r[6]}</span></td></tr>`).join('');
+
+/* ───────── theme + refresh ───────── */
+const root=document.documentElement;
+document.getElementById('themeBtn').onclick=()=>{
+  const next=root.dataset.theme==='dark'?'light':'dark';
+  root.dataset.theme=next;
+  document.getElementById('themeIcon').innerHTML = next==='dark'
+    ? '<path d="M16 11.5A6.5 6.5 0 1 1 8.5 4 5 5 0 0 0 16 11.5z"/>'
+    : '<circle cx="10" cy="10" r="4"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M4 4l1.4 1.4M14.6 14.6 16 16M16 4l-1.4 1.4M5.4 14.6 4 16"/>';
+};
+document.getElementById('refreshBtn').onclick=e=>{
+  const ic=e.currentTarget.querySelector('svg');
+  if(!reduced) ic.animate([{transform:'rotate(0)'},{transform:'rotate(360deg)'}],{duration:450,easing:'ease-out'});
+  countUps();
+};
+
+/* ── collapsible sidebar ── */
+const sbT=document.getElementById('sbToggle');
+if(sbT){
+  sbT.onclick=()=>{const c=document.body.classList.toggle('sbc');sbT.setAttribute('aria-expanded',String(!c))};
+  if(matchMedia('(max-width:920px)').matches){document.body.classList.add('sbc');sbT.setAttribute('aria-expanded','false');}
+}
+</script>
+<footer style="position:fixed;left:0;right:0;bottom:0;z-index:99;padding:6px 12px;font:400 10px/1.5 system-ui,-apple-system,sans-serif;color:#9A9AA2;text-align:center;background:rgba(127,127,127,.08);backdrop-filter:blur(4px);pointer-events:none">Demo page generated from themes/graphite.md (research-designer). Hover any chart point, bar, marker, KPI, or table row to trace its value to the source log line (file:line). All people, companies, products, and figures are fictional. No affiliation with any real entity.</footer>
+</body>
+</html>

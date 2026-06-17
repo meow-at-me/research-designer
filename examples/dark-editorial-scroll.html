@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FMP: Fast Meow Prediction — CatTower LTD Research</title>
+<meta name="description" content="Demo page generated from themes/dark-editorial-scroll.md (research-designer). Fictional research project page; all content invented.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Dark Editorial Scroll — themes/dark-editorial-scroll.md
+   Content: fictional ML paper landing page (FMP)
+   ============================================================ */
+:root{
+  --canvas:#0F0F0F;
+  --card:#1A1A1A;
+  --card-edge:#262626;
+  --chip-bg:#2A2A2A;
+  --text-hi:#F2F2F0;
+  --text-mid:#9C9C98;
+  --text-low:#6B6B67;
+  --amber:#D97A2B;      /* imagery / figure interiors only — never UI chrome */
+  --focus:#CDE3EF;      /* focus ring only */
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --mono:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"Liberation Mono",monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html,body{background:var(--canvas)}
+body{
+  font-family:"Inter",sans-serif;
+  font-size:15px;line-height:1.6;font-weight:400;letter-spacing:0;
+  color:var(--text-mid);
+  overflow-x:hidden;
+}
+::selection{background:#3A3A36;color:var(--text-hi)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:2px}
+a{color:inherit;text-decoration:none}
+strong{color:var(--text-hi);font-weight:600}
+svg.ic{width:16px;height:16px;flex:none;vertical-align:-2px}
+
+/* ---------- topbar + progress ---------- */
+.progress{
+  position:fixed;top:0;left:0;height:2px;width:0;
+  background:var(--text-hi);z-index:60;
+}
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+  padding:18px 56px 30px;
+  background:linear-gradient(to bottom,rgba(15,15,15,.96) 0%,rgba(15,15,15,.82) 55%,rgba(15,15,15,0) 100%);
+  pointer-events:none;
+}
+.topbar>*{pointer-events:auto}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  color:var(--text-hi);font-size:13px;font-weight:600;letter-spacing:.01em;
+}
+.brand svg{width:18px;height:18px}
+.topnav{display:flex;align-items:center;gap:22px}
+.topnav a{
+  font-size:11px;line-height:1;font-weight:500;letter-spacing:.04em;
+  color:var(--text-low);text-transform:uppercase;
+  transition:color .3s var(--ease);
+}
+.topnav a:hover{color:var(--text-hi)}
+.course-label{
+  font-size:11px;line-height:1;font-weight:500;letter-spacing:.04em;
+  color:var(--text-low);text-transform:uppercase;white-space:nowrap;
+}
+@media (max-width:980px){.topnav{display:none}}
+
+/* ---------- section grid ---------- */
+.sec{
+  max-width:1240px;margin:0 auto;
+  padding:18vh 56px 14vh;
+  display:grid;grid-template-columns:repeat(12,1fr);gap:24px;
+  align-items:start;
+}
+.left{
+  grid-column:1 / span 4;
+  position:sticky;top:16vh;align-self:start;
+}
+.right{grid-column:5 / -1;min-width:0;width:100%}
+
+.display{
+  font-family:"Inter Tight",sans-serif;
+  font-size:56px;line-height:1.05;font-weight:500;letter-spacing:-0.02em;
+  color:var(--text-hi);
+  margin:18px 0 20px;
+}
+.lede{max-width:36ch}
+.meta{font-size:11px;line-height:1;font-weight:500;letter-spacing:.04em;color:var(--text-low);text-transform:uppercase}
+
+/* ---------- chips ---------- */
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--chip-bg);color:var(--text-hi);
+  border-radius:4px;padding:4px 10px;
+  font-size:11px;line-height:1;font-weight:500;letter-spacing:.04em;
+  text-transform:uppercase;
+}
+
+/* ---------- authors + link pills (hero) ---------- */
+.authors{margin-top:22px}
+.authors .names{color:var(--text-hi);font-size:15px;font-weight:600;line-height:1.6}
+.authors .affil{font-size:11px;line-height:1.6;font-weight:500;letter-spacing:.04em;color:var(--text-low);text-transform:uppercase;margin-top:4px}
+.pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.pill{
+  display:inline-flex;align-items:center;gap:8px;
+  border:1px solid var(--card-edge);border-radius:6px;padding:10px 16px;
+  font-size:13px;font-weight:500;line-height:1;color:var(--text-mid);
+  transition:color .3s var(--ease),border-color .3s var(--ease),transform .3s var(--ease);
+}
+.pill:hover{color:var(--text-hi);border-color:#3A3A3A;transform:translateY(-2px)}
+.pill.solid{background:var(--text-hi);color:#0F0F0F;border-color:transparent;font-weight:600}
+.pill.solid:hover{color:#0F0F0F;transform:translateY(-2px)}
+.pill svg{width:15px;height:15px}
+
+/* ---------- stacked rows ---------- */
+.rows{display:flex;flex-direction:column;gap:24px}
+
+/* ---------- claim stat card ---------- */
+.stat{
+  background:var(--card);border:1px solid var(--card-edge);border-radius:10px;
+  padding:24px 28px;
+  display:grid;grid-template-columns:auto 1fr;gap:6px 32px;align-items:center;
+}
+.stat .big{
+  font-family:"Inter Tight",sans-serif;
+  font-size:clamp(48px,6vw,76px);line-height:1;font-weight:500;letter-spacing:-0.03em;
+  color:var(--text-hi);font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.stat .what{font-size:14px;line-height:1.55;max-width:36ch}
+.stat .tag{font-size:11px;line-height:1;font-weight:500;letter-spacing:.04em;color:var(--text-low);text-transform:uppercase;margin-top:8px}
+@media (max-width:600px){.stat{grid-template-columns:1fr;gap:12px}}
+
+/* ---------- hero claim row: tall vertical cards in a row ---------- */
+.claim-row{display:flex;gap:18px;align-items:stretch}
+.vcard{
+  flex:1 1 0;min-width:0;
+  background:var(--card);border:1px solid var(--card-edge);border-radius:12px;
+  padding:24px 20px;min-height:clamp(320px,38vh,400px);
+  display:flex;flex-direction:column;
+}
+.vcard .big{
+  font-family:"Inter Tight",sans-serif;
+  font-size:clamp(34px,3.5vw,52px);line-height:.96;font-weight:500;letter-spacing:-0.035em;
+  color:var(--text-hi);font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.vcard .what{font-size:13px;line-height:1.5;color:var(--text-mid);margin-top:16px}
+.vcard .tag{font-size:11px;line-height:1.3;font-weight:500;letter-spacing:.04em;color:var(--text-low);text-transform:uppercase;margin-top:auto;padding-top:16px}
+/* bright figure card — white panel pops against the dark page */
+.vcard.figcard{padding:0;border:0;overflow:hidden;background:#FAFAF8;box-shadow:0 24px 60px rgb(0 0 0 / .45)}
+.vcard.figcard .ph{flex:1;min-height:0;background:#FFFFFF;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.vcard.figcard img{width:100%;height:100%;object-fit:cover;display:block}
+.vcard.figcard .fcap{padding:12px 16px;background:#FAFAF8;color:#55554F;font-size:12px;line-height:1.45}
+.vcard.figcard .fcap strong{color:#0F0F0F;font-weight:600}
+.abstract-card{
+  background:var(--card);border:1px solid var(--card-edge);border-radius:12px;
+  padding:22px 24px;margin-top:18px;
+}
+.abstract-card .chip{margin-bottom:12px}
+.abstract-card p{font-size:14px;line-height:1.6}
+@media (max-width:900px){.claim-row{flex-wrap:wrap}.vcard{flex:1 1 calc(50% - 9px);min-height:240px}}
+@media (max-width:520px){.vcard{flex:1 1 100%}}
+
+/* ---------- text card ---------- */
+.card-txt{
+  background:var(--card);border:1px solid var(--card-edge);
+  border-radius:10px;padding:20px;
+}
+.card-txt .chip{margin-bottom:12px}
+.card-txt p{font-size:14px;line-height:1.55}
+
+/* ---------- white figure panel (floating panel component) ---------- */
+.fig-wrap{margin-right:-20px}
+.fig{
+  background:#FAFAF8;color:#1A1A1A;
+  border-radius:14px;padding:24px 26px 20px;
+  box-shadow:0 24px 60px rgb(0 0 0 / .45);
+}
+.fig svg{width:100%;height:auto;display:block}
+.figcap{font-size:13px;line-height:1.55;color:#55554F;margin-top:14px}
+.figcap strong{color:#0F0F0F;font-weight:600}
+@media (max-width:900px){.fig-wrap{margin-right:0}}
+
+/* ---------- dark figure panel ---------- */
+.fig-dark{
+  background:var(--card);border:1px solid var(--card-edge);
+  border-radius:10px;padding:24px 26px 20px;
+}
+.fig-dark svg{width:100%;height:auto;display:block}
+.fig-dark .figcap{color:var(--text-low)}
+.fig-dark .figcap strong{color:var(--text-hi)}
+
+/* ---------- qualitative spectrogram tiles ---------- */
+.qual{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+@media (max-width:900px){.qual{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:480px){.qual{grid-template-columns:1fr}}
+.qtile{
+  background:var(--card);border:1px solid var(--card-edge);border-radius:10px;
+  padding:14px;display:flex;flex-direction:column;gap:8px;
+}
+.qlab{font-size:11px;line-height:1;font-weight:500;letter-spacing:.04em;color:var(--text-low);text-transform:uppercase}
+.spec-strip{
+  height:62px;border-radius:6px;overflow:hidden;
+  filter:saturate(.9) brightness(.85);
+  background:
+    radial-gradient(55% 75% at var(--bx,30%) 64%, rgba(232,155,85,.95), rgba(217,122,43,.45) 52%, transparent 76%),
+    radial-gradient(34% 52% at var(--cx,68%) 32%, rgba(217,122,43,.65), transparent 72%),
+    repeating-linear-gradient(90deg, rgba(15,15,15,.5) 0 1px, transparent 1px 6px),
+    linear-gradient(to top, #241307, #140E08 70%, #0E0B08);
+}
+.qcap{font-size:11px;line-height:1.5;font-weight:500;letter-spacing:.04em;color:var(--text-low);text-transform:uppercase;margin-top:4px}
+.fig-note{font-size:13px;line-height:1.55;color:var(--text-low);margin-top:18px}
+.fig-note strong{color:var(--text-hi);font-weight:600}
+.reaction{display:flex;gap:16px;align-items:center;background:var(--card);border:1px solid var(--card-edge);border-radius:10px;padding:14px;margin-top:24px}
+.reaction img{width:104px;height:104px;border-radius:8px;object-fit:cover;flex:none}
+.reaction p{font-size:13px;line-height:1.55;color:var(--text-mid)}
+.reaction strong{color:var(--text-hi);font-weight:600}
+@media (max-width:480px){.reaction{flex-direction:column;align-items:flex-start}}
+
+/* ---------- bibtex code card ---------- */
+.code-card{
+  background:var(--card);border:1px solid var(--card-edge);
+  border-radius:10px;padding:20px;
+}
+.code-card .chip{margin-bottom:14px}
+.code-card pre{
+  font-family:var(--mono);font-size:12.5px;line-height:1.7;
+  color:var(--text-mid);overflow-x:auto;tab-size:2;
+}
+.code-card pre strong{font-weight:600}
+
+/* ---------- CTA ---------- */
+.cta-row{display:flex;align-items:center;gap:18px;margin-top:28px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--text-hi);color:#0F0F0F;
+  border:0;border-radius:6px;padding:12px 20px;
+  font-family:"Inter",sans-serif;font-size:13px;font-weight:600;line-height:1;
+  cursor:pointer;transition:transform .3s var(--ease);
+}
+.btn:hover{transform:translateY(-2px)}
+.btn svg{width:16px;height:16px}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--card-edge);margin-top:6vh}
+.foot-inner{
+  max-width:1240px;margin:0 auto;padding:48px 56px 56px;
+  display:flex;flex-wrap:wrap;gap:32px;justify-content:space-between;align-items:flex-start;
+}
+.foot-inner .brand{font-size:13px}
+.foot-nav{display:flex;gap:20px;flex-wrap:wrap}
+.foot-nav a{font-size:11px;line-height:1;font-weight:500;letter-spacing:.04em;color:var(--text-low);text-transform:uppercase;transition:color .3s var(--ease)}
+.foot-nav a:hover{color:var(--text-mid)}
+.disclaimer{width:100%;border-top:1px solid var(--card-edge);padding-top:20px}
+.disclaimer p{font-size:11px;line-height:1.8;color:var(--text-low)}
+
+/* ---------- scroll motion ---------- */
+.sec .rv{
+  opacity:0;transform:translateY(56px);
+  transition:opacity .8s var(--ease),transform .8s var(--ease);
+  transition-delay:calc(var(--i,0) * 100ms);
+  will-change:opacity,transform;
+}
+.sec .rv-soft{
+  opacity:0;transform:translateY(26px);
+  transition:opacity .65s var(--ease),transform .65s var(--ease);
+  transition-delay:calc(var(--i,0) * 100ms);
+  will-change:opacity,transform;
+}
+.sec.in .rv,.sec.in .rv-soft{opacity:1;transform:translateY(0)}
+.sec.out .rv,.sec.out .rv-soft{
+  opacity:0;transform:translateY(-32px);
+  transition-duration:.45s,.45s;transition-delay:0ms,0ms;
+}
+
+/* ---------- mobile stack ---------- */
+@media (max-width:760px){
+  .sec{display:block;padding:14vh 24px 10vh}
+  .left{position:static;margin-bottom:40px}
+  .display{font-size:40px}
+  .topbar{padding:16px 24px 26px}
+  .foot-inner{padding:40px 24px 48px}
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  .sec .rv,.sec .rv-soft{opacity:1 !important;transform:none !important;transition:none !important}
+  .btn,.pill,.topnav a,.foot-nav a{transition:none !important}
+  .btn:hover,.pill:hover{transform:none}
+}
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="#top" aria-label="CatTower LTD Research home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M5 21V9l7-6 7 6v12"/><path d="M9 21v-6h6v6"/><path d="M5 13h14"/>
+    </svg>
+    CatTower LTD Research
+  </a>
+  <nav class="topnav" aria-label="Sections">
+    <a href="#architecture">Architecture</a>
+    <a href="#results">Results</a>
+    <a href="#ablations">Ablations</a>
+    <a href="#qualitative">Qualitative</a>
+    <a href="#bibtex">BibTeX</a>
+  </nav>
+  <span class="course-label">Preprint FMP-2026-014 · fictional</span>
+</header>
+
+<main>
+
+<!-- ============ HERO (visible at load, no scroll gating) ============ -->
+<section class="sec in" id="top" data-sec style="padding-top:max(18vh,128px)">
+  <div class="left">
+    <span class="chip rv-soft" style="--i:0">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      Preprint · 2026
+    </span>
+    <h1 class="display rv-soft" style="--i:1">FMP: Fast Meow Prediction</h1>
+    <p class="lede rv-soft" style="--i:2">Real-time vocalization forecasting for domestic cats. One forward pass, <strong>0.3 ms</strong> ahead of the meow.</p>
+    <div class="authors rv-soft" style="--i:3">
+      <p class="names">Kitty Park · Ya-ong Kim · Calico Lee</p>
+      <p class="affil">CatTower LTD Research — all authors fictional</p>
+    </div>
+    <div class="pills rv-soft" style="--i:4">
+      <a class="pill solid" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>
+        Paper
+      </a>
+      <a class="pill" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>
+        Code
+      </a>
+      <a class="pill" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4Z"/></svg>
+        Demo
+      </a>
+      <a class="pill" href="#bibtex">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6c0 2-1 3-3 4"/><path d="M20 11h-4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6c0 2-1 3-3 4"/></svg>
+        BibTeX
+      </a>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="claim-row">
+      <div class="vcard rv" style="--i:0">
+        <span class="big">99&times;</span>
+        <p class="what">Better task performance than the strongest published baseline, by our own definition of better.</p>
+        <p class="tag">MeowBench-1M · fictional</p>
+      </div>
+      <div class="vcard rv" style="--i:1">
+        <span class="big">10000&times;</span>
+        <p class="what">More training-compute efficient at matched MeowScore — four orders of magnitude fewer cat-FLOPs.</p>
+        <p class="tag">Log scale, Fig. 2 · fictional</p>
+      </div>
+      <div class="vcard rv" style="--i:2">
+        <span class="big">0.3 ms</span>
+        <p class="what">End-to-end latency from purr stream to onset probability, on one unremarkable CPU core.</p>
+        <p class="tag">Measured nowhere · fictional</p>
+      </div>
+      <div class="vcard figcard rv" style="--i:3">
+        <div class="ph"><img src="shots/example_fig2.png" alt="Figure: the FMP reference subject in a lab coat (fictional)" loading="lazy"></div>
+        <p class="fcap"><strong>Subject 01.</strong> Reference meower, calibration set. Fictional.</p>
+      </div>
+    </div>
+    <div class="abstract-card rv" style="--i:4">
+      <span class="chip">Abstract</span>
+      <p>Cats vocalize on their own schedule; humans react too late. <strong>FMP (Fast Meow Prediction)</strong> forecasts the onset of a domestic-cat vocalization up to 1.2 seconds before it happens, reading nothing but a continuous purr-band audio stream. A frozen encoder, a two-layer temporal mixer, and a 41 k-parameter meow head reach 99.1 MeowScore on MeowBench-1M while training on <strong>10000&times; less compute</strong> than the strongest baseline. Every number in this paper is fictional, which is also why they are so good.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 01 · ARCHITECTURE ============ -->
+<section class="sec" id="architecture" data-sec>
+  <div class="left">
+    <span class="chip rv-soft" style="--i:0">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="6" height="8" rx="1"/><rect x="15" y="8" width="6" height="8" rx="1"/><path d="M9 12h6"/></svg>
+      01 · Architecture
+    </span>
+    <h2 class="display rv-soft" style="--i:1">Three parts, one pass.</h2>
+    <p class="lede rv-soft" style="--i:2">The encoder never updates, the mixer only looks backward, and the head is small enough to read aloud. Everything runs in a single forward pass per audio frame — <strong>no lookahead, no retries</strong>.</p>
+  </div>
+
+  <div class="right">
+    <div class="rows">
+      <figure class="fig-wrap rv" style="--i:0">
+        <div class="fig">
+          <svg viewBox="0 0 780 300" role="img" aria-label="Architecture diagram: a purr stream enters a frozen audio encoder, then a two-layer temporal mixer, then a meow head that outputs an onset probability; a dashed whisker-attention skip path bypasses the mixer">
+            <defs>
+              <marker id="ar1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1A1A1A"/></marker>
+              <marker id="ar1g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#9C9C98"/></marker>
+            </defs>
+            <!-- input waveform -->
+            <polyline points="20,150 28,150 33,128 39,172 45,112 51,186 57,124 63,166 69,138 75,158 82,146 92,150" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="56" y="198" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">purr stream</text>
+            <text x="56" y="213" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">16 kHz mono</text>
+            <line x1="98" y1="150" x2="120" y2="150" stroke="#1A1A1A" stroke-width="1.5" marker-end="url(#ar1)"/>
+            <!-- encoder -->
+            <rect x="128" y="100" width="150" height="100" rx="10" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1.5"/>
+            <text x="203" y="143" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="600" fill="#0F0F0F">Audio Encoder</text>
+            <text x="203" y="163" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">conv &#215;4 &#183; frozen</text>
+            <line x1="284" y1="150" x2="312" y2="150" stroke="#1A1A1A" stroke-width="1.5" marker-end="url(#ar1)"/>
+            <!-- mixer -->
+            <rect x="318" y="100" width="170" height="100" rx="10" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1.5"/>
+            <text x="403" y="143" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="600" fill="#0F0F0F">Temporal Mixer &#215;2</text>
+            <text x="403" y="163" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">gated time-shift MLP</text>
+            <line x1="494" y1="150" x2="522" y2="150" stroke="#1A1A1A" stroke-width="1.5" marker-end="url(#ar1)"/>
+            <!-- meow head (amber inside imagery only) -->
+            <rect x="528" y="100" width="150" height="100" rx="10" fill="#F8E2CC" stroke="#D97A2B" stroke-width="1.5"/>
+            <text x="603" y="143" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="600" fill="#0F0F0F">Meow Head</text>
+            <text x="603" y="163" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#8A4E1B">41 k params</text>
+            <line x1="684" y1="150" x2="702" y2="150" stroke="#1A1A1A" stroke-width="1.5" marker-end="url(#ar1)"/>
+            <text x="710" y="146" font-family="Inter,sans-serif" font-size="12" font-weight="600" fill="#0F0F0F">p(meow)</text>
+            <text x="710" y="163" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">t + &#916;</text>
+            <!-- skip connection -->
+            <path d="M203 200 C 203 252, 603 252, 603 206" fill="none" stroke="#9C9C98" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#ar1g)"/>
+            <text x="403" y="266" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">whisker attention (skip)</text>
+          </svg>
+          <p class="figcap"><strong>Figure 1: FMP architecture.</strong> A frozen convolutional encoder summarizes the purr stream, a two-layer temporal mixer carries context forward in time, and a 41 k-parameter meow head emits an onset probability every 0.3 ms. The whisker-attention skip path routes fast transients around the mixer.</p>
+        </div>
+      </figure>
+
+      <div class="card-txt rv" style="--i:1">
+        <span class="chip">Design note</span>
+        <p>The head is the entire trainable budget at deployment. Freezing the encoder means a new cat is onboarded by fitting <strong>only the head</strong> — about four seconds on the hardware we made up.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 02 · RESULTS ============ -->
+<section class="sec" id="results" data-sec>
+  <div class="left">
+    <span class="chip rv-soft" style="--i:0">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 3 5-6"/></svg>
+      02 · Results
+    </span>
+    <h2 class="display rv-soft" style="--i:1">Up and to the left.</h2>
+    <p class="lede rv-soft" style="--i:2">Both protocol plots use the same splits, the same seeds, and the same imaginary hardware. Baselines were re-run under identical conditions, then <strong>politely outperformed</strong>.</p>
+  </div>
+
+  <div class="right">
+    <div class="rows">
+      <figure class="fig-wrap rv" style="--i:0">
+        <div class="fig">
+          <svg viewBox="0 0 760 400" role="img" aria-label="Log-scale plot of MeowScore versus training compute. FMP sits far top-left with a high score at low compute; three baselines sit far bottom-right at higher compute and lower scores">
+            <defs>
+              <marker id="ar2g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#9C9C98"/></marker>
+            </defs>
+            <!-- gridlines -->
+            <g stroke="#E8E6DF" stroke-width="1">
+              <line x1="243" y1="36" x2="243" y2="312"/><line x1="402" y1="36" x2="402" y2="312"/><line x1="561" y1="36" x2="561" y2="312"/><line x1="720" y1="36" x2="720" y2="312"/>
+              <line x1="84" y1="36" x2="720" y2="36"/><line x1="84" y1="91" x2="720" y2="91"/><line x1="84" y1="146" x2="720" y2="146"/><line x1="84" y1="201" x2="720" y2="201"/><line x1="84" y1="256" x2="720" y2="256"/>
+            </g>
+            <!-- axes -->
+            <line x1="84" y1="312" x2="720" y2="312" stroke="#1A1A1A" stroke-width="1.5"/>
+            <line x1="84" y1="36" x2="84" y2="312" stroke="#1A1A1A" stroke-width="1.5"/>
+            <!-- x ticks -->
+            <g font-family="Inter,sans-serif" font-size="11" fill="#6B6B67" text-anchor="middle">
+              <text x="84" y="332">10&#185;</text><text x="243" y="332">10&#178;</text><text x="402" y="332">10&#179;</text><text x="561" y="332">10&#8308;</text><text x="720" y="332">10&#8309;</text>
+            </g>
+            <!-- y ticks -->
+            <g font-family="Inter,sans-serif" font-size="11" fill="#6B6B67" text-anchor="end">
+              <text x="74" y="316">50</text><text x="74" y="260">60</text><text x="74" y="205">70</text><text x="74" y="150">80</text><text x="74" y="95">90</text><text x="74" y="40">100</text>
+            </g>
+            <!-- axis titles -->
+            <text x="402" y="362" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" fill="#3A3A36">Training compute (cat&#183;FLOPs, log scale)</text>
+            <text transform="rotate(-90)" x="-174" y="28" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" fill="#3A3A36">MeowScore (%)</text>
+            <!-- baseline trend -->
+            <polyline points="434,246 545,157 672,89" fill="none" stroke="#9C9C98" stroke-width="1.5" stroke-dasharray="5 5"/>
+            <!-- baselines -->
+            <rect x="429" y="241" width="10" height="10" fill="#8A8A86"/>
+            <text x="434" y="268" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">Tail-RNN</text>
+            <path d="M545 150 l7 12 h-14 z" fill="#6B6B67"/>
+            <text x="545" y="180" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">HissFormer</text>
+            <path d="M672 81 l8 8 -8 8 -8 -8 z" fill="#3A3A36"/>
+            <text x="664" y="74" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">PurrNet-XL</text>
+            <!-- annotation arrow -->
+            <line x1="156" y1="64" x2="652" y2="64" stroke="#9C9C98" stroke-width="1" marker-start="url(#ar2g)" marker-end="url(#ar2g)"/>
+            <text x="404" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#3A3A36">10000&#215; less compute at higher MeowScore</text>
+            <!-- ours (amber inside imagery only) -->
+            <circle cx="132" cy="43" r="11" fill="none" stroke="#D97A2B" stroke-width="1.5" opacity=".55"/>
+            <circle cx="132" cy="43" r="7" fill="#D97A2B"/>
+            <text x="152" y="36" font-family="Inter,sans-serif" font-size="12" font-weight="600" fill="#0F0F0F">FMP (ours)</text>
+            <!-- legend -->
+            <rect x="478" y="246" width="226" height="58" rx="6" fill="#FFFFFF" stroke="#E0DED6"/>
+            <circle cx="492" cy="263" r="5" fill="#D97A2B"/>
+            <text x="504" y="267" font-family="Inter,sans-serif" font-size="11" fill="#0F0F0F">FMP (ours)</text>
+            <rect x="487" y="281" width="10" height="10" fill="#8A8A86"/>
+            <text x="504" y="290" font-family="Inter,sans-serif" font-size="11" fill="#3A3A36">Tail-RNN</text>
+            <path d="M596 280 l6 10 h-12 z" fill="#6B6B67"/>
+            <text x="610" y="290" font-family="Inter,sans-serif" font-size="11" fill="#3A3A36">HissFormer</text>
+            <path d="M596 257 l6 6 -6 6 -6 -6 z" fill="#3A3A36"/>
+            <text x="610" y="267" font-family="Inter,sans-serif" font-size="11" fill="#3A3A36">PurrNet-XL</text>
+          </svg>
+          <p class="figcap"><strong>Figure 2: MeowScore vs training compute (log scale).</strong> FMP exceeds the strongest baseline while training on four orders of magnitude less compute. Baselines re-run under the same protocol. All axes, models, and numbers are fictional.</p>
+        </div>
+      </figure>
+
+      <figure class="fig-wrap rv" style="--i:1">
+        <div class="fig">
+          <svg viewBox="0 0 760 400" role="img" aria-label="Scatter plot of accuracy versus latency on log scale. Grey baseline points form a dashed pareto front; FMP sits far above and left of the front at 0.3 milliseconds and 99.1 percent accuracy">
+            <defs>
+              <marker id="ar3g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#9C9C98"/></marker>
+            </defs>
+            <!-- gridlines -->
+            <g stroke="#E8E6DF" stroke-width="1">
+              <line x1="243" y1="36" x2="243" y2="312"/><line x1="402" y1="36" x2="402" y2="312"/><line x1="561" y1="36" x2="561" y2="312"/><line x1="720" y1="36" x2="720" y2="312"/>
+              <line x1="84" y1="36" x2="720" y2="36"/><line x1="84" y1="91" x2="720" y2="91"/><line x1="84" y1="146" x2="720" y2="146"/><line x1="84" y1="201" x2="720" y2="201"/><line x1="84" y1="256" x2="720" y2="256"/>
+            </g>
+            <!-- axes -->
+            <line x1="84" y1="312" x2="720" y2="312" stroke="#1A1A1A" stroke-width="1.5"/>
+            <line x1="84" y1="36" x2="84" y2="312" stroke="#1A1A1A" stroke-width="1.5"/>
+            <!-- x ticks -->
+            <g font-family="Inter,sans-serif" font-size="11" fill="#6B6B67" text-anchor="middle">
+              <text x="84" y="332">0.1</text><text x="243" y="332">1</text><text x="402" y="332">10</text><text x="561" y="332">100</text><text x="720" y="332">1000</text>
+            </g>
+            <!-- y ticks -->
+            <g font-family="Inter,sans-serif" font-size="11" fill="#6B6B67" text-anchor="end">
+              <text x="74" y="316">50</text><text x="74" y="260">60</text><text x="74" y="205">70</text><text x="74" y="150">80</text><text x="74" y="95">90</text><text x="74" y="40">100</text>
+            </g>
+            <!-- axis titles -->
+            <text x="402" y="362" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" fill="#3A3A36">End-to-end latency (ms, log scale)</text>
+            <text transform="rotate(-90)" x="-174" y="28" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" fill="#3A3A36">Top-1 vocalization accuracy (%)</text>
+            <!-- baseline pareto front -->
+            <polyline points="236,284 303,251 494,157 639,86" fill="none" stroke="#3A3A36" stroke-width="1.5" stroke-dasharray="6 5"/>
+            <text x="404" y="224" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">baseline pareto front</text>
+            <!-- baselines -->
+            <circle cx="236" cy="284" r="5" fill="#6B6B67"/>
+            <text x="236" y="304" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">Whisker-MLP</text>
+            <circle cx="303" cy="251" r="5" fill="#6B6B67"/>
+            <text x="313" y="247" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">Tail-RNN</text>
+            <circle cx="367" cy="268" r="5" fill="#9C9C98"/>
+            <text x="377" y="273" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">Echo-LSTM</text>
+            <circle cx="494" cy="157" r="5" fill="#6B6B67"/>
+            <text x="504" y="153" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">HissFormer</text>
+            <circle cx="558" cy="191" r="5" fill="#9C9C98"/>
+            <text x="568" y="196" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">PurrNet-S</text>
+            <circle cx="639" cy="86" r="5" fill="#6B6B67"/>
+            <text x="639" y="72" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#6B6B67">PurrNet-XL</text>
+            <!-- annotation -->
+            <line x1="320" y1="190" x2="184" y2="62" stroke="#9C9C98" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#ar3g)"/>
+            <text x="330" y="188" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#3A3A36">beyond the front</text>
+            <!-- ours (amber inside imagery only) -->
+            <circle cx="160" cy="43" r="11" fill="none" stroke="#D97A2B" stroke-width="1.5" opacity=".55"/>
+            <circle cx="160" cy="43" r="7" fill="#D97A2B"/>
+            <text x="180" y="40" font-family="Inter,sans-serif" font-size="12" font-weight="600" fill="#0F0F0F">FMP (ours)</text>
+          </svg>
+          <p class="figcap"><strong>Figure 3: Accuracy vs latency.</strong> Grey points are baselines; the dashed line is their pareto front. FMP sits far up-left of the front at 99.1% top-1 and 0.3 ms. Fictional, like everything else on this page.</p>
+        </div>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 03 · ABLATIONS ============ -->
+<section class="sec" id="ablations" data-sec>
+  <div class="left">
+    <span class="chip rv-soft" style="--i:0">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+      03 · Ablations
+    </span>
+    <h2 class="display rv-soft" style="--i:1">Remove one part, learn its job.</h2>
+    <p class="lede rv-soft" style="--i:2">Each bar deletes exactly one component and retrains the head. <strong>Pretraining does the heavy lifting</strong>; the mixer does the timing.</p>
+  </div>
+
+  <div class="right">
+    <div class="rows">
+      <figure class="fig-dark rv" style="--i:0">
+        <svg viewBox="0 0 760 340" role="img" aria-label="Bar chart of four ablations. Full FMP scores 99.1; removing the temporal mixer drops to 84.3; removing whisker attention drops to 71.0; removing purr pretraining drops to 52.6">
+          <defs>
+            <linearGradient id="abar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#E89B55"/>
+              <stop offset="55%" stop-color="#D97A2B"/>
+              <stop offset="100%" stop-color="#8A4E1B"/>
+            </linearGradient>
+          </defs>
+          <!-- gridlines -->
+          <g stroke="#262626" stroke-width="1">
+            <line x1="84" y1="30" x2="720" y2="30"/><line x1="84" y1="92.5" x2="720" y2="92.5"/><line x1="84" y1="155" x2="720" y2="155"/><line x1="84" y1="217.5" x2="720" y2="217.5"/>
+          </g>
+          <!-- y ticks -->
+          <g font-family="Inter,sans-serif" font-size="11" fill="#6B6B67" text-anchor="end">
+            <text x="74" y="284">0</text><text x="74" y="221.5">25</text><text x="74" y="159">50</text><text x="74" y="96.5">75</text><text x="74" y="34">100</text>
+          </g>
+          <text transform="rotate(-90)" x="-155" y="28" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" fill="#9C9C98">MeowScore (%)</text>
+          <!-- bars (amber inside imagery only) -->
+          <rect x="115.5" y="32.25" width="96" height="247.75" rx="4" fill="url(#abar)"/>
+          <rect x="274.5" y="69.25" width="96" height="210.75" rx="4" fill="url(#abar)" opacity=".68"/>
+          <rect x="433.5" y="102.5" width="96" height="177.5" rx="4" fill="url(#abar)" opacity=".48"/>
+          <rect x="592.5" y="148.5" width="96" height="131.5" rx="4" fill="url(#abar)" opacity=".32"/>
+          <!-- value labels -->
+          <g font-family="Inter,sans-serif" font-size="13" font-weight="600" fill="#F2F2F0" text-anchor="middle">
+            <text x="163.5" y="22">99.1</text><text x="322.5" y="59">84.3</text><text x="481.5" y="92">71.0</text><text x="640.5" y="138">52.6</text>
+          </g>
+          <!-- baseline + x labels -->
+          <line x1="84" y1="280" x2="720" y2="280" stroke="#3A3A36" stroke-width="1.5"/>
+          <g font-family="Inter,sans-serif" font-size="11" fill="#9C9C98" text-anchor="middle">
+            <text x="163.5" y="302">Full FMP</text>
+            <text x="322.5" y="302">&#8722; temporal mixer</text>
+            <text x="481.5" y="302">&#8722; whisker attention</text>
+            <text x="640.5" y="302">&#8722; purr pretraining</text>
+          </g>
+        </svg>
+        <p class="figcap"><strong>Figure 4: Ablations on MeowBench-1M (val).</strong> Removing the temporal mixer costs 14.8 points; removing purr pretraining nearly halves the score. Bars, splits, and points are fictional.</p>
+      </figure>
+
+      <div class="card-txt rv" style="--i:1">
+        <span class="chip">Protocol</span>
+        <p>Every ablation keeps the parameter budget constant by widening the remaining parts. The ordering held across <strong>all three seeds</strong>, which is easy when you invent the seeds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 · QUALITATIVE ============ -->
+<section class="sec" id="qualitative" data-sec>
+  <div class="left">
+    <span class="chip rv-soft" style="--i:0">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 16V9"/><path d="M11 16v-5"/><path d="M15 16V7"/><path d="M19 16v-3" transform="translate(-2)"/></svg>
+      04 · Qualitative
+    </span>
+    <h2 class="display rv-soft" style="--i:1">Forecasts you can look at.</h2>
+    <p class="lede rv-soft" style="--i:2">Each pair shows the model's predicted spectrogram above what the cat actually said. The differences are small; the cats were <strong>unavailable for comment</strong>.</p>
+  </div>
+
+  <div class="right">
+    <div class="qual">
+      <div class="qtile rv" style="--i:0">
+        <p class="qlab">Predicted</p>
+        <div class="spec-strip" style="--bx:26%;--cx:70%" aria-hidden="true"></div>
+        <p class="qlab">Actual</p>
+        <div class="spec-strip" style="--bx:29%;--cx:66%" aria-hidden="true"></div>
+        <p class="qcap">Food bowl &#183; t+0.2 s &#183; match 0.97</p>
+      </div>
+      <div class="qtile rv" style="--i:1">
+        <p class="qlab">Predicted</p>
+        <div class="spec-strip" style="--bx:48%;--cx:18%" aria-hidden="true"></div>
+        <p class="qlab">Actual</p>
+        <div class="spec-strip" style="--bx:52%;--cx:22%" aria-hidden="true"></div>
+        <p class="qcap">Door opens &#183; t+0.4 s &#183; match 0.95</p>
+      </div>
+      <div class="qtile rv" style="--i:2">
+        <p class="qlab">Predicted</p>
+        <div class="spec-strip" style="--bx:64%;--cx:30%" aria-hidden="true"></div>
+        <p class="qlab">Actual</p>
+        <div class="spec-strip" style="--bx:60%;--cx:34%" aria-hidden="true"></div>
+        <p class="qcap">Vacuum sighted &#183; t+0.1 s &#183; match 0.99</p>
+      </div>
+      <div class="qtile rv" style="--i:3">
+        <p class="qlab">Predicted</p>
+        <div class="spec-strip" style="--bx:38%;--cx:82%" aria-hidden="true"></div>
+        <p class="qlab">Actual</p>
+        <div class="spec-strip" style="--bx:42%;--cx:78%" aria-hidden="true"></div>
+        <p class="qcap">Midnight zoomies &#183; t+1.2 s &#183; match 0.91</p>
+      </div>
+    </div>
+    <p class="fig-note rv" style="--i:4"><strong>Figure 5: Predicted vs observed spectrogram excerpts</strong>, sampled 1.2 s before onset. Tiles are decorative gradients standing in for real spectrograms — like the cats, fictional.</p>
+    <div class="reaction rv" style="--i:5">
+      <img src="shots/example_fig.jpg" alt="A cat giving an approving thumbs up — fictional reviewer reaction" loading="lazy">
+      <p><strong>Figure 6: Reviewer 2, on our latency numbers.</strong> We interpret the gesture as acceptance. Reaction fictional; reviewer hypothetical; tears unrelated to the rebuttal.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 05 · BIBTEX ============ -->
+<section class="sec" id="bibtex" data-sec>
+  <div class="left">
+    <span class="chip rv-soft" style="--i:0">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6c0 2-1 3-3 4"/><path d="M20 11h-4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6c0 2-1 3-3 4"/></svg>
+      05 · BibTeX
+    </span>
+    <h2 class="display rv-soft" style="--i:1">Cite the cat.</h2>
+    <p class="lede rv-soft" style="--i:2">If you cite this, you are citing a fictional cat. We are at peace with that.</p>
+    <div class="cta-row rv-soft" style="--i:3">
+      <a class="btn" href="#top">
+        Back to the title
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="rows">
+      <div class="code-card rv" style="--i:0">
+        <span class="chip">BibTeX</span>
+<pre>@article{park2026fmp,
+  title   = {<strong>FMP: Fast Meow Prediction</strong>},
+  author  = {Park, Kitty and Kim, Ya-ong and Lee, Calico},
+  journal = {CatTower LTD Research Preprints},
+  volume  = {26},
+  number  = {14},
+  year    = {2026},
+  note    = {Fictional. Please do not deploy near real cats.}
+}</pre>
+      </div>
+      <div class="card-txt rv" style="--i:1">
+        <span class="chip">Contact</span>
+        <p>Questions about FMP go to the meow head, care of <strong>CatTower LTD Research</strong>. Replies arrive 0.3 ms before you finish asking.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <a class="brand" href="#top" aria-label="CatTower LTD Research home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 21V9l7-6 7 6v12"/><path d="M9 21v-6h6v6"/><path d="M5 13h14"/>
+      </svg>
+      CatTower LTD Research
+    </a>
+    <nav class="foot-nav" aria-label="Footer">
+      <a href="#architecture">Architecture</a>
+      <a href="#results">Results</a>
+      <a href="#ablations">Ablations</a>
+      <a href="#qualitative">Qualitative</a>
+      <a href="#bibtex">BibTeX</a>
+    </nav>
+    <div class="disclaimer">
+      <p>Demo page generated from themes/dark-editorial-scroll.md (research-designer).<br>
+      All people, companies, products, and figures are fictional.<br>
+      No affiliation with any real entity.</p>
+    </div>
+  </div>
+</footer>
+
+<noscript><style>.sec .rv,.sec .rv-soft{opacity:1;transform:none}</style></noscript>
+
+<script>
+(function(){
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var sections = document.querySelectorAll('[data-sec]');
+
+  if (reduced || !('IntersectionObserver' in window)){
+    sections.forEach(function(s){ s.classList.add('in'); s.classList.remove('out'); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        var s = e.target;
+        if (e.isIntersecting){
+          s.classList.add('in'); s.classList.remove('out');       /* enter: rise + fade */
+        } else if (e.boundingClientRect.top < 0){
+          s.classList.add('out'); s.classList.remove('in');       /* left past top: drift up */
+        } else {
+          s.classList.remove('in'); s.classList.remove('out');    /* left below: reset, replay */
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -10% 0px' });
+    sections.forEach(function(s){ io.observe(s); });
+  }
+
+  /* 2px scroll progress bar, updated in requestAnimationFrame */
+  var bar = document.getElementById('progress');
+  var ticking = false;
+  function paint(){
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - doc.clientHeight;
+    var p = max > 0 ? (window.scrollY || doc.scrollTop) / max : 0;
+    bar.style.width = (p * 100).toFixed(3) + '%';
+    ticking = false;
+  }
+  function onScroll(){
+    if (!ticking){ ticking = true; window.requestAnimationFrame(paint); }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  paint();
+})();
+</script>
+
+</body>
+</html>

@@ -93,6 +93,20 @@ Status: good `#009E73`, watch `#E69F00`, alert `#D55E00`.
 | Status row | Icon + name + value + status dot-with-label; 44px min hit target |
 | Theme toggle | Sun/moon swap, 220ms crossfade |
 
+## Source provenance (hover → file:line) — REQUIRED
+
+Every plotted datum is traceable to where it came from. Each chart point, count-up KPI value, bar, and table row binds source metadata — the **file path and line number** of the log/record that produced it — and the hover tooltip / readout surfaces it as `path:line` beside the value.
+
+| Aspect | Spec |
+|---|---|
+| Data model | each series/point carries `{ value, file, line }` (or a `src:"path:line"` string); a series maps point *i* → a deterministic line in that source log |
+| Reveal | extend the theme's existing tooltip/readout — append `file:line` in mono, muted vs. the value; no new chrome; stays instant even though the theme is springy elsewhere |
+| Example | hovering a card shows e.g. `48 % · metrics/daily.csv:57` |
+| Affordance | optional click-to-copy / link target; never required |
+| Scope | a standing default for **every** data surface in this collection — not opt-in |
+
+A number on screen must be traceable back to the exact line that produced it.
+
 ## 8. Don't
 
 - Never more than one hero number per screen

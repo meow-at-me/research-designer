@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>research-designer — motion & 3D page specs for researchers</title>
-<meta name="description" content="Motion- and 3D-first page specs for researchers and engineers: project pages, experiment dashboards, eval interfaces, and posters that aren't static.">
+<title>research-designer — page specs for researchers & engineers</title>
+<meta name="description" content="Page specs and live demos for researchers and engineers: project pages, experiment dashboards, eval interfaces, posters, and adopted static dashboard/research-page specs. No time to design it. Too proud to ship it ugly.">
 
 <!-- Fonts: SIL OFL only -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -88,31 +88,15 @@ svg.ic{width:16px; height:16px; flex:none; fill:none; stroke:currentColor; strok
 .pill.solid{background:var(--text-hi); color:#0F0F0F; border-color:transparent; font-weight:600}
 .pill svg{width:15px; height:15px}
 
-/* ---- hero masonry: false-color "reconstruction" plates + frosted description cards ---- */
+/* ---- hero masonry: real demo previews + frosted description cards ---- */
 .masonry{display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start}
 .mcol{display:flex; flex-direction:column; gap:16px; min-width:0}
 .mphoto{position:relative; margin:0; border-radius:12px; overflow:hidden; border:1px solid var(--card-edge); background:var(--card); line-height:0}
 .mphoto.tall{aspect-ratio:3 / 4.4}
 .mphoto.wide{aspect-ratio:4 / 3}
-.plate{position:absolute; inset:0; background-color:#0b0d12; filter:saturate(.95) brightness(.86)}
-.plate{background-image:
-  radial-gradient(circle, rgba(244,244,242,.45) 1px, transparent 1.5px),
-  radial-gradient(58% 60% at 30% 28%, rgba(42,47,107,.95), transparent 60%),
-  radial-gradient(55% 60% at 76% 72%, rgba(31,143,134,.82), transparent 62%),
-  radial-gradient(46% 48% at 82% 24%, rgba(217,122,43,.5), transparent 60%);
-  background-size:7px 7px, auto, auto, auto}
-.plate.b{background-image:
-  radial-gradient(circle, rgba(244,244,242,.45) 1px, transparent 1.5px),
-  radial-gradient(58% 60% at 70% 30%, rgba(31,143,134,.9), transparent 60%),
-  radial-gradient(55% 60% at 26% 70%, rgba(110,71,201,.7), transparent 62%),
-  radial-gradient(46% 48% at 60% 80%, rgba(217,122,43,.45), transparent 60%);
-  background-size:7px 7px, auto, auto, auto}
-.plate.c{background-image:
-  radial-gradient(circle, rgba(244,244,242,.45) 1px, transparent 1.5px),
-  radial-gradient(58% 60% at 40% 34%, rgba(180,71,143,.78), transparent 60%),
-  radial-gradient(55% 60% at 80% 66%, rgba(31,143,134,.7), transparent 62%),
-  radial-gradient(46% 48% at 24% 26%, rgba(42,47,107,.85), transparent 60%);
-  background-size:7px 7px, auto, auto, auto}
+.mphoto a{display:block; width:100%; height:100%}
+.mphoto img{width:100%; height:100%; object-fit:cover; object-position:top center; transition:transform .5s var(--ease)}
+.mphoto:hover img{transform:scale(1.04)}
 .mcard{border-radius:12px; padding:18px 18px 20px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06);
   -webkit-backdrop-filter:blur(14px) saturate(130%); backdrop-filter:blur(14px) saturate(130%)}
 .mcard .chip{margin-bottom:11px; background:rgba(255,255,255,.15); color:#fff}
@@ -181,8 +165,9 @@ footer{border-top:1px solid var(--card-edge); margin-top:6vh}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   .sec .rv,.sec .rv-soft{opacity:1 !important; transform:none !important; transition:none !important}
-  .pill,.dlink,.topnav a,.foot-col a,.gcard,.gthumb img{transition:none !important}
+  .pill,.dlink,.topnav a,.foot-col a,.gcard,.gthumb img,.mphoto img{transition:none !important}
   .pill:hover,.gcard:hover{transform:none}
+  .gcard:hover .gthumb img,.mphoto:hover img{transform:none}
 }
 </style>
 </head>
@@ -197,7 +182,8 @@ footer{border-top:1px solid var(--card-edge); margin-top:6vh}
     <nav class="topnav" aria-label="Primary">
       <a href="#top" class="active">Home</a>
       <a href="#vision">Vision</a>
-      <a href="#archetypes">Archetypes</a>
+      <a href="#pages">Pages</a>
+      <a href="#dashboards">Dashboards</a>
       <a href="#showcase">Showcase</a>
       <a href="README.md">Docs</a>
     </nav>
@@ -218,16 +204,17 @@ footer{border-top:1px solid var(--card-edge); margin-top:6vh}
     <div class="left">
       <span class="chip rv-soft" style="--i:0">
         <svg class="ic" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3"/></svg>
-        Motion &amp; 3D · for researchers
+        15 specs · for researchers &amp; engineers
       </span>
       <h1 class="display rv-soft" style="--i:1">Research pages that aren't <span class="ser">static</span>.</h1>
       <p class="subtitle rv-soft" style="--i:2">No time to design it. Too proud to ship it ugly.</p>
       <p class="lede rv-soft" style="--i:3">Self-contained specs and live demos for the page genres researchers actually build —
-        <strong>project pages, experiment dashboards, eval interfaces, and posters</strong>.</p>
+        <strong>project pages, experiment dashboards, eval interfaces, posters</strong>, plus a set of
+        static dashboard &amp; research-page specs for when you don't need motion.</p>
       <p class="lede rv-soft" style="--i:4">Real interactive 3D, live charts, and scroll-driven figures — reached for only when they
         serve comprehension, never as decoration. License-clean, single-file, no build step.</p>
       <div class="pills rv-soft" style="--i:5">
-        <a class="pill solid" href="#archetypes">Browse archetypes
+        <a class="pill solid" href="#pages">Browse the gallery
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
         <a class="pill" href="examples/research-project-page.html">Open a live demo</a>
         <a class="pill" href="README.md">Read the docs</a>
@@ -236,15 +223,15 @@ footer{border-top:1px solid var(--card-edge); margin-top:6vh}
     <div class="right">
       <div class="masonry">
         <div class="mcol">
-          <figure class="mphoto wide rv" style="--i:0"><div class="plate" aria-hidden="true"></div></figure>
+          <figure class="mphoto wide rv" style="--i:0"><a href="examples/research-project-page.html" aria-label="research-project-page demo"><img src="assets/previews/research-project-page.png" alt="research-project-page demo preview" loading="lazy"></a></figure>
           <div class="mcard rv" style="--i:1">
             <span class="chip">Interactive</span>
             <p>Drag a real 3D reconstruction, scrub a before/after slider — the teaser <strong>is the result</strong>, not a screenshot.</p>
           </div>
-          <figure class="mphoto wide rv" style="--i:2"><div class="plate b" aria-hidden="true"></div></figure>
+          <figure class="mphoto wide rv" style="--i:2"><a href="examples/experiment-dashboard.html" aria-label="experiment-dashboard demo"><img src="assets/previews/experiment-dashboard.png" alt="experiment-dashboard demo preview" loading="lazy"></a></figure>
         </div>
         <div class="mcol">
-          <figure class="mphoto tall rv" style="--i:0"><div class="plate c" aria-hidden="true"></div></figure>
+          <figure class="mphoto tall rv" style="--i:0"><a href="examples/research-poster.html" aria-label="research-poster demo"><img src="assets/previews/research-poster.png" alt="research-poster demo preview" loading="lazy"></a></figure>
           <div class="mcard rv" style="--i:1">
             <span class="chip">Live</span>
             <p>Charts draw in, metrics count up, figures reveal on scroll — <strong>motion that tracks the work</strong>.</p>
@@ -280,20 +267,19 @@ footer{border-top:1px solid var(--card-edge); margin-top:6vh}
     </div>
   </section>
 
-  <!-- ARCHETYPES -->
-  <section class="sec" id="archetypes" data-sec>
+  <!-- GALLERY · RESEARCH & PROJECT PAGES -->
+  <section class="sec" id="pages" data-sec>
     <div class="left">
       <span class="chip rv-soft" style="--i:0">
-        <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-        02 · Archetypes
+        <svg class="ic" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M8 14l3-3 3 2 4-5"/></svg>
+        02 · Pages
       </span>
-      <h2 class="display rv-soft" style="--i:1">Pick the page you're building.</h2>
-      <p class="lede rv-soft" style="--i:2">Each is a self-contained spec plus a live demo. All four share one fictional
-        computer-vision project (<strong>WhiskerSplat</strong>) so they read as one body of work.</p>
+      <h2 class="display rv-soft" style="--i:1">Pages that read like a result.</h2>
+      <p class="lede rv-soft" style="--i:2">Paper / project landings and scroll-driven data stories. The interactive archetype shares one
+        fictional computer-vision project (<strong>WhiskerSplat</strong>) so the demos read as one body of work.</p>
     </div>
     <div class="right">
       <div class="gcards">
-
         <article class="gcard rv" style="--i:0">
           <a class="gthumb" href="examples/research-project-page.html"><img src="assets/previews/research-project-page.png" alt="research-project-page demo preview" loading="lazy"></a>
           <div class="gbody">
@@ -302,26 +288,122 @@ footer{border-top:1px solid var(--card-edge); margin-top:6vh}
             <div class="glinks"><a class="dlink demo" href="examples/research-project-page.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/research-project-page.md">Spec</a></div>
           </div>
         </article>
-
         <article class="gcard rv" style="--i:1">
+          <a class="gthumb" href="examples/dark-editorial-scroll.html"><img src="assets/previews/dark-editorial-scroll.png" alt="dark-editorial-scroll demo preview" loading="lazy"></a>
+          <div class="gbody">
+            <div class="grow"><h3><a href="examples/dark-editorial-scroll.html">dark-editorial-scroll</a></h3><span class="gtier">Static spec</span></div>
+            <p>Research/paper landing on near-black — a sticky title column beside bright figure cards, editorial scroll pacing.</p>
+            <div class="glinks"><a class="dlink demo" href="examples/dark-editorial-scroll.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/dark-editorial-scroll.md">Spec</a></div>
+          </div>
+        </article>
+        <article class="gcard rv" style="--i:2">
+          <a class="gthumb" href="examples/scrolly-data.html"><img src="assets/previews/scrolly-data.png" alt="scrolly-data demo preview" loading="lazy"></a>
+          <div class="gbody">
+            <div class="grow"><h3><a href="examples/scrolly-data.html">scrolly-data</a></h3><span class="gtier">Static spec</span></div>
+            <p>Scroll-driven data essay — serif editorial voice, charts that build as you read, light reading surface.</p>
+            <div class="glinks"><a class="dlink demo" href="examples/scrolly-data.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/scrolly-data.md">Spec</a></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY · DASHBOARDS & CONSOLES -->
+  <section class="sec" id="dashboards" data-sec>
+    <div class="left">
+      <span class="chip rv-soft" style="--i:0">
+        <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        03 · Dashboards
+      </span>
+      <h2 class="display rv-soft" style="--i:1">Boards you'd actually debug from.</h2>
+      <p class="lede rv-soft" style="--i:2">Metrics, ablations, run comparison and monitoring UIs. Every chart datapoint is
+        <strong>traceable to its source log line</strong> — hover a point and the tooltip shows the exact <code>file:line</code> it came from.</p>
+      <p class="lede rv-soft" style="--i:3">The interactive board is Tier 1; the rest are static specs adopted from the <strong>theme-park.md</strong> vocabulary for the same surfaces without motion.</p>
+    </div>
+    <div class="right">
+      <div class="gcards">
+        <article class="gcard rv" style="--i:0">
           <a class="gthumb" href="examples/experiment-dashboard.html"><img src="assets/previews/experiment-dashboard.png" alt="experiment-dashboard demo preview" loading="lazy"></a>
           <div class="gbody">
             <div class="grow"><h3><a href="examples/experiment-dashboard.html">experiment-dashboard</a></h3><span class="gtier">Tier 1 · Motion</span></div>
-            <p>ML experiment board: multi-run training curves, validation metrics, comparison bars, PSNR-vs-latency scatter, sortable runs table.</p>
+            <p>ML experiment board: multi-run training curves, validation metrics, comparison bars, PSNR-vs-latency scatter, sortable runs table. Hover any point for its source log line.</p>
             <div class="glinks"><a class="dlink demo" href="examples/experiment-dashboard.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/experiment-dashboard.md">Spec</a></div>
           </div>
         </article>
-
-        <article class="gcard rv" style="--i:0">
-          <a class="gthumb" href="examples/research-poster.html"><img src="assets/previews/research-poster.png" alt="research-poster demo preview" loading="lazy"></a>
+        <article class="gcard rv" style="--i:1">
+          <a class="gthumb" href="examples/lab-console.html"><img src="assets/previews/lab-console.png" alt="lab-console demo preview" loading="lazy"></a>
           <div class="gbody">
-            <div class="grow"><h3><a href="examples/research-poster.html">research-poster</a></h3><span class="gtier">Tier 0 · print</span></div>
-            <p>Conference poster on a fixed A0 canvas that scales to fit on screen and prints to a real PDF — columns, panels, figures, QR footer.</p>
-            <div class="glinks"><a class="dlink demo" href="examples/research-poster.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/research-poster.md">Spec</a></div>
+            <div class="grow"><h3><a href="examples/lab-console.html">lab-console</a></h3><span class="gtier">Static spec</span></div>
+            <p>Light engineering console — dense run tables, live metrics, sparklines; each row traceable to its run log.</p>
+            <div class="glinks"><a class="dlink demo" href="examples/lab-console.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/lab-console.md">Spec</a></div>
           </div>
         </article>
+        <article class="gcard rv" style="--i:2">
+          <a class="gthumb" href="examples/aurora.html"><img src="assets/previews/aurora.png" alt="aurora demo preview" loading="lazy"></a>
+          <div class="gbody">
+            <div class="grow"><h3><a href="examples/aurora.html">aurora</a></h3><span class="gtier">Static spec</span></div>
+            <p>Light analytics dashboard with a dark sidebar — donut + bar viz, a single purple accent.</p>
+            <div class="glinks"><a class="dlink demo" href="examples/aurora.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/aurora.md">Spec</a></div>
+          </div>
+        </article>
+        <article class="gcard rv" style="--i:3">
+          <a class="gthumb" href="examples/graphite.html"><img src="assets/previews/graphite.png" alt="graphite demo preview" loading="lazy"></a>
+          <div class="gbody">
+            <div class="grow"><h3><a href="examples/graphite.html">graphite</a></h3><span class="gtier">Static spec</span></div>
+            <p>Matte charcoal industrial console — color only in the data, an ink-in reveal on load.</p>
+            <div class="glinks"><a class="dlink demo" href="examples/graphite.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/graphite.md">Spec</a></div>
+          </div>
+        </article>
+        <article class="gcard rv" style="--i:4">
+          <a class="gthumb" href="examples/marine-grid.html"><img src="assets/previews/marine-grid.png" alt="marine-grid demo preview" loading="lazy"></a>
+          <div class="gbody">
+            <div class="grow"><h3><a href="examples/marine-grid.html">marine-grid</a></h3><span class="gtier">Static spec</span></div>
+            <p>Square-corner corporate sensor board — deep marine blue, hairline panels, tabular readouts.</p>
+            <div class="glinks"><a class="dlink demo" href="examples/marine-grid.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/marine-grid.md">Spec</a></div>
+          </div>
+        </article>
+        <article class="gcard rv" style="--i:5">
+          <a class="gthumb" href="examples/lumen.html"><img src="assets/previews/lumen.png" alt="lumen demo preview" loading="lazy"></a>
+          <div class="gbody">
+            <div class="grow"><h3><a href="examples/lumen.html">lumen</a></h3><span class="gtier">Static spec</span></div>
+            <p>Navy instrument panel — radial gauges, uniform-ramp heatmaps, mono readouts.</p>
+            <div class="glinks"><a class="dlink demo" href="examples/lumen.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/lumen.md">Spec</a></div>
+          </div>
+        </article>
+        <article class="gcard rv" style="--i:6">
+          <a class="gthumb" href="examples/nocturne.html"><img src="assets/previews/nocturne.png" alt="nocturne demo preview" loading="lazy"></a>
+          <div class="gbody">
+            <div class="grow"><h3><a href="examples/nocturne.html">nocturne</a></h3><span class="gtier">Static spec</span></div>
+            <p>Dense slate night-ops board — frost accent, packed 12-column panels.</p>
+            <div class="glinks"><a class="dlink demo" href="examples/nocturne.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/nocturne.md">Spec</a></div>
+          </div>
+        </article>
+        <article class="gcard rv" style="--i:7">
+          <a class="gthumb" href="examples/pulse.html"><img src="assets/previews/pulse.png" alt="pulse demo preview" loading="lazy"></a>
+          <div class="gbody">
+            <div class="grow"><h3><a href="examples/pulse.html">pulse</a></h3><span class="gtier">Static spec</span></div>
+            <p>Consumer-soft monitor — one blue, springy count-ups, large rounded cards.</p>
+            <div class="glinks"><a class="dlink demo" href="examples/pulse.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/pulse.md">Spec</a></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
 
-        <article class="gcard rv" style="--i:1">
+  <!-- GALLERY · ANNOTATION & POSTERS -->
+  <section class="sec" id="tools" data-sec>
+    <div class="left">
+      <span class="chip rv-soft" style="--i:0">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
+        04 · Annotation &amp; posters
+      </span>
+      <h2 class="display rv-soft" style="--i:1">Collect labels. Print a poster.</h2>
+      <p class="lede rv-soft" style="--i:2">A keyboard-first human-verification interface and a fixed-aspect poster that renders on screen
+        <em>and</em> prints to a real PDF — two surfaces every lab eventually needs.</p>
+    </div>
+    <div class="right">
+      <div class="gcards">
+        <article class="gcard rv" style="--i:0">
           <a class="gthumb" href="examples/eval-interface.html"><img src="assets/previews/eval-interface.png" alt="eval-interface demo preview" loading="lazy"></a>
           <div class="gbody">
             <div class="grow"><h3><a href="examples/eval-interface.html">eval-interface</a></h3><span class="gtier">Tier 0 · keyboard</span></div>
@@ -329,7 +411,14 @@ footer{border-top:1px solid var(--card-edge); margin-top:6vh}
             <div class="glinks"><a class="dlink demo" href="examples/eval-interface.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/eval-interface.md">Spec</a></div>
           </div>
         </article>
-
+        <article class="gcard rv" style="--i:1">
+          <a class="gthumb" href="examples/research-poster.html"><img src="assets/previews/research-poster.png" alt="research-poster demo preview" loading="lazy"></a>
+          <div class="gbody">
+            <div class="grow"><h3><a href="examples/research-poster.html">research-poster</a></h3><span class="gtier">Tier 0 · print</span></div>
+            <p>Conference poster on a fixed A0 canvas that scales to fit on screen and prints to a real PDF — columns, panels, figures, QR footer.</p>
+            <div class="glinks"><a class="dlink demo" href="examples/research-poster.html">Live demo<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a><a class="dlink" href="themes/research-poster.md">Spec</a></div>
+          </div>
+        </article>
       </div>
     </div>
   </section>
@@ -339,7 +428,7 @@ footer{border-top:1px solid var(--card-edge); margin-top:6vh}
     <div class="left">
       <span class="chip rv-soft" style="--i:0">
         <svg class="ic" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg>
-        03 · Showcase
+        05 · Showcase
       </span>
       <h2 class="display rv-soft" style="--i:1">Motion &amp; 3D character studies.</h2>
       <p class="lede rv-soft" style="--i:2">Pure technique demos that show the ethos in the abstract. Borrow their moves inside any archetype.</p>
@@ -371,7 +460,7 @@ footer{border-top:1px solid var(--card-edge); margin-top:6vh}
     <div class="left">
       <span class="chip rv-soft" style="--i:0">
         <svg class="ic" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 3 5-6"/></svg>
-        04 · Approach
+        06 · Approach
       </span>
       <h2 class="display rv-soft" style="--i:1">Three-tier progressive enhancement.</h2>
       <p class="lede rv-soft" style="--i:2">Every spec declares the highest tier it uses, and reaches up only when motion or 3D is
@@ -399,21 +488,17 @@ footer{border-top:1px solid var(--card-edge); margin-top:6vh}
   <div class="foot-inner">
     <a class="brand" href="#top" aria-label="research-designer — home"><span class="mk" aria-hidden="true"></span>research-designer</a>
     <nav class="foot-cols" aria-label="Footer">
-      <div class="foot-col"><h4>Archetypes</h4>
-        <a href="examples/research-project-page.html">Project page</a>
-        <a href="examples/experiment-dashboard.html">Experiment dashboard</a>
-        <a href="examples/research-poster.html">Research poster</a>
-        <a href="examples/eval-interface.html">Eval interface</a>
+      <div class="foot-col"><h4>Gallery</h4>
+        <a href="#pages">Research &amp; project pages</a>
+        <a href="#dashboards">Dashboards &amp; consoles</a>
+        <a href="#tools">Annotation &amp; posters</a>
+        <a href="#showcase">Motion &amp; 3D showcase</a>
       </div>
       <div class="foot-col"><h4>Docs</h4>
         <a href="README.md">README</a>
         <a href="GUIDELINES.md">Guidelines</a>
         <a href="TOOLING.md">Tooling</a>
         <a href="LICENSES.md">Licenses</a>
-      </div>
-      <div class="foot-col"><h4>Showcase</h4>
-        <a href="examples/liquid-chrome.html">liquid-chrome</a>
-        <a href="examples/prism-glass.html">prism-glass</a>
       </div>
     </nav>
     <div class="disclaimer">

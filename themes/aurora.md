@@ -81,6 +81,20 @@ Status: success `#198038`, failed `#FA4D56`, inconclusive `#878D96`.
 - Hover: bars lighten +8% with tooltip; donut segment scales out 4px and center text swaps to hovered label + %; line crosshair + dot.
 - Legend right of each donut; legend hover highlights the segment.
 
+## Source provenance (hover → file:line) — REQUIRED
+
+Every plotted datum is traceable to where it came from. Each chart point, bar, donut segment, KPI value, and table row binds source metadata — the **file path and line number** of the log/record that produced it — and the hover tooltip / readout surfaces it as `path:line` beside the value.
+
+| Aspect | Spec |
+|---|---|
+| Data model | each series/point carries `{ value, file, line }` (or a `src:"path:line"` string); a curve maps point *i* → a deterministic line in that run's log |
+| Reveal | extend the theme's existing tooltip/readout — append `file:line` in mono, muted vs. the value; no new chrome |
+| Example | hovering a metric shows e.g. `34% · eval/outcomes.csv:57` |
+| Affordance | optional click-to-copy / link target; never required. Instant (no animation), like every hover here |
+| Scope | a standing default for **every** data surface in this collection — not opt-in |
+
+A number on screen must be traceable back to the exact line that produced it.
+
 ## 7. Motion
 
 | Step | Spec |

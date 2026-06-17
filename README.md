@@ -97,9 +97,11 @@ Each `themes/*.md` is a self-contained spec: color tokens, typography, layout, c
 
 ### Dashboards & consoles
 
+Collection-wide rule: every chart datapoint is **traceable to its source log line** — hover a point and the tooltip shows the exact `file:line` it came from. Wired into all eight dashboard demos.
+
 | Spec | What it is |
 |---|---|
-| `themes/experiment-dashboard.md` | Metrics, ablations & run comparison — charts, KPI cards, readouts — Tier 1 (Motion) |
+| `themes/experiment-dashboard.md` | Metrics, ablations & run comparison — charts, KPI cards, readouts; hover any point for its source `file:line` — Tier 1 (Motion) |
 | `themes/aurora.md` | Light analytics dashboard, dark sidebar, purple accent, donut/bar viz |
 | `themes/graphite.md` | Matte charcoal industrial console, color only in data, ink-in reveal |
 | `themes/marine-grid.md` | Square-corner corporate sensor board, deep marine blue, hairline panels |

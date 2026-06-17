@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meowtrics Lab Console — CatTower LTD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBF9F9;
+    --panel:#FFFFFF;
+    --ink:#14141C;
+    --ink-soft:#6F7890;
+    --ink-faint:#A6ACBE;
+    --border:#E5E1DC;
+    --accent:#4E79C4;
+    --s-blue:#4E79C4;
+    --s-teal:#3E8E7E;
+    --s-gold:#C9A23D;
+    --s-violet:#9B6FB5;
+    --s-red:#C75D5D;
+    --s-gray:#6F7890;
+    --r-base:3px;
+    --r-md:6px;
+    --r-lg:8px;
+    --r-full:999px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:13px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+  a{color:var(--accent);text-decoration:none;}
+  svg.icon{flex:none;display:block;}
+
+  /* ---------- Top bar (48px) ---------- */
+  .topbar{
+    height:48px;display:flex;align-items:center;gap:12px;
+    padding:0 16px;background:var(--panel);
+    border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:30;
+  }
+  .brand{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;}
+  .brand .icon{color:var(--ink);}
+  .brand-tag{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:400;
+    color:var(--ink-soft);border:1px solid var(--border);border-radius:var(--r-base);
+    padding:1px 5px;
+  }
+  .topbar-sep{width:1px;height:20px;background:var(--border);}
+  .proj-switch{
+    display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;
+    border:1px solid var(--border);border-radius:var(--r-base);
+    background:var(--panel);color:var(--ink);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;
+    cursor:pointer;transition:background-color .15s ease;
+  }
+  .proj-switch:hover{background:var(--bg);}
+  .proj-switch .icon{color:var(--ink-soft);}
+  .search{
+    flex:1;max-width:320px;display:flex;align-items:center;gap:6px;
+    height:28px;padding:0 8px;background:var(--bg);
+    border:1px solid var(--border);border-radius:var(--r-base);color:var(--ink-soft);
+  }
+  .search input{
+    flex:1;border:0;background:transparent;outline:none;
+    font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:var(--ink);
+  }
+  .search input::placeholder{color:var(--ink-faint);}
+  .search kbd{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);
+    border:1px solid var(--border);border-radius:var(--r-base);padding:0 4px;
+  }
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+  .icon-btn{
+    width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--border);border-radius:var(--r-base);
+    background:var(--panel);color:var(--ink-soft);cursor:pointer;
+    transition:background-color .15s ease;
+  }
+  .icon-btn:hover{background:var(--bg);}
+  .btn{
+    height:28px;display:inline-flex;align-items:center;gap:6px;padding:0 10px;
+    border:1px solid var(--border);border-radius:var(--r-base);
+    background:var(--panel);color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:500;
+    cursor:pointer;transition:background-color .15s ease;
+  }
+  .btn:hover{background:var(--bg);}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#FFFFFF;}
+  .btn-primary:hover{background:#4069AE;}
+  .btn:focus-visible,.icon-btn:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .avatar{
+    width:28px;height:28px;border-radius:var(--r-full);
+    background:var(--accent);color:#FFFFFF;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:600;
+  }
+
+  /* ---------- App frame ---------- */
+  .frame{display:flex;min-height:calc(100vh - 48px);}
+
+  /* ---------- Sidebar (240px) ---------- */
+  .sidebar{
+    width:240px;flex:none;background:var(--panel);
+    border-right:1px solid var(--border);padding:12px 8px 16px;
+  }
+  .nav-group{margin-bottom:14px;}
+  .nav-label{
+    font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-soft);padding:4px 8px 4px;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:8px;height:30px;padding:0 8px;
+    border-radius:var(--r-base);color:var(--ink);font-size:13px;cursor:pointer;
+    transition:background-color .15s ease;
+  }
+  .nav-item:hover{background:var(--bg);}
+  .nav-item .icon{color:var(--ink-soft);}
+  .nav-item.active{background:rgba(78,121,196,.12);color:var(--accent);font-weight:500;}
+  .nav-item.active .icon{color:var(--accent);}
+  .nav-count{
+    margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    color:var(--ink-soft);font-variant-numeric:tabular-nums;
+  }
+  .run-item{
+    display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;
+    border-radius:var(--r-base);cursor:pointer;transition:background-color .15s ease;
+  }
+  .run-item:hover{background:var(--bg);}
+  .run-id{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .run-meta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);font-variant-numeric:tabular-nums;}
+  .dot{width:8px;height:8px;border-radius:var(--r-full);flex:none;}
+  .dot-running{animation:pulse 1.2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+  /* ---------- Canvas ---------- */
+  .canvas{flex:1;min-width:0;padding:16px;}
+  .page-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+  .crumbs{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);margin-bottom:2px;font-variant-numeric:tabular-nums;}
+  .crumbs span{color:var(--ink-faint);}
+  .page-title{font-size:20px;font-weight:600;line-height:1.2;}
+  .page-sub{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .page-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+  .chip{
+    height:24px;display:inline-flex;align-items:center;gap:6px;padding:0 8px;
+    background:var(--bg);border:1px solid var(--border);border-radius:var(--r-base);
+    font-size:12px;font-weight:500;color:var(--ink-soft);cursor:pointer;
+    transition:background-color .15s ease;
+  }
+  .chip:hover{background:var(--panel);}
+  .chip.active{background:rgba(78,121,196,.12);border-color:rgba(78,121,196,.3);color:var(--accent);}
+  .chip .mono{font-size:11px;}
+  .toolbar-right{margin-left:auto;display:flex;gap:4px;align-items:center;}
+  .toggle{
+    width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--border);border-radius:var(--r-base);background:var(--panel);
+    color:var(--ink-soft);cursor:pointer;transition:background-color .15s ease;
+  }
+  .toggle:hover{background:var(--bg);}
+  .toggle.active{background:rgba(78,121,196,.12);color:var(--accent);border-color:rgba(78,121,196,.3);}
+
+  /* ---------- Panels ---------- */
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);animation:panelEnter .2s ease-out;}
+  @keyframes panelEnter{from{opacity:0;}to{opacity:1;}}
+  .section-title{font-size:15px;font-weight:600;margin:16px 0 8px;display:flex;align-items:center;gap:8px;}
+  .section-title .mono{font-size:11px;color:var(--ink-soft);font-weight:400;}
+
+  /* Stat row */
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+  .stat{padding:10px 12px;}
+  .stat-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);}
+  .stat-value{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:500;line-height:1.25;font-variant-numeric:tabular-nums;}
+  .stat-note{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+
+  /* Chart grid */
+  .chart-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px;}
+  .metric-panel{height:220px;display:flex;flex-direction:column;padding:10px 12px;}
+  .metric-head{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
+  .metric-title{font-size:13px;font-weight:500;}
+  .metric-value{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;}
+  .metric-unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);}
+  .chart-body{flex:1;display:flex;gap:6px;min-height:0;}
+  .y-axis{
+    width:34px;flex:none;display:flex;flex-direction:column;justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);
+    text-align:right;padding:0 0 14px;font-variant-numeric:tabular-nums;
+  }
+  .plot{flex:1;display:flex;flex-direction:column;min-width:0;position:relative;}
+  .plot svg{flex:1;width:100%;min-height:0;}
+  .x-axis{
+    height:14px;display:flex;justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);font-variant-numeric:tabular-nums;
+  }
+  .gridline{stroke:#E5E1DC;stroke-width:1;vector-effect:non-scaling-stroke;}
+  .lab-line{
+    fill:none;stroke-width:1.5;vector-effect:non-scaling-stroke;
+    stroke-linecap:round;stroke-linejoin:round;
+    stroke-dasharray:1;stroke-dashoffset:1;
+    animation:draw .4s ease-out forwards;
+  }
+  @keyframes draw{to{stroke-dashoffset:0;}}
+  .legend{display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+  .swatch{width:8px;height:2px;flex:none;}
+
+  /* Crosshair demo */
+  .crosshair{position:absolute;top:0;bottom:14px;left:68%;width:1px;background:var(--border);}
+  .crosshair-card{
+    position:absolute;top:6px;left:calc(68% + 8px);
+    background:var(--ink);color:#FFFFFF;border-radius:var(--r-base);
+    padding:6px 8px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.5;
+    font-variant-numeric:tabular-nums;white-space:nowrap;z-index:5;
+  }
+  .crosshair-card .k{color:var(--ink-faint);}
+  .crosshair-card .src{color:var(--ink-faint);opacity:.85;}
+  .sq{display:inline-block;width:8px;height:8px;border-radius:var(--r-full);margin-right:5px;vertical-align:baseline;}
+
+  /* ---------- Table ---------- */
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-md);background:var(--panel);animation:panelEnter .2s ease-out;}
+  table{border-collapse:collapse;width:100%;min-width:1080px;}
+  th{
+    height:32px;padding:0 12px;text-align:left;white-space:nowrap;
+    font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-soft);border-bottom:1px solid var(--border);background:var(--panel);
+  }
+  td{
+    height:36px;padding:0 12px;white-space:nowrap;
+    font-size:13px;border-bottom:1px solid var(--border);background:var(--panel);
+    transition:background-color .15s ease;
+  }
+  td.num,th.num{text-align:right;}
+  td.num{font-family:'IBM Plex Mono',monospace;font-size:12px;font-variant-numeric:tabular-nums;}
+  tbody tr:last-child td{border-bottom:0;}
+  tbody tr:hover td{background:var(--bg);}
+  th:first-child,td:first-child{position:sticky;left:0;z-index:2;}
+  tr.selected td:first-child{box-shadow:inset 2px 0 0 var(--accent);}
+  .cell-run{display:flex;align-items:center;gap:8px;}
+  .cell-run .run-id{font-size:12px;}
+  .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink);}
+  .spark{display:block;}
+  .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);
+    border:1px solid var(--border);border-radius:var(--r-base);padding:1px 5px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ---------- Bottom grid: config + events ---------- */
+  .bottom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px;}
+  .panel-head{
+    display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;
+    border-bottom:1px solid var(--border);font-size:13px;font-weight:500;
+  }
+  .panel-head .mono{margin-left:auto;font-size:11px;color:var(--ink-soft);}
+  .kv{padding:2px 12px 6px;}
+  .kv-row{
+    display:flex;align-items:center;height:28px;gap:12px;
+    border-bottom:1px solid var(--border);
+  }
+  .kv-row:last-child{border-bottom:0;}
+  .kv-key{width:120px;flex:none;font-size:12px;color:var(--ink-soft);}
+  .kv-val{font-family:'IBM Plex Mono',monospace;font-size:12px;font-variant-numeric:tabular-nums;}
+  .log{padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:2;font-variant-numeric:tabular-nums;}
+  .log .t{color:var(--ink-soft);}
+  .log .lvl-ok{color:var(--s-teal);}
+  .log .lvl-err{color:var(--s-red);}
+  .log .lvl-run{color:var(--s-blue);}
+
+  /* ---------- Footer ---------- */
+  .footer{
+    margin-top:16px;border-top:1px solid var(--border);padding:14px 2px 4px;
+    display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;
+  }
+  .footer-brand{font-size:12px;font-weight:600;}
+  .footer-brand .mono{display:block;font-weight:400;font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .footer-links{display:flex;gap:12px;font-size:12px;color:var(--ink-soft);}
+  .footer-links a{color:var(--ink-soft);transition:color .15s ease;}
+  .footer-links a:hover{color:var(--accent);}
+  .disclaimer{
+    margin-left:auto;text-align:right;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);line-height:1.6;
+  }
+
+  @media (max-width:900px){
+    .sidebar{display:none;}
+    .disclaimer{margin-left:0;text-align:left;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none !important;transition:none !important;}
+    .lab-line{stroke-dasharray:none;stroke-dashoffset:0;}
+    .dot-running{opacity:1;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= Top bar ================= -->
+<header class="topbar">
+  <div class="brand">
+    <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.5L4.5 19a2 2 0 0 0 1.7 3h11.6a2 2 0 0 0 1.7-3L14 9.5V2"/><path d="M8.5 2h7"/><path d="M7 16.5h10"/></svg>
+    Meowtrics
+    <span class="brand-tag">console</span>
+  </div>
+  <div class="topbar-sep"></div>
+  <button class="proj-switch" type="button">
+    whiskr-vision-eval
+    <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+  <label class="search">
+    <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" placeholder="Search runs, metrics, tags">
+    <kbd>/</kbd>
+  </label>
+  <div class="topbar-right">
+    <button class="icon-btn" type="button" aria-label="Notifications">
+      <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    </button>
+    <button class="icon-btn" type="button" aria-label="Settings">
+      <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+    <button class="btn btn-primary" type="button">
+      <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      New run
+    </button>
+    <div class="avatar" title="Kitty Park">KP</div>
+  </div>
+</header>
+
+<div class="frame">
+
+  <!-- ================= Sidebar ================= -->
+  <aside class="sidebar">
+    <nav class="nav-group">
+      <div class="nav-label">Workspace</div>
+      <div class="nav-item">
+        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        Overview
+      </div>
+      <div class="nav-item active">
+        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.5L4.5 19a2 2 0 0 0 1.7 3h11.6a2 2 0 0 0 1.7-3L14 9.5V2"/><path d="M8.5 2h7"/></svg>
+        Experiments
+        <span class="nav-count">24</span>
+      </div>
+      <div class="nav-item">
+        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Runs
+        <span class="nav-count">312</span>
+      </div>
+      <div class="nav-item">
+        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v6"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="m15 12 3 3 3-3"/></svg>
+        Sweeps
+        <span class="nav-count">7</span>
+      </div>
+      <div class="nav-item">
+        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+        Reports
+      </div>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-label">Resources</div>
+      <div class="nav-item">
+        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+        Datasets
+      </div>
+      <div class="nav-item">
+        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+        Models
+      </div>
+      <div class="nav-item">
+        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4"/><path d="M12 18v4"/></svg>
+        Artifacts
+      </div>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-label">Active runs</div>
+      <div class="run-item"><span class="dot" style="background:var(--s-blue)"></span><span class="run-id">run_8f3a2</span><span class="run-meta">42.0k</span></div>
+      <div class="run-item"><span class="dot" style="background:var(--s-teal)"></span><span class="run-id">run_7c91d</span><span class="run-meta">41.2k</span></div>
+      <div class="run-item"><span class="dot" style="background:var(--s-gold)"></span><span class="run-id">run_3d44a</span><span class="run-meta">38.5k</span></div>
+      <div class="run-item"><span class="dot" style="background:var(--s-violet)"></span><span class="run-id">run_b2e07</span><span class="run-meta">12.8k</span></div>
+      <div class="run-item"><span class="dot" style="background:var(--s-red)"></span><span class="run-id">run_55c19</span><span class="run-meta">9.1k</span></div>
+      <div class="run-item"><span class="dot" style="background:var(--s-gray)"></span><span class="run-id">run_e0d63</span><span class="run-meta">queued</span></div>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-label">Admin</div>
+      <div class="nav-item">
+        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Members
+      </div>
+      <div class="nav-item">
+        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+        Settings
+      </div>
+    </nav>
+  </aside>
+
+  <!-- ================= Canvas ================= -->
+  <main class="canvas">
+
+    <div class="page-head">
+      <div>
+        <div class="crumbs">cattower-ltd <span>/</span> whiskr-vision-eval</div>
+        <h1 class="page-title">whiskr-vision-eval</h1>
+        <p class="page-sub">Vision-grading evaluation suite for the Whiskr Inc retrieval stack. 6 active runs, 312 total.</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn" type="button">
+          <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+          Compare
+        </button>
+        <button class="btn" type="button">
+          <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+          Export CSV
+        </button>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <button class="chip active" type="button">All runs <span class="mono">312</span></button>
+      <button class="chip" type="button"><span class="dot" style="background:var(--s-blue)"></span>running <span class="mono">6</span></button>
+      <button class="chip" type="button"><span class="dot" style="background:var(--s-teal)"></span>finished <span class="mono">281</span></button>
+      <button class="chip" type="button"><span class="dot" style="background:var(--s-red)"></span>failed <span class="mono">22</span></button>
+      <button class="chip" type="button"><span class="dot" style="background:var(--s-gray)"></span>queued <span class="mono">3</span></button>
+      <button class="chip" type="button">owner: me</button>
+      <div class="toolbar-right">
+        <button class="toggle active" type="button" aria-label="Grid view">
+          <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+        </button>
+        <button class="toggle" type="button" aria-label="List view">
+          <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stat row -->
+    <div class="stat-row">
+      <div class="panel stat">
+        <div class="stat-label">Active runs</div>
+        <div class="stat-value" title="6 active runs — source scheduler/state.json:18">6</div>
+        <div class="stat-note">across 4 nodes</div>
+      </div>
+      <div class="panel stat">
+        <div class="stat-label">Best eval/accuracy</div>
+        <div class="stat-value" title="0.861 — source runs/run_91aa0/eval.log:2204">0.861</div>
+        <div class="stat-note">run_8f3a2 · step 41,200</div>
+      </div>
+      <div class="panel stat">
+        <div class="stat-label">GPU hours (30d)</div>
+        <div class="stat-value" title="1,284.5 GPU-h — source billing/gpu_hours.csv:31">1,284.5</div>
+        <div class="stat-note">+12.4% vs prior 30d</div>
+      </div>
+      <div class="panel stat">
+        <div class="stat-label">Queue depth</div>
+        <div class="stat-value" title="3 queued — source scheduler/queue.log:147">3</div>
+        <div class="stat-note">est. wait 00:18:40</div>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <h2 class="section-title">Metrics <span class="mono">smoothing 0.6 · last 42,000 steps</span></h2>
+    <div class="chart-grid">
+
+      <!-- eval/accuracy with crosshair demo -->
+      <section class="panel metric-panel">
+        <div class="metric-head">
+          <span class="metric-title">eval/accuracy</span>
+          <span class="metric-value">0.847</span>
+        </div>
+        <div class="chart-body">
+          <div class="y-axis"><span>0.90</span><span>0.75</span><span>0.60</span><span>0.45</span></div>
+          <div class="plot">
+            <svg viewBox="0 0 100 56" preserveAspectRatio="none" aria-hidden="true">
+              <line class="gridline" x1="0" y1="1" x2="100" y2="1"/>
+              <line class="gridline" x1="0" y1="19" x2="100" y2="19"/>
+              <line class="gridline" x1="0" y1="37" x2="100" y2="37"/>
+              <line class="gridline" x1="0" y1="55" x2="100" y2="55"/>
+              <polyline class="lab-line" pathLength="1" stroke="#4E79C4" points="0,46 8,40 16,36 24,33 32,28 40,26 48,22 56,20 64,18 72,15 80,14 88,12 100,10"><title>run_8f3a2 · eval/accuracy — source runs/run_8f3a2/eval.log:1453</title></polyline>
+              <polyline class="lab-line" pathLength="1" stroke="#3E8E7E" points="0,50 8,45 16,42 24,38 32,36 40,33 48,31 56,29 64,27 72,26 80,24 88,23 100,22"><title>run_7c91d · eval/accuracy — source runs/run_7c91d/eval.log:1388</title></polyline>
+              <polyline class="lab-line" pathLength="1" stroke="#C9A23D" points="0,52 8,49 16,47 24,44 32,43 40,41 48,40 56,38 64,38 72,36 80,35 88,35 100,34"><title>run_3d44a · eval/accuracy — source runs/run_3d44a/eval.log:1271</title></polyline>
+            </svg>
+            <div class="crosshair"></div>
+            <div class="crosshair-card">
+              <span class="k">step 29,400</span><br>
+              <span class="sq" style="background:var(--s-blue)"></span>run_8f3a2 0.847 <span class="src">runs/run_8f3a2/eval.log:1976</span><br>
+              <span class="sq" style="background:var(--s-teal)"></span>run_7c91d 0.821 <span class="src">runs/run_7c91d/eval.log:1911</span><br>
+              <span class="sq" style="background:var(--s-gold)"></span>run_3d44a 0.792 <span class="src">runs/run_3d44a/eval.log:1794</span>
+            </div>
+            <div class="x-axis"><span>0</span><span>14k</span><span>28k</span><span>42k</span></div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--s-blue)"></span>run_8f3a2</span>
+          <span><span class="swatch" style="background:var(--s-teal)"></span>run_7c91d</span>
+          <span><span class="swatch" style="background:var(--s-gold)"></span>run_3d44a</span>
+        </div>
+      </section>
+
+      <!-- train/loss -->
+      <section class="panel metric-panel">
+        <div class="metric-head">
+          <span class="metric-title">train/loss</span>
+          <span class="metric-value">0.213</span>
+        </div>
+        <div class="chart-body">
+          <div class="y-axis"><span>2.4</span><span>1.6</span><span>0.8</span><span>0.0</span></div>
+          <div class="plot">
+            <svg viewBox="0 0 100 56" preserveAspectRatio="none" aria-hidden="true">
+              <line class="gridline" x1="0" y1="1" x2="100" y2="1"/>
+              <line class="gridline" x1="0" y1="19" x2="100" y2="19"/>
+              <line class="gridline" x1="0" y1="37" x2="100" y2="37"/>
+              <line class="gridline" x1="0" y1="55" x2="100" y2="55"/>
+              <polyline class="lab-line" pathLength="1" stroke="#4E79C4" points="0,6 8,13 16,19 24,24 32,28 40,31 48,34 56,37 64,39 72,41 80,43 88,44 100,45"><title>run_8f3a2 · train/loss — source runs/run_8f3a2/train.log:42180</title></polyline>
+              <polyline class="lab-line" pathLength="1" stroke="#3E8E7E" points="0,8 8,16 16,22 24,26 32,31 40,33 48,37 56,39 64,42 72,43 80,45 88,46 100,47"><title>run_7c91d · train/loss — source runs/run_7c91d/train.log:41360</title></polyline>
+              <polyline class="lab-line" pathLength="1" stroke="#C75D5D" points="0,5 8,11 16,18 24,21 32,26 40,24 48,29 56,27 60,25"><title>run_55c19 · train/loss (failed @ 9.1k) — source runs/run_55c19/train.log:9142</title></polyline>
+            </svg>
+            <div class="x-axis"><span>0</span><span>14k</span><span>28k</span><span>42k</span></div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--s-blue)"></span>run_8f3a2</span>
+          <span><span class="swatch" style="background:var(--s-teal)"></span>run_7c91d</span>
+          <span><span class="swatch" style="background:var(--s-red)"></span>run_55c19 (failed)</span>
+        </div>
+      </section>
+
+      <!-- throughput, single series + 8% area fill -->
+      <section class="panel metric-panel">
+        <div class="metric-head">
+          <span class="metric-title">throughput</span>
+          <span class="metric-value">12,408 <span class="metric-unit">tok/s</span></span>
+        </div>
+        <div class="chart-body">
+          <div class="y-axis"><span>16k</span><span>12k</span><span>8k</span><span>4k</span></div>
+          <div class="plot">
+            <svg viewBox="0 0 100 56" preserveAspectRatio="none" aria-hidden="true">
+              <line class="gridline" x1="0" y1="1" x2="100" y2="1"/>
+              <line class="gridline" x1="0" y1="19" x2="100" y2="19"/>
+              <line class="gridline" x1="0" y1="37" x2="100" y2="37"/>
+              <line class="gridline" x1="0" y1="55" x2="100" y2="55"/>
+              <path fill="#3E8E7E" opacity="0.08" stroke="none" d="M0,30 6,24 12,32 18,22 24,28 30,20 36,26 42,18 48,28 54,22 60,30 66,20 72,26 78,16 84,24 90,18 100,22 L100,56 L0,56 Z"/>
+              <polyline class="lab-line" pathLength="1" stroke="#3E8E7E" points="0,30 6,24 12,32 18,22 24,28 30,20 36,26 42,18 48,28 54,22 60,30 66,20 72,26 78,16 84,24 90,18 100,22"><title>cluster aggregate · throughput tok/s — source metrics/throughput.csv:608</title></polyline>
+            </svg>
+            <div class="x-axis"><span>-60m</span><span>-40m</span><span>-20m</span><span>now</span></div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--s-teal)"></span>cluster aggregate</span>
+        </div>
+      </section>
+
+      <!-- gpu memory, stepped -->
+      <section class="panel metric-panel">
+        <div class="metric-head">
+          <span class="metric-title">gpu/memory</span>
+          <span class="metric-value">38.2 <span class="metric-unit">GB</span></span>
+        </div>
+        <div class="chart-body">
+          <div class="y-axis"><span>48</span><span>32</span><span>16</span><span>0</span></div>
+          <div class="plot">
+            <svg viewBox="0 0 100 56" preserveAspectRatio="none" aria-hidden="true">
+              <line class="gridline" x1="0" y1="1" x2="100" y2="1"/>
+              <line class="gridline" x1="0" y1="19" x2="100" y2="19"/>
+              <line class="gridline" x1="0" y1="37" x2="100" y2="37"/>
+              <line class="gridline" x1="0" y1="55" x2="100" y2="55"/>
+              <polyline class="lab-line" pathLength="1" stroke="#9B6FB5" points="0,40 10,40 10,30 25,30 25,26 45,26 45,18 70,18 70,14 100,14"><title>node-a3 · gpu/memory GB — source nodes/node-a3/gpu.log:8821</title></polyline>
+              <polyline class="lab-line" pathLength="1" stroke="#6F7890" points="0,44 14,44 14,38 38,38 38,34 62,34 62,30 100,30"><title>node-b1 · gpu/memory GB — source nodes/node-b1/gpu.log:7640</title></polyline>
+            </svg>
+            <div class="x-axis"><span>-60m</span><span>-40m</span><span>-20m</span><span>now</span></div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--s-violet)"></span>node-a3</span>
+          <span><span class="swatch" style="background:var(--s-gray)"></span>node-b1</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- Runs table -->
+    <h2 class="section-title">Runs <span class="mono">showing 8 of 312</span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Run</th>
+            <th>Status</th>
+            <th>Owner</th>
+            <th class="num">Steps</th>
+            <th class="num">eval/acc</th>
+            <th class="num">train/loss</th>
+            <th class="num">tok/s</th>
+            <th>Trend</th>
+            <th class="num">GPU h</th>
+            <th>Tags</th>
+            <th class="num">Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="selected" title="run_8f3a2 · acc 0.847 · loss 0.213 · step 42,000 — source runs/run_8f3a2/train.log:42007">
+            <td><span class="cell-run"><span class="dot" style="background:var(--s-blue)"></span><span class="run-id mono">run_8f3a2</span></span></td>
+            <td><span class="status"><span class="dot dot-running" style="background:#4E79C4"></span>running</span></td>
+            <td>Kitty Park</td>
+            <td class="num">42,000</td>
+            <td class="num">0.847</td>
+            <td class="num">0.213</td>
+            <td class="num">12,408</td>
+            <td><svg class="spark" width="90" height="20" viewBox="0 0 90 20" role="img" aria-label="eval/accuracy trend for run_8f3a2"><title>eval/accuracy trend — source runs/run_8f3a2/eval.log:1976</title><polyline fill="none" stroke="#4E79C4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" points="0,16 10,14 20,13 30,11 40,10 50,8 60,7 70,5 80,4 90,3"/></svg></td>
+            <td class="num">181.4</td>
+            <td><span class="tag">bf16</span> <span class="tag">lr3e-4</span></td>
+            <td class="num">12:48:07</td>
+          </tr>
+          <tr title="run_7c91d · acc 0.821 · loss 0.246 · step 41,200 — source runs/run_7c91d/train.log:41207">
+            <td><span class="cell-run"><span class="dot" style="background:var(--s-teal)"></span><span class="run-id mono">run_7c91d</span></span></td>
+            <td><span class="status"><span class="dot dot-running" style="background:#4E79C4"></span>running</span></td>
+            <td>Ya-ong Kim</td>
+            <td class="num">41,200</td>
+            <td class="num">0.821</td>
+            <td class="num">0.246</td>
+            <td class="num">11,952</td>
+            <td><svg class="spark" width="90" height="20" viewBox="0 0 90 20" role="img" aria-label="eval/accuracy trend for run_7c91d"><title>eval/accuracy trend — source runs/run_7c91d/eval.log:1911</title><polyline fill="none" stroke="#3E8E7E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" points="0,17 10,15 20,14 30,13 40,11 50,10 60,9 70,8 80,7 90,6"/></svg></td>
+            <td class="num">176.9</td>
+            <td><span class="tag">bf16</span> <span class="tag">ema</span></td>
+            <td class="num">12:47:31</td>
+          </tr>
+          <tr title="run_3d44a · acc 0.792 · loss 0.281 · step 38,500 — source runs/run_3d44a/train.log:38510">
+            <td><span class="cell-run"><span class="dot" style="background:var(--s-gold)"></span><span class="run-id mono">run_3d44a</span></span></td>
+            <td><span class="status"><span class="dot dot-running" style="background:#4E79C4"></span>running</span></td>
+            <td>Calico Lee</td>
+            <td class="num">38,500</td>
+            <td class="num">0.792</td>
+            <td class="num">0.281</td>
+            <td class="num">10,114</td>
+            <td><svg class="spark" width="90" height="20" viewBox="0 0 90 20" role="img" aria-label="eval/accuracy trend for run_3d44a"><title>eval/accuracy trend — source runs/run_3d44a/eval.log:1794</title><polyline fill="none" stroke="#C9A23D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" points="0,17 10,16 20,15 30,15 40,13 50,12 60,12 70,10 80,10 90,9"/></svg></td>
+            <td class="num">158.2</td>
+            <td><span class="tag">fp32</span></td>
+            <td class="num">12:45:02</td>
+          </tr>
+          <tr title="run_b2e07 · acc 0.703 · loss 0.512 · step 12,800 — source runs/run_b2e07/train.log:12814">
+            <td><span class="cell-run"><span class="dot" style="background:var(--s-violet)"></span><span class="run-id mono">run_b2e07</span></span></td>
+            <td><span class="status"><span class="dot dot-running" style="background:#4E79C4"></span>running</span></td>
+            <td>Kitty Park</td>
+            <td class="num">12,800</td>
+            <td class="num">0.703</td>
+            <td class="num">0.512</td>
+            <td class="num">12,011</td>
+            <td><svg class="spark" width="90" height="20" viewBox="0 0 90 20" role="img" aria-label="eval/accuracy trend for run_b2e07"><title>eval/accuracy trend — source runs/run_b2e07/eval.log:612</title><polyline fill="none" stroke="#9B6FB5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" points="0,18 10,17 20,15 30,14 40,12 50,12 60,10 70,9 80,9 90,8"/></svg></td>
+            <td class="num">54.7</td>
+            <td><span class="tag">bf16</span> <span class="tag">aug-v2</span></td>
+            <td class="num">12:44:48</td>
+          </tr>
+          <tr title="run_55c19 · acc 0.611 · loss 0.844 · step 9,100 (CUDA OOM) — source runs/run_55c19/train.log:9142">
+            <td><span class="cell-run"><span class="dot" style="background:var(--s-red)"></span><span class="run-id mono">run_55c19</span></span></td>
+            <td><span class="status"><span class="dot" style="background:#C75D5D"></span>failed</span></td>
+            <td>Ya-ong Kim</td>
+            <td class="num">9,100</td>
+            <td class="num">0.611</td>
+            <td class="num">0.844</td>
+            <td class="num">—</td>
+            <td><svg class="spark" width="90" height="20" viewBox="0 0 90 20" role="img" aria-label="eval/accuracy trend for run_55c19"><title>eval/accuracy trend (stops at failure) — source runs/run_55c19/eval.log:438</title><polyline fill="none" stroke="#C75D5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" points="0,18 10,16 20,15 30,13 40,14 50,11 60,12 70,10 75,9"/></svg></td>
+            <td class="num">31.0</td>
+            <td><span class="tag">oom</span></td>
+            <td class="num">11:58:19</td>
+          </tr>
+          <tr title="run_e0d63 · queued (sweep-7), no steps yet — source scheduler/queue.log:147">
+            <td><span class="cell-run"><span class="dot" style="background:var(--s-gray)"></span><span class="run-id mono">run_e0d63</span></span></td>
+            <td><span class="status"><span class="dot" style="background:#A6ACBE"></span>queued</span></td>
+            <td>Calico Lee</td>
+            <td class="num">0</td>
+            <td class="num">—</td>
+            <td class="num">—</td>
+            <td class="num">—</td>
+            <td><svg class="spark" width="90" height="20" viewBox="0 0 90 20" role="img" aria-label="no trend yet for run_e0d63"><title>no samples yet (queued) — source scheduler/queue.log:147</title><polyline fill="none" stroke="#A6ACBE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" points="0,10 90,10"/></svg></td>
+            <td class="num">0.0</td>
+            <td><span class="tag">sweep-7</span></td>
+            <td class="num">11:31:55</td>
+          </tr>
+          <tr title="run_91aa0 · acc 0.861 · loss 0.198 · step 50,000 (best) — source runs/run_91aa0/train.log:50012">
+            <td><span class="cell-run"><span class="dot" style="background:var(--s-blue)"></span><span class="run-id mono">run_91aa0</span></span></td>
+            <td><span class="status"><span class="dot" style="background:#3E8E7E"></span>finished</span></td>
+            <td>Kitty Park</td>
+            <td class="num">50,000</td>
+            <td class="num">0.861</td>
+            <td class="num">0.198</td>
+            <td class="num">12,377</td>
+            <td><svg class="spark" width="90" height="20" viewBox="0 0 90 20" role="img" aria-label="eval/accuracy trend for run_91aa0"><title>eval/accuracy trend — source runs/run_91aa0/eval.log:2204</title><polyline fill="none" stroke="#4E79C4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" points="0,17 10,14 20,12 30,10 40,8 50,7 60,5 70,4 80,4 90,3"/></svg></td>
+            <td class="num">214.6</td>
+            <td><span class="tag">bf16</span> <span class="tag">best</span></td>
+            <td class="num">09:12:40</td>
+          </tr>
+          <tr title="run_4c7f8 · acc 0.853 · loss 0.204 · step 50,000 — source runs/run_4c7f8/train.log:50009">
+            <td><span class="cell-run"><span class="dot" style="background:var(--s-teal)"></span><span class="run-id mono">run_4c7f8</span></span></td>
+            <td><span class="status"><span class="dot" style="background:#3E8E7E"></span>finished</span></td>
+            <td>Ya-ong Kim</td>
+            <td class="num">50,000</td>
+            <td class="num">0.853</td>
+            <td class="num">0.204</td>
+            <td class="num">11,840</td>
+            <td><svg class="spark" width="90" height="20" viewBox="0 0 90 20" role="img" aria-label="eval/accuracy trend for run_4c7f8"><title>eval/accuracy trend — source runs/run_4c7f8/eval.log:2187</title><polyline fill="none" stroke="#3E8E7E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" points="0,17 10,15 20,12 30,11 40,9 50,8 60,6 70,5 80,5 90,4"/></svg></td>
+            <td class="num">209.1</td>
+            <td><span class="tag">bf16</span></td>
+            <td class="num">08:47:13</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Config + events -->
+    <h2 class="section-title">Selected run <span class="mono">run_8f3a2</span></h2>
+    <div class="bottom-grid">
+      <section class="panel">
+        <div class="panel-head">
+          Configuration
+          <span class="mono">config.yaml</span>
+        </div>
+        <div class="kv">
+          <div class="kv-row"><span class="kv-key">model</span><span class="kv-val">cattower-7b-v3</span></div>
+          <div class="kv-row"><span class="kv-key">dataset</span><span class="kv-val">whiskr-corpus-v3</span></div>
+          <div class="kv-row"><span class="kv-key">optimizer</span><span class="kv-val">adamw</span></div>
+          <div class="kv-row"><span class="kv-key">learning_rate</span><span class="kv-val">3.0e-4</span></div>
+          <div class="kv-row"><span class="kv-key">batch_size</span><span class="kv-val">256</span></div>
+          <div class="kv-row"><span class="kv-key">precision</span><span class="kv-val">bf16</span></div>
+          <div class="kv-row"><span class="kv-key">seed</span><span class="kv-val">42</span></div>
+          <div class="kv-row"><span class="kv-key">nodes</span><span class="kv-val">4 × node-a</span></div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          Event log
+          <span class="mono">tail -n 8</span>
+        </div>
+        <div class="log">
+          <div><span class="t">12:48:07</span> <span class="lvl-ok">ckpt</span> saved checkpoint step_42000</div>
+          <div><span class="t">12:47:31</span> <span class="lvl-run">eval</span> eval/accuracy 0.847 (+0.003)</div>
+          <div><span class="t">12:44:48</span> <span class="lvl-run">eval</span> run_b2e07 eval pass started</div>
+          <div><span class="t">12:30:12</span> <span class="lvl-ok">ckpt</span> saved checkpoint step_41000</div>
+          <div><span class="t">12:12:55</span> <span class="lvl-run">info</span> lr decayed to 1.8e-4</div>
+          <div><span class="t">11:58:19</span> <span class="lvl-err">fail</span> run_55c19 CUDA OOM on node-b2</div>
+          <div><span class="t">11:31:55</span> <span class="lvl-run">queue</span> run_e0d63 enqueued (sweep-7)</div>
+          <div><span class="t">11:02:40</span> <span class="lvl-ok">ckpt</span> saved checkpoint step_40000</div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          Notes
+          <span class="mono">updated 12:40</span>
+        </div>
+        <div class="kv">
+          <div class="kv-row"><span class="kv-key">objective</span><span class="kv-val">acc ≥ 0.860 @ 50k</span></div>
+          <div class="kv-row"><span class="kv-key">baseline</span><span class="kv-val">run_91aa0 (0.861)</span></div>
+          <div class="kv-row"><span class="kv-key">reviewer</span><span class="kv-val">Ya-ong Kim</span></div>
+          <div class="kv-row"><span class="kv-key">report</span><span class="kv-val"><a href="#">meowtrics.example/r/8f3a2</a></span></div>
+          <div class="kv-row"><span class="kv-key">next sweep</span><span class="kv-val">lr ∈ {1e-4, 3e-4}</span></div>
+          <div class="kv-row"><span class="kv-key">owner team</span><span class="kv-val">Pawment Co · eval</span></div>
+          <div class="kv-row"><span class="kv-key">budget</span><span class="kv-val">240 GPU h remaining</span></div>
+          <div class="kv-row"><span class="kv-key">data card</span><span class="kv-val">whiskr-corpus-v3.md</span></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-brand">
+        Meowtrics — a CatTower LTD lab tool
+        <span class="mono">v3.8.1 · build 2026.06.12</span>
+      </div>
+      <nav class="footer-links">
+        <a href="#">Docs</a>
+        <a href="#">API</a>
+        <a href="#">Status</a>
+        <a href="#">Changelog</a>
+      </nav>
+      <div class="disclaimer">
+        Demo page generated from themes/lab-console.md (research-designer).<br>
+        Hover any stat, chart line, sparkline, or run row to see the source log line (file:line) it came from.<br>
+        All people, companies, products, and figures are fictional.<br>
+        No affiliation with any real entity.
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+</body>
+</html>

@@ -80,6 +80,20 @@ No monospace — numerals stabilized with `tabular-nums`.
 - Legend under chart (square dot + label); click toggles (off = 35%), axes recompute; hover dims others to 22%.
 - Gridlines horizontal only; no plot border except baseline axis.
 
+## Source provenance (hover → file:line) — REQUIRED
+
+Every plotted datum is traceable to where it came from. Each chart point, bar, gauge value, KPI value, and table row binds source metadata — the **file path and line number** of the log/record that produced it — and the hover tooltip / readout surfaces it as `path:line` beside the value.
+
+| Aspect | Spec |
+|---|---|
+| Data model | each series/point carries `{ value, file, line }` (or a `src:"path:line"` string); a series maps point *i* → a deterministic line in that source log |
+| Reveal | extend the theme's existing tooltip/readout — append `file:line` in mono, muted vs. the value; no new chrome |
+| Example | hovering a reading shows e.g. `33.8 °C · telemetry/bay-temp.csv:107` |
+| Affordance | optional click-to-copy / link target; never required. Instant (no animation), like every hover here |
+| Scope | a standing default for **every** data surface in this collection — not opt-in |
+
+A number on screen must be traceable back to the exact line that produced it.
+
 ## 6. Motion
 
 | Step | Spec |

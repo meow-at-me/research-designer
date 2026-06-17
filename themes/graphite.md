@@ -76,6 +76,20 @@ Status: ok s2, warn s3, crit s4 (per-theme values above).
 - Legend click toggles series (off = 35% swatch, axes recompute); legend hover dims others to 22%.
 - Scatter points r=4, fill-opacity .8; warn/crit points get a 1.5px ring (shape redundancy, not color-only).
 
+## Source provenance (hover → file:line) — REQUIRED
+
+Every plotted datum is traceable to where it came from. Each chart point, bar, KPI value, and table row binds source metadata — the **file path and line number** of the log/record that produced it — and the hover tooltip / readout surfaces it as `path:line` beside the value.
+
+| Aspect | Spec |
+|---|---|
+| Data model | each series/point carries `{ value, file, line }` (or a `src:"path:line"` string); a curve maps point *i* → a deterministic line in that run's log |
+| Reveal | extend the theme's existing tooltip/readout — append `file:line` in mono, muted vs. the value; no new chrome |
+| Example | hovering a metric shows e.g. `61.4 °C · logs/press-A1/sensors.log:1182` |
+| Affordance | optional click-to-copy / link target; never required. Instant (no animation), like every hover here |
+| Scope | a standing default for **every** data surface in this collection — not opt-in |
+
+A number on screen must be traceable back to the exact line that produced it.
+
 ## 6. Motion
 
 | Step | Spec |

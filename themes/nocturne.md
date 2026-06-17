@@ -69,6 +69,20 @@ Status: ok `#A3BE8C`/`#5E8A4E` · warn `#EBCB8B`/`#9A7B2D` · crit `#BF616A`/`#A
 - Legend at panel bottom; click toggles series (off = 35% swatch); hover dims other series to 25%.
 - Heatmap sequential ramp `#3B4252 → #88C0D0 → #EBCB8B → #BF616A`; cell hover shows `time / bucket / count`.
 
+## Source provenance (hover → file:line) — REQUIRED
+
+Every plotted datum is traceable to where it came from. Each chart point, bar, KPI value, and table row binds source metadata — the **file path and line number** of the log/record that produced it — and the hover tooltip / readout surfaces it as `path:line` beside the value.
+
+| Aspect | Spec |
+|---|---|
+| Data model | each series/point carries `{ value, file, line }` (or a `src:"path:line"` string); a series maps point *i* → a deterministic line in that source log |
+| Reveal | extend the theme's existing tooltip/readout — append `file:line` in mono, muted vs. the value; no new chrome |
+| Example | hovering a point shows e.g. `4.2ms · logs/ops/controller.log:204` |
+| Affordance | optional click-to-copy / link target; never required. Instant (no animation), like every hover here |
+| Scope | a standing default for **every** data surface in this collection — not opt-in |
+
+A number on screen must be traceable back to the exact line that produced it.
+
 ## 6. Motion
 
 | Step | Spec |

@@ -74,6 +74,20 @@ Scale: 11 / 12 / 13 / 15 / 20 / 28. Nothing larger — this is a tool, not a pos
 | Tag | Mono 11px, radius 3px, `--border` outline |
 | Tooltip / crosshair | Vertical hairline + 12px mono readout card, radius 3px, `--ink` bg white text |
 
+## Source provenance (hover → file:line) — REQUIRED
+
+Every plotted datum is traceable to where it came from. Each sparkline point, chart point, live metric, and run-table row binds source metadata — the **file path and line number** of the log/record that produced it — and the hover tooltip / readout surfaces it as `path:line` beside the value.
+
+| Aspect | Spec |
+|---|---|
+| Data model | each series/point/row carries `{ value, file, line }` (or a `src:"path:line"` string); a series maps point *i* → a deterministic line in that run's log |
+| Reveal | extend the theme's existing tooltip/readout — append `file:line` in mono, muted vs. the value; no new chrome |
+| Example | hovering a run row shows e.g. `0.847 · runs/run_8f3a2/train.log:42007` |
+| Affordance | optional click-to-copy / link target; never required. Instant (no animation), like every hover here |
+| Scope | a standing default for **every** data surface in this collection — not opt-in |
+
+A number on screen must be traceable back to the exact line that produced it.
+
 ## 7. Motion
 
 | Target | Effect |
