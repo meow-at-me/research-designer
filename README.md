@@ -23,7 +23,9 @@ don't survive a screenshot — open them).
 
 👉 **Live gallery:** https://meow-at-me.github.io/research-designer/
 
-<!-- GIF ROW GOES HERE once recorded — see Part 2.2 -->
+<p align="center">
+  <a href="https://meow-at-me.github.io/research-designer/"><img src="assets/gifs/project-page.gif" alt="Scroll-through of a research project page built from one spec — motion, charts, and layout (fictional content)" width="100%"></a>
+</p>
 
 ## Quickstart
 

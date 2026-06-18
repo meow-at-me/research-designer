@@ -17,5 +17,8 @@ dist/
 .tmp/
 *.tmp
 
+# GIF source videos — commit the .gif, not the heavy source
+assets/gifs/*.mp4
+
 # NOTE: examples/ is intentionally NOT ignored — the live motion/3D demos are the product
 # and are published (GitHub Pages). Static screenshots can't convey them.
