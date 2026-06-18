@@ -17,6 +17,7 @@
 | The 3D idea | A procedurally generated colored point cloud (≈30–60k points, additive splat-like sprites) standing in for a 3D Gaussian/NeRF reconstruction; OrbitControls drag-to-rotate, **no autorotate** (screenshot-ready); static fallback = a self-made false-color depth poster |
 | Reduced-motion | Autorotate off (already), figure reveals + count-ups instant, smooth-scroll off; the slider stays usable (input-driven, not animated) |
 | WebGL fallback | Feature-detect; on no-WebGL show a static false-color depth-map SVG/CSS poster + caption "Interactive 3D requires WebGL." DPR ≤2, pause loop on `document.hidden` |
+| Dark mode | Light + dark via CSS-variable token sets; **follow `prefers-color-scheme` by default**, with a manual toggle that overrides (persisted, applied before paint to avoid flash). Diagram figures stay on a fixed "lit" light card so they read in dark; the 3D viewer panel is dark in both. |
 
 ## 1. Principles
 
