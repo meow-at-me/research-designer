@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhiskerSplat — Feed-forward 3D reconstruction (fictional) · acid-editorial</title>
+<meta name="description" content="Fictional research project page in a bold dark-editorial style (acid-editorial theme, advanced-theme-park). Design after the NVIDIA-research aesthetic; no affiliation.">
+
+<!-- Fonts: SIL OFL only. NVIDIA Sans (proprietary) is intentionally replaced by Inter / Inter Tight. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ===== acid-editorial — bold near-black research page, one electric accent (after the NVIDIA-research editorial look) ===== */
+:root{
+  --bg:#ffffff; --bg-2:#f5f5f3; --surface:#ffffff; --surface-2:#fafafa;
+  --ink:#161616; --ink-2:#4b4b4b; --muted:#757575; --faint:#a7a7a7;
+  --line:#e4e4e1; --line-2:#cccccc;
+  --accent:#06c2cf; --accent-d:#05a8b6; --accent-ink:#078b97;     /* vivid aqua / bluish mint */
+  --accent-wash:rgba(6,194,207,0.13); --accent-mark:rgba(6,194,207,0.30);
+  --silver:#8b929c;                                                /* sub color — silver */
+  --blue:#9aa2ad; --orange:#646c78;                                /* baselines in silver/steel */
+  --code-bg:#0c0e14; --shadow:0 1px 2px rgba(0,0,0,0.05);
+  --font-sans:"Inter Tight",system-ui,-apple-system,sans-serif;
+  --font-body:"Inter",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --maxw:1180px; color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#0a0b0d; --bg-2:#101114; --surface:#15171b; --surface-2:#1b1e23;
+  --ink:#f4f5f4; --ink-2:#c4c7cc; --muted:#8b9097; --faint:#6a6f76;
+  --line:#2a2d33; --line-2:#3a3e45;
+  --accent:#16d9e6; --accent-d:#5ff0f6; --accent-ink:#2ce6f0;     /* vivid aqua / bluish mint */
+  --accent-wash:rgba(22,217,230,0.17); --accent-mark:rgba(22,217,230,0.36);
+  --silver:#c7ccd6;                                                /* sub color — silver */
+  --blue:#c2c8d2; --orange:#868e9b;                                /* baselines in silver/steel */
+  --code-bg:#06070a; --shadow:0 1px 2px rgba(0,0,0,0.4); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0; font-family:var(--font-body); background:var(--bg); color:var(--ink); line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden; transition:background .4s ease,color .4s ease}
+img{max-width:100%} a{color:inherit}
+::selection{background:var(--accent-mark); color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 clamp(1.25rem,4vw,3rem)}
+.section{padding:clamp(4rem,8vw,7rem) 0; border-top:1px solid var(--line)}
+.section.bg{background:var(--bg-2)}
+
+/* kicker + section head */
+.kicker{display:flex; align-items:center; gap:.7rem; font-family:var(--font-mono); font-weight:600; font-size:.78rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:1.6rem}
+.kicker .kn{color:var(--accent-ink)}
+.kicker::after{content:""; flex:0 0 auto; width:7px; height:7px; background:var(--accent); border-radius:2px}
+.sec-head{display:grid; grid-template-columns:1fr; gap:1.2rem; margin-bottom:clamp(2.4rem,5vw,3.6rem)}
+@media(min-width:900px){ .sec-head.split{grid-template-columns:1.35fr 1fr; align-items:end; gap:2.6rem} }
+.sec-title{font-family:var(--font-sans); font-weight:700; font-size:clamp(2rem,4.6vw,3.4rem); line-height:1.04; letter-spacing:-0.025em; margin:0; text-wrap:balance}
+.sec-title em{font-style:italic; color:var(--accent-ink)}
+.sec-lede{font-size:clamp(1.05rem,1.5vw,1.25rem); color:var(--ink-2); line-height:1.55; margin:0; max-width:46ch}
+.sec-lede strong{color:var(--ink); font-weight:600}
+.mark{background:linear-gradient(180deg,transparent 58%,var(--accent-mark) 58%); font-weight:600; padding:0 1px}
+.accent{color:var(--accent-ink)}
+code{font-family:var(--font-mono); font-size:.85em; background:var(--accent-wash); color:var(--accent-ink); padding:.08em .4em; border-radius:4px}
+
+/* theme toggle */
+.theme-toggle{position:fixed; top:1.1rem; right:1.1rem; z-index:90; display:inline-flex; align-items:center; gap:.5rem;
+  background:var(--surface); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:.5rem .7rem; cursor:pointer;
+  font-family:var(--font-mono); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; box-shadow:var(--shadow); transition:border-color .2s,transform .15s,background .4s}
+.theme-toggle:hover{border-color:var(--accent); transform:translateY(-1px)}
+.theme-toggle svg{width:16px; height:16px; color:var(--accent-ink)}
+@media(max-width:600px){.theme-toggle .lbl{display:none}}
+
+/* hero */
+.hero{position:relative; padding:clamp(2.4rem,5vw,4rem) 0 clamp(2.6rem,5vw,4rem); overflow:hidden}
+.hero::before{content:""; position:absolute; inset:0; z-index:0; pointer-events:none; background:radial-gradient(900px 520px at 88% -8%,var(--accent-wash),transparent 60%)}
+.hero .wrap{position:relative; z-index:1}
+.hero-top{display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:clamp(2.4rem,6vw,4rem)}
+.hero-brand{display:flex; align-items:center; gap:.7rem; font-family:var(--font-sans); font-weight:700; font-size:1.05rem; letter-spacing:-.01em; color:var(--ink)}
+.hero-brand .mk{width:22px; height:22px; border-radius:6px; background:var(--accent); display:grid; place-items:center; color:#0d1a00}
+.hero-brand .mk svg{width:14px; height:14px}
+.hero-meta{font-family:var(--font-mono); font-size:.74rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); text-align:right}
+.hero-eyebrow{font-family:var(--font-mono); font-weight:600; font-size:.8rem; letter-spacing:.18em; text-transform:uppercase; color:var(--accent-ink); margin-bottom:1.4rem; display:flex; align-items:center; gap:.7rem}
+.hero-eyebrow::before{content:""; width:9px; height:9px; border-radius:2px; background:var(--accent)}
+.hero-title{font-family:var(--font-sans); font-weight:700; font-size:clamp(2.8rem,8vw,6rem); line-height:0.94; letter-spacing:-0.04em; margin:0 0 1.4rem}
+.hero-title .nm{color:var(--accent)}
+.hero-title .rest{display:block; color:var(--ink); font-size:clamp(1.5rem,4vw,3rem); line-height:1.04; letter-spacing:-0.025em; margin-top:.5rem}
+.hero-thesis{font-size:clamp(1.1rem,1.9vw,1.45rem); line-height:1.5; color:var(--ink-2); max-width:34ch; margin:0}
+.hero-thesis strong{color:var(--ink); font-weight:600}
+.hero-grid{display:grid; grid-template-columns:1fr; gap:clamp(1.6rem,3vw,2.4rem); margin-top:clamp(1.8rem,3.5vw,2.6rem)}
+@media(min-width:920px){.hero-grid{grid-template-columns:minmax(0,1fr) 440px; align-items:start}}
+.hero-left,.hero-radar{min-width:0}
+.hero-title{overflow-wrap:break-word}
+.lede-grid>*,.sec-head>*{min-width:0}
+
+/* authors + links */
+.authors{margin:1.6rem 0 0; font-size:1rem; color:var(--ink-2); line-height:1.9; max-width:62ch}
+.authors a{color:var(--ink); text-decoration:none; border-bottom:1px solid transparent; transition:border-color .2s}
+.authors a:hover{border-color:var(--accent)}
+.authors sup{color:var(--accent-ink); font-weight:700}
+.affil-note{font-size:.86rem; color:var(--muted); margin:.3rem 0 0}
+.affil-note sup{color:var(--accent-ink); font-weight:700}
+.links{display:flex; flex-wrap:wrap; gap:.6rem; margin-top:1.8rem}
+.btn{display:inline-flex; align-items:center; gap:.5rem; background:var(--ink); color:var(--bg); border:1px solid var(--ink); padding:.62rem 1.15rem; border-radius:8px; text-decoration:none; font-weight:500; font-size:.95rem; transition:all .18s ease}
+.btn:hover{background:var(--accent); border-color:var(--accent); color:#042a2e; transform:translateY(-1px)}
+.btn.ghost{background:transparent; color:var(--ink); border-color:var(--line-2)}
+.btn.ghost:hover{background:transparent; border-color:var(--accent); color:var(--accent-ink)}
+.btn svg{width:15px; height:15px}
+
+/* radar */
+.hero-radar{display:flex; flex-direction:column; gap:1.1rem; align-self:start}
+.radar-box{width:100%; max-width:440px; margin:0 auto}
+.radar-box svg{width:100%; height:auto; display:block}
+.mlegend{display:flex; flex-wrap:wrap; justify-content:center; gap:.5rem 1.1rem; font-family:var(--font-mono); font-size:.78rem; color:var(--ink-2)}
+.mlegend .row{display:inline-flex; align-items:center; gap:.5rem}
+.mlegend .ln{width:20px; height:4px; border-radius:2px; flex:none}
+.radar-cap{font-size:.88rem; color:var(--muted); line-height:1.5; margin:0; text-align:center}
+
+/* lede band */
+.lede-grid{display:grid; grid-template-columns:1fr; gap:2rem}
+@media(min-width:900px){.lede-grid{grid-template-columns:1fr 1fr; gap:clamp(2.5rem,6vw,5rem); align-items:start}}
+.lede-statement{font-family:var(--font-sans); font-weight:700; font-size:clamp(1.7rem,3.6vw,2.8rem); line-height:1.2; letter-spacing:-0.02em; max-width:20ch; margin:0}
+.lede-statement .g{color:var(--accent-ink)}
+.lede-body{font-size:clamp(1.05rem,1.5vw,1.2rem); color:var(--ink-2); line-height:1.65; margin:0}
+.lede-body strong{color:var(--ink); font-weight:600}
+.lede-body p{margin:0 0 1rem}
+
+/* comparison cards */
+.iface-grid{display:grid; grid-template-columns:1fr; gap:1rem}
+@media(min-width:760px){.iface-grid{grid-template-columns:repeat(3,1fr)}}
+.iface{border:1px solid var(--line); border-radius:12px; padding:1.5rem; background:var(--surface); position:relative; transition:border-color .2s; min-width:0; overflow-wrap:break-word; overflow:hidden}
+.iface .tag{font-family:var(--font-mono); font-size:.74rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:.7rem}
+.iface h3{font-family:var(--font-sans); font-weight:600; font-size:1.15rem; margin:0 0 .5rem; letter-spacing:-0.01em}
+.iface p{margin:0; font-size:.97rem; color:var(--ink-2); line-height:1.55}
+.iface.ours{border-color:var(--accent); background:linear-gradient(180deg,var(--accent-wash),transparent)}
+.iface.ours .tag{color:var(--accent-ink)}
+.iface.ours::before{content:""; position:absolute; left:0; right:0; top:0; height:3px; background:var(--accent)}
+
+/* table */
+.tbl-title{font-family:var(--font-sans); font-weight:600; font-size:1.2rem; letter-spacing:-0.01em; margin:0 0 .4rem}
+.tbl-note{color:var(--muted); font-size:.95rem; line-height:1.55; margin:0 0 1.2rem; max-width:75ch}
+.tbl-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:12px}
+table.tbl{width:100%; border-collapse:collapse; font-size:.95rem; background:var(--surface)}
+table.tbl th,table.tbl td{padding:.72rem 1rem; text-align:center; border-bottom:1px solid var(--line); white-space:nowrap}
+table.tbl thead th{background:var(--bg-2); font-weight:600; color:var(--ink); font-family:var(--font-sans); font-size:.88rem}
+table.tbl th.l,table.tbl td.l{text-align:left}
+table.tbl tbody tr:last-child td{border-bottom:none}
+table.tbl td.num{font-variant-numeric:tabular-nums; font-family:var(--font-mono); font-size:.9rem}
+table.tbl tr.ours td{background:var(--accent-wash); font-weight:600}
+table.tbl tr.ours td.l{color:var(--ink)}
+table.tbl tr.base td{color:var(--muted)}
+.pos{color:var(--accent-ink); font-weight:700}
+
+/* findings accordion */
+details.finding{border-top:1px solid var(--line)}
+details.finding:last-of-type{border-bottom:1px solid var(--line)}
+summary.finding-head{display:flex; align-items:center; gap:.9rem; margin:0; padding:clamp(1.3rem,3vw,1.9rem) 0; list-style:none; cursor:pointer; user-select:none}
+summary.finding-head::-webkit-details-marker{display:none}
+.finding-n{font-family:var(--font-mono); font-weight:700; font-size:.85rem; letter-spacing:.08em; color:var(--accent-ink); flex:0 0 auto}
+.finding-title{flex:1 1 auto; font-family:var(--font-sans); font-weight:600; font-size:clamp(1.15rem,2.2vw,1.6rem); line-height:1.25; letter-spacing:-0.015em; margin:0; transition:color .2s}
+summary.finding-head:hover .finding-title,details.finding[open] .finding-title{color:var(--accent-ink)}
+summary.finding-head::after{content:""; flex:0 0 auto; margin-left:auto; width:2.1rem; height:2.1rem; border-radius:9px; border:1px solid var(--line-2);
+  background:no-repeat center/0.8rem; transition:transform .35s cubic-bezier(.4,0,.2,1),border-color .2s,background-color .2s;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b9097' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>")}
+details.finding[open] summary.finding-head::after{transform:rotate(180deg); border-color:var(--accent)}
+.finding-body{padding-bottom:clamp(1.6rem,3vw,2.4rem)}
+.finding-body p{font-size:1.02rem; color:var(--ink-2); line-height:1.65; margin:0 0 .8rem}
+.finding-body p strong{color:var(--ink); font-weight:600}
+.finding-body p:last-child{margin-bottom:0}
+@media(prefers-reduced-motion:reduce){ summary.finding-head::after{transition:none} }
+
+.takeaway{margin-top:clamp(2.2rem,5vw,3.2rem); border:1px solid var(--accent); border-radius:14px; padding:clamp(1.6rem,3vw,2.4rem); background:linear-gradient(135deg,var(--accent-wash),transparent)}
+.takeaway .lab{font-family:var(--font-mono); font-weight:600; font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-ink); margin-bottom:.7rem}
+.takeaway p{font-family:var(--font-sans); font-size:clamp(1.1rem,1.8vw,1.4rem); line-height:1.45; margin:0; color:var(--ink); font-weight:500; letter-spacing:-0.01em}
+.takeaway p strong{font-weight:700}
+
+/* bibtex */
+.bibtex{position:relative; background:var(--code-bg); color:#cdd6e0; border-radius:12px; padding:1.6rem; font-family:var(--font-mono); font-size:.86rem; line-height:1.6; overflow-x:auto; margin-top:1.6rem; border:1px solid var(--line)}
+.bibtex pre{margin:0; background:none; color:inherit}
+.copy-btn{position:absolute; top:.8rem; right:.8rem; background:rgba(255,255,255,.07); color:#cdd6e0; border:1px solid rgba(255,255,255,.16); border-radius:6px; padding:.35rem .75rem; font-size:.78rem; cursor:pointer; font-family:var(--font-mono); transition:all .2s}
+.copy-btn:hover{background:var(--accent); color:#0d1a00; border-color:var(--accent)}
+
+/* footer */
+footer{border-top:1px solid var(--line); padding:3rem 0; color:var(--muted); font-size:.9rem}
+footer .wrap{display:flex; flex-wrap:wrap; gap:1rem 2rem; justify-content:space-between; align-items:flex-start}
+footer a{color:var(--accent-ink); text-decoration:none}
+footer a:hover{color:var(--accent)}
+.disc{font-family:var(--font-mono); font-size:.72rem; line-height:1.8; color:var(--faint); max-width:60ch}
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light / dark">
+  <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  <span class="lbl" id="themeLbl">Light</span>
+</button>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-top">
+      <span class="hero-brand"><span class="mk" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg></span>WhiskerSplat</span>
+      <span class="hero-meta">CatTower Vision Lab<br>PURRCV 2026 · Oral</span>
+    </div>
+
+    <div class="hero-eyebrow">Feed-forward 3D · sparse views</div>
+    <h1 class="hero-title"><span class="nm">No more slow models.</span>
+      <span class="rest">Feed-forward neural 3D reconstruction from sparse views.</span></h1>
+
+    <div class="hero-grid">
+      <div class="hero-left">
+        <p class="hero-thesis">Metric-scale 3D from as few as <strong>three unposed views</strong> in <strong>~0.9&nbsp;s</strong> — no per-scene optimization, ~40× faster than optimization baselines.</p>
+
+        <p class="authors">
+          <a href="#">Kitty Park</a><sup>1</sup>, <a href="#">Ya-ong Kim</a><sup>1,2</sup>,
+          <a href="#">Calico Lee</a><sup>1</sup>, <a href="#">Mittens Choi</a><sup>1</sup>
+        </p>
+        <p class="affil-note"><sup>1</sup> CatTower Vision Lab &nbsp;·&nbsp; <sup>2</sup> Whiskr Inc &nbsp;·&nbsp; ✉ kitty.park@cattower.example</p>
+
+        <div class="links">
+          <a class="btn" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Paper</a>
+          <a class="btn ghost" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>arXiv</a>
+          <a class="btn ghost" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18 22 12 16 6M8 6 2 12l6 6"/></svg>Code</a>
+          <a class="btn ghost" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4z"/></svg>Video</a>
+          <a class="btn ghost" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>Dataset</a>
+        </div>
+      </div>
+
+      <div class="hero-radar">
+        <div class="radar-box" id="radarBox" aria-hidden="true"></div>
+        <div class="mlegend">
+          <span class="row"><span class="ln" style="background:var(--accent)"></span>WhiskerSplat</span>
+          <span class="row"><span class="ln" style="background:var(--blue)"></span>TabbyFormer</span>
+          <span class="row"><span class="ln" style="background:var(--orange)"></span>FelineGS</span>
+        </div>
+        <p class="radar-cap">Normalized scores on CT-Scenes-Hard (higher is better). All numbers fictional.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- LEDE BAND -->
+<section class="section bg">
+  <div class="wrap">
+    <div class="kicker"><span class="kn">01</span> Thesis</div>
+    <div class="lede-grid">
+      <h2 class="lede-statement">Speed is <span class="g">the</span> interface for usable 3D.</h2>
+      <div class="lede-body">
+        <p>Reconstructing a scene shouldn't take minutes of per-scene fitting or known camera poses.
+          <strong>WhiskerSplat</strong> predicts a metric-scale anisotropic-splat field in a single forward pass.</p>
+        <p>A cross-view attention module resolves scale ambiguity that otherwise needs pose supervision — so
+          three casual photos are enough, and the result is <strong>interactive</strong>, not a render queue.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY / COMPARISON -->
+<section class="section">
+  <div class="wrap">
+    <div class="kicker"><span class="kn">02</span> Why it matters</div>
+    <div class="sec-head split">
+      <h2 class="sec-title">The interface is <em>feed-forward</em>.</h2>
+      <p class="sec-lede">Prior sparse-view methods trade speed for quality or demand poses. WhiskerSplat keeps both — one pass, no poses.</p>
+    </div>
+    <div class="iface-grid">
+      <div class="iface">
+        <span class="tag">Baseline · slow</span>
+        <h3>Per-scene optimization</h3>
+        <p>Minutes of fitting per scene; great quality, impractical for casual capture or interaction.</p>
+      </div>
+      <div class="iface">
+        <span class="tag">Baseline · constrained</span>
+        <h3>Pose-required feed-forward</h3>
+        <p>Fast, but needs calibrated camera poses — a non-starter for three phone snapshots.</p>
+      </div>
+      <div class="iface ours">
+        <span class="tag">Ours</span>
+        <h3>WhiskerSplat</h3>
+        <p>One forward pass from unposed views — <strong>~0.9&nbsp;s</strong>, metric-scale, state of the art.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS TABLE -->
+<section class="section bg">
+  <div class="wrap">
+    <div class="kicker"><span class="kn">03</span> Results</div>
+    <h3 class="tbl-title">CT-Scenes-Hard · 3 input views</h3>
+    <p class="tbl-note">Novel-view synthesis and geometry. Best per column in <span class="accent">green</span>; ↑ higher better, ↓ lower better. <strong>All numbers fictional.</strong></p>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th class="l">Method</th><th>PSNR ↑</th><th>SSIM ↑</th><th>LPIPS ↓</th><th>Chamfer-L1 ↓</th><th>Time ↓</th></tr></thead>
+        <tbody>
+          <tr class="base"><td class="l">Meowtrics-NeRF</td><td class="num">24.10</td><td class="num">0.842</td><td class="num">0.171</td><td class="num">0.092</td><td class="num">38 min</td></tr>
+          <tr class="base"><td class="l">PawSplat</td><td class="num">26.30</td><td class="num">0.881</td><td class="num">0.124</td><td class="num">0.063</td><td class="num">4.2 s</td></tr>
+          <tr class="base"><td class="l">FelineGS</td><td class="num">27.05</td><td class="num">0.894</td><td class="num">0.108</td><td class="num">0.055</td><td class="num">1.6 s</td></tr>
+          <tr class="base"><td class="l">TabbyFormer</td><td class="num">27.42</td><td class="num">0.901</td><td class="num">0.097</td><td class="num">0.049</td><td class="num">1.0 s</td></tr>
+          <tr class="ours"><td class="l">WhiskerSplat (ours)</td><td class="num"><span class="pos">28.41</span></td><td class="num"><span class="pos">0.912</span></td><td class="num"><span class="pos">0.087</span></td><td class="num"><span class="pos">0.041</span></td><td class="num"><span class="pos">0.9 s</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FINDINGS -->
+<section class="section">
+  <div class="wrap">
+    <div class="kicker"><span class="kn">04</span> Findings</div>
+    <div class="sec-head"><h2 class="sec-title">What carries the result.</h2></div>
+
+    <details class="finding" open>
+      <summary class="finding-head"><span class="finding-n">F1</span><h3 class="finding-title">Cross-view attention <em>replaces</em> pose supervision.</h3></summary>
+      <div class="finding-body"><p>Removing the cross-view attention module drops PSNR by <strong>1.31&nbsp;dB</strong> and reintroduces scale drift. Attention across the sparse views recovers metric scale without any camera poses at test time.</p></div>
+    </details>
+    <details class="finding">
+      <summary class="finding-head"><span class="finding-n">F2</span><h3 class="finding-title">One forward pass is <em>~40× faster</em> than optimization.</h3></summary>
+      <div class="finding-body"><p>At <strong>0.9&nbsp;s/scene</strong> on a single GPU, WhiskerSplat turns reconstruction from a batch job into an interactive one, while matching or beating optimization baselines on quality.</p></div>
+    </details>
+    <details class="finding">
+      <summary class="finding-head"><span class="finding-n">F3</span><h3 class="finding-title">It <em>degrades gracefully</em> from 9 to 2 views.</h3></summary>
+      <div class="finding-body"><p>Accuracy scales smoothly with input count (30.6 → 28.4 → 26.9 dB at 9 / 3 / 2 views), with no retraining — robust indoors and outdoors on CT-Scenes-Hard.</p></div>
+    </details>
+
+    <div class="takeaway">
+      <div class="lab">Takeaway</div>
+      <p>Feed-forward, pose-free, <strong>0.9&nbsp;s</strong> reconstruction is state of the art on CT-Scenes-Hard — fast, efficient, adaptable, powerful, and robust.</p>
+    </div>
+  </div>
+</section>
+
+<!-- BIBTEX -->
+<section class="section bg">
+  <div class="wrap">
+    <div class="kicker"><span class="kn">05</span> Citation</div>
+    <div class="sec-head"><h2 class="sec-title">BibTeX</h2></div>
+    <div class="bibtex">
+      <button class="copy-btn" id="copyBib" type="button">Copy</button>
+<pre id="bibText">@inproceedings{park2026whiskersplat,
+  title     = {WhiskerSplat: Feed-Forward Neural 3D Reconstruction from Sparse Views},
+  author    = {Park, Kitty and Kim, Ya-ong and Lee, Calico and Choi, Mittens},
+  booktitle = {Proceedings of PURRCV},
+  year      = {2026},
+  note      = {Fictional demo citation}
+}</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>WhiskerSplat · CatTower Vision Lab (fictional)</span>
+    <p class="disc">Demo page generated for the acid-editorial theme (advanced-theme-park) — a design study after a bold dark-editorial research aesthetic.<br>
+    All people, companies, products, datasets, venues, and figures are fictional. No affiliation with any real entity (including NVIDIA).</p>
+  </div>
+</footer>
+
+<script>
+/* ---- theme toggle (dark default) ---- */
+(function(){
+  const root=document.documentElement, btn=document.getElementById("themeToggle"), lbl=document.getElementById("themeLbl");
+  function sync(){ const dark=root.getAttribute("data-theme")==="dark"; lbl.textContent=dark?"Light":"Dark"; if(window.drawRadar) window.drawRadar(); }
+  btn.addEventListener("click", ()=>{ root.setAttribute("data-theme", root.getAttribute("data-theme")==="dark"?"light":"dark"); sync(); });
+  sync();
+})();
+
+/* ---- copy bibtex ---- */
+document.getElementById("copyBib").addEventListener("click", async function(){
+  try{ await navigator.clipboard.writeText(document.getElementById("bibText").textContent); this.textContent="Copied"; }
+  catch(e){ this.textContent="Select & copy"; }
+  setTimeout(()=>{ this.textContent="Copy"; }, 1500);
+});
+
+/* ---- radar chart (hand-rolled inline SVG, theme-aware, no chart lib) ---- */
+(function(){
+  const box=document.getElementById("radarBox");
+  const axes=["PSNR","SSIM","Detail","Speed","Robust","Memory"];
+  // normalized 0..1 per axis (fictional)
+  const series=[
+    {key:"accent", vals:[0.94,0.95,0.92,0.98,0.90,0.88]},   // WhiskerSplat (ours)
+    {key:"blue",   vals:[0.80,0.83,0.84,0.74,0.70,0.66]},   // TabbyFormer
+    {key:"orange", vals:[0.74,0.78,0.80,0.62,0.64,0.72]},   // FelineGS
+  ];
+  function cssvar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  window.drawRadar=function(){
+    const W=440,H=360,cx=W/2,cy=H/2+6,R=Math.min(W,H)/2-46,N=axes.length;
+    const line=cssvar("--line"), muted=cssvar("--muted"), ink=cssvar("--ink-2");
+    const ang=i=>(-Math.PI/2)+i*(2*Math.PI/N);
+    const pt=(i,r)=>[cx+Math.cos(ang(i))*R*r, cy+Math.sin(ang(i))*R*r];
+    let g="";
+    // rings
+    for(let k=1;k<=4;k++){ const r=k/4; let p=""; for(let i=0;i<N;i++){ const [x,y]=pt(i,r); p+=(i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1); } p+="Z";
+      g+=`<path d="${p}" fill="none" stroke="${line}" stroke-width="1"/>`; }
+    // spokes + labels
+    for(let i=0;i<N;i++){ const [x,y]=pt(i,1); g+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${line}" stroke-width="1"/>`;
+      const [lx,ly]=pt(i,1.16); g+=`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" fill="${muted}" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle" dominant-baseline="middle">${axes[i]}</text>`; }
+    // series polygons
+    series.forEach(s=>{ const col=cssvar("--"+s.key); let p="";
+      for(let i=0;i<N;i++){ const [x,y]=pt(i,s.vals[i]); p+=(i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1); } p+="Z";
+      const fill = s.key==="accent" ? 0.22 : 0.10;
+      g+=`<path d="${p}" fill="${col}" fill-opacity="${fill}" stroke="${col}" stroke-width="${s.key==="accent"?2.4:1.6}" stroke-linejoin="round"/>`;
+      for(let i=0;i<N;i++){ const [x,y]=pt(i,s.vals[i]); g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s.key==="accent"?3:2.2}" fill="${col}"/>`; }
+    });
+    box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Radar chart: WhiskerSplat leads on all six axes.">${g}</svg>`;
+  };
+  window.drawRadar();
+})();
+</script>
+</body>
+</html>

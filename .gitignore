@@ -9,6 +9,7 @@ desktop.ini
 
 # Node (only if a build/tooling step is ever added)
 node_modules/
+package-lock.json
 dist/
 .cache/
 
