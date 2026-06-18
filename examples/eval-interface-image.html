@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CatTower Vision Lab — Reconstruction QA (image annotation, fictional) · eval-interface</title>
+<meta name="description" content="Fictional image-annotation workbench for the eval-interface theme (research-designer): pairwise image A/B, image-quality Likert, and bounding-box region labeling. Self-made renders.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --surface-page:#F8FAFC; --surface-card:#FFFFFF; --surface-sunken:#F1F5F9;
+    --border-default:#E2E8F0; --border-strong:#CBD5E1;
+    --text-primary:#0F172A; --text-body:#334155; --text-muted:#64748B; --text-inverse:#F8FAFC;
+    --accent:#4F46E5; --accent-hover:#4338CA; --accent-soft:#EEF2FF;
+    --success:#16A34A; --warning:#D97706; --danger:#DC2626; --danger-soft:#FEF2F2;
+    --radius-control:8px; --radius-card:12px; --radius-modal:16px; --radius-pill:9999px;
+    --shadow-card:0 1px 2px rgba(15,23,42,.06);
+    --shadow-raised:0 4px 12px rgba(15,23,42,.10);
+    --shadow-modal:0 16px 48px rgba(15,23,42,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',sans-serif;background:var(--surface-page);color:var(--text-body);
+    font-size:14px;line-height:22px;min-height:100vh;display:flex;flex-direction:column}
+  button{font:inherit;cursor:pointer;border:none;background:none}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+  .mono{font-family:'JetBrains Mono',monospace}
+  .icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+  /* ---------- Header ---------- */
+  .progress-track{height:4px;background:var(--border-default)}
+  .progress-fill{height:100%;width:23%;background:var(--accent);border-radius:var(--radius-pill);transition:width 150ms ease-out}
+  header{position:sticky;top:0;z-index:30;background:var(--surface-card);box-shadow:var(--shadow-raised)}
+  .header-row{height:56px;max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:24px}
+  .study-name{font-size:14px;font-weight:600;color:var(--text-primary)}
+  .header-meta{display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:13px}
+  .header-spacer{flex:1}
+  .tabs{display:flex;gap:4px;background:var(--surface-sunken);padding:3px;border-radius:var(--radius-pill)}
+  .tab{padding:5px 14px;border-radius:var(--radius-pill);font-size:13px;color:var(--text-muted);transition:background 150ms,color 150ms}
+  .tab[aria-selected="true"]{background:var(--surface-card);color:var(--accent);font-weight:600;box-shadow:var(--shadow-card)}
+  .help-btn{display:flex;align-items:center;gap:6px;color:var(--text-muted);padding:8px;border-radius:var(--radius-control)}
+  .help-btn:hover{background:var(--surface-sunken)}
+
+  /* ---------- Layout ---------- */
+  main{flex:1;width:100%;max-width:1200px;margin:0 auto;padding:28px 24px 120px}
+  .section-label{font-size:12px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+  .prompt-card{background:var(--surface-sunken);border-radius:var(--radius-card);padding:18px 20px;margin-bottom:22px;font-size:16px;color:var(--text-primary)}
+  .pane{display:none}
+  .pane.active{display:block}
+
+  /* ---------- image cards ---------- */
+  .img-card{position:relative;border-radius:var(--radius-card);overflow:hidden;border:1px solid var(--border-default);background:#0b0d12;box-shadow:var(--shadow-card)}
+  .img-card canvas{display:block;width:100%;aspect-ratio:16/10;transition:transform 200ms ease-out}
+  .img-card.zoom:hover canvas{transform:scale(1.06)}
+  .img-cap{position:absolute;top:10px;left:10px;z-index:2;font-family:'JetBrains Mono',monospace;font-size:11px;color:#E2E8F0;background:rgba(2,6,23,.55);padding:3px 8px;border-radius:6px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+  .ref-wrap{max-width:520px;margin:0 auto 22px}
+
+  /* pairwise */
+  .pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .resp{position:relative}
+  .resp .pick{position:absolute;inset:0;z-index:3;border-radius:var(--radius-card);border:2px solid transparent;transition:border-color 150ms,box-shadow 150ms;pointer-events:none}
+  .resp.selected .pick{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .resp .check{position:absolute;top:12px;right:12px;z-index:4;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:none;place-items:center;box-shadow:var(--shadow-raised)}
+  .resp.selected .check{display:grid}
+  .resp .tag{position:absolute;bottom:10px;left:10px;z-index:2;font-size:12px;font-weight:600;color:#fff;background:rgba(2,6,23,.55);padding:3px 10px;border-radius:var(--radius-pill);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+
+  /* likert */
+  .likert-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:22px}
+  .dim-card{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-card);box-shadow:var(--shadow-card);padding:18px 20px;margin-bottom:12px;position:relative;transition:border-color 150ms}
+  .dim-card.rated::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;background:var(--accent);border-radius:var(--radius-pill)}
+  .dim-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .dim-name{font-weight:600;color:var(--text-primary)}
+  .dim-q{color:var(--text-body)}.dim-card.rated .dim-q{color:var(--text-muted)}
+  .dim-check{color:var(--success);display:none}.dim-card.rated .dim-check{display:block}
+  .scale-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .scale-btn{width:44px;height:44px;border-radius:var(--radius-pill);border:1px solid var(--border-strong);color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:14px;transition:background 150ms,border-color 150ms}
+  .scale-btn:hover{background:var(--accent-soft)}
+  .scale-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .anchors{margin-left:8px;font-size:12px;color:var(--text-muted)}
+
+  /* regions / bbox */
+  .label-bar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+  .label-chip{height:36px;padding:0 14px;border-radius:var(--radius-pill);border:1px solid;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;background:var(--surface-card);transition:background 150ms,color 150ms}
+  .key{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);background:var(--surface-sunken);border-radius:var(--radius-pill);padding:2px 8px}
+  .stage{position:relative;border-radius:var(--radius-card);overflow:hidden;border:1px solid var(--border-default);background:#0b0d12;box-shadow:var(--shadow-card);user-select:none;touch-action:none}
+  .stage canvas{display:block;width:100%;aspect-ratio:16/10}
+  .stage .overlay{position:absolute;inset:0;cursor:crosshair}
+  .stage .overlay.idle{cursor:default}
+  .bbox{position:absolute;border:2px solid;border-radius:4px}
+  .bbox .blab{position:absolute;left:-2px;top:0;transform:translateY(-100%);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:#fff;padding:2px 6px;border-radius:4px 4px 4px 0;white-space:nowrap}
+  .bbox .bx{position:absolute;right:-9px;top:-9px;width:18px;height:18px;border-radius:50%;background:#fff;color:#0f172a;display:grid;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.45)}
+  .bbox .bx svg{width:12px;height:12px}
+  .drawing{position:absolute;border:2px dashed #fff;border-radius:4px;background:rgba(255,255,255,.08);pointer-events:none}
+  .box-list{margin-top:16px}
+  .box-row{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-control);margin-bottom:8px;font-size:13px}
+  .box-sw{width:12px;height:12px;border-radius:3px;flex:none}
+  .box-coords{font-family:'JetBrains Mono',monospace;color:var(--text-muted);margin-left:auto}
+  .box-row .x{color:var(--text-muted);padding:4px;border-radius:4px}
+  .box-row .x:hover{color:var(--danger);background:var(--danger-soft)}
+  .hint{font-size:13px;color:var(--text-muted);margin-top:12px;display:flex;gap:6px;align-items:center}
+
+  /* completion */
+  .complete{display:none;max-width:560px;margin:56px auto;text-align:center}
+  .complete.show{display:block}
+  .complete .seal{width:64px;height:64px;border-radius:var(--radius-pill);background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin:0 auto 20px}
+  .complete h2{font-size:24px;line-height:32px;color:var(--text-primary);margin-bottom:8px}
+  .complete p{margin-bottom:24px}
+  .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+  .summary-grid .s{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-card);padding:16px}
+  .summary-grid .sv{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;color:var(--text-primary)}
+  .summary-grid .sl{font-size:12px;color:var(--text-muted);margin-top:4px}
+
+  /* dock */
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface-card);box-shadow:var(--shadow-raised);border-top:1px solid var(--border-default)}
+  .dock-row{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:12px;min-height:72px;flex-wrap:wrap}
+  .dock-q{font-size:14px;color:var(--text-body);margin-right:8px}
+  .choice-btn{height:44px;padding:0 18px 0 10px;border-radius:var(--radius-control);border:1px solid var(--border-strong);background:var(--surface-card);color:var(--text-body);display:flex;align-items:center;gap:10px;font-size:14px;transition:background 150ms,border-color 150ms,color 150ms}
+  .choice-btn:hover{background:var(--accent-soft)}
+  .choice-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .choice-btn[aria-pressed="true"] .key{background:var(--accent-soft);color:var(--accent)}
+  .conf{display:none;align-items:center;gap:8px;margin-left:8px}.conf.show{display:flex}
+  .conf-label{font-size:13px;color:var(--text-muted)}
+  .seg{display:flex;border:1px solid var(--border-strong);border-radius:var(--radius-control);overflow:hidden}
+  .seg button{padding:8px 14px;font-size:13px;color:var(--text-muted);border-right:1px solid var(--border-strong)}
+  .seg button:last-child{border-right:none}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+  .ghost-btn{display:flex;align-items:center;gap:8px;color:var(--text-muted);padding:10px 12px;border-radius:var(--radius-control)}
+  .ghost-btn:hover{background:var(--surface-sunken)}
+  .submit-btn{height:44px;padding:0 22px;border-radius:var(--radius-control);background:var(--accent);color:#fff;font-weight:600;display:flex;align-items:center;gap:10px;transition:background 150ms}
+  .submit-btn:hover{background:var(--accent-hover)}
+  .submit-btn:disabled{background:var(--surface-sunken);color:var(--text-muted);cursor:not-allowed}
+  .submit-btn:disabled .key{background:var(--surface-card)}
+  .dock-spacer{flex:1}
+  .no-error-btn{display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;font-size:14px;border:1px solid var(--border-strong);border-radius:var(--radius-control);color:var(--text-body)}
+  .no-error-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  /* skip menu / toast / banner / drawer */
+  .skip-menu{position:fixed;bottom:88px;z-index:35;min-width:230px;background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-card);box-shadow:var(--shadow-modal);padding:6px;display:none}
+  .skip-menu.show{display:block}
+  .skip-menu .sm-h{font-size:12px;color:var(--text-muted);padding:8px 10px 4px}
+  .skip-menu button{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:var(--radius-control);font-size:14px;color:var(--text-body)}
+  .skip-menu button:hover{background:var(--surface-sunken)}
+  .banner{display:none;max-width:1200px;margin:0 auto;padding:10px 24px;background:var(--danger-soft);color:var(--danger);font-size:13px;align-items:center;gap:8px}
+  .banner.show{display:flex}
+  .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);z-index:40;background:var(--text-primary);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--radius-control);box-shadow:var(--shadow-modal);display:none;align-items:center;gap:8px}
+  .toast.show{display:flex}.toast.success svg{color:#4ADE80}
+  .drawer-veil{position:fixed;inset:0;background:rgba(15,23,42,.25);z-index:48;display:none}
+  .drawer-veil.open{display:block}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:90vw;z-index:50;background:var(--surface-card);border-radius:var(--radius-modal) 0 0 var(--radius-modal);box-shadow:var(--shadow-modal);padding:32px;overflow-y:auto;transform:translateX(105%);transition:transform 150ms ease-out}
+  .drawer.open{transform:none}
+  .drawer h2{font-size:20px;line-height:28px;font-weight:600;color:var(--text-primary);margin-bottom:16px}
+  .drawer p{margin-bottom:12px}
+  .drawer .code-block{background:var(--surface-sunken);border-radius:var(--radius-control);padding:12px 16px;font-size:13px;margin:12px 0}
+  .drawer-close{position:absolute;top:20px;right:20px;color:var(--text-muted);padding:8px;border-radius:var(--radius-control)}
+  .drawer-close:hover{background:var(--surface-sunken)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media (max-width:768px){main,.dock,.drawer,.skip-menu{display:none}.mobile-block{display:flex!important}}
+  .mobile-block{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:32px;text-align:center;color:var(--text-body)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="header-row">
+    <span class="study-name">CatTower Vision Lab · Reconstruction QA</span>
+    <span class="header-meta mono" id="itemCounter">Item 8 / 40</span>
+    <span class="header-meta">
+      <svg class="icon" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>
+      <span class="mono" id="timer">01:58</span>
+    </span>
+    <div class="header-spacer"></div>
+    <div class="tabs" role="tablist" aria-label="Pattern switcher">
+      <button class="tab" role="tab" aria-selected="true" data-pane="pairwise">Pairwise</button>
+      <button class="tab" role="tab" aria-selected="false" data-pane="likert">Likert</button>
+      <button class="tab" role="tab" aria-selected="false" data-pane="regions">Regions</button>
+    </div>
+    <button class="help-btn" id="helpBtn" aria-label="Open instructions">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+      Instructions
+    </button>
+  </div>
+  <div class="banner" id="banner" role="alert">
+    <svg class="icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <span id="bannerText"></span>
+  </div>
+</header>
+
+<main>
+  <!-- ============ PAIRWISE ============ -->
+  <section class="pane active" id="pane-pairwise">
+    <div class="prompt-card">Which reconstruction is more faithful to the <strong>reference view</strong> of <span class="mono">CT-Scenes / living-room-07</span>?</div>
+    <div class="ref-wrap">
+      <div class="section-label">Reference view (ground truth)</div>
+      <div class="img-card"><span class="img-cap">REFERENCE</span><canvas data-seed="7" data-kind="ref"></canvas></div>
+    </div>
+    <div class="pair-grid">
+      <div>
+        <div class="section-label">Reconstruction A</div>
+        <div class="resp img-card zoom" id="cardA" data-choice="A">
+          <span class="img-cap">A</span><span class="tag">WhiskerSplat-L</span>
+          <canvas data-seed="7" data-kind="ours"></canvas>
+          <span class="check"><svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="pick"></span>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Reconstruction B</div>
+        <div class="resp img-card zoom" id="cardB" data-choice="B">
+          <span class="img-cap">B</span><span class="tag">PawSplat</span>
+          <canvas data-seed="7" data-kind="base"></canvas>
+          <span class="check"><svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="pick"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LIKERT ============ -->
+  <section class="pane" id="pane-likert">
+    <div class="likert-grid">
+      <div>
+        <div class="section-label">Reference view</div>
+        <div class="img-card"><span class="img-cap">REFERENCE</span><canvas data-seed="22" data-kind="ref"></canvas></div>
+      </div>
+      <div>
+        <div class="section-label">Reconstruction under review · <span class="mono">FelineGS</span></div>
+        <div class="img-card"><span class="img-cap">CANDIDATE</span><canvas data-seed="22" data-kind="base"></canvas></div>
+      </div>
+    </div>
+
+    <div class="dim-card" data-dim="geometry">
+      <div class="dim-head"><span class="dim-check"><svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="dim-name">Geometry</span><span class="dim-q">Are shapes & depth faithful to the reference?</span></div>
+      <div class="scale-row" role="radiogroup" aria-label="Geometry">
+        <button class="scale-btn" aria-pressed="false">1</button><button class="scale-btn" aria-pressed="false">2</button><button class="scale-btn" aria-pressed="false">3</button><button class="scale-btn" aria-pressed="false">4</button>
+        <span class="anchors">1 = Distorted · 4 = Faithful</span>
+      </div>
+    </div>
+    <div class="dim-card" data-dim="texture">
+      <div class="dim-head"><span class="dim-check"><svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="dim-name">Texture</span><span class="dim-q">Is surface detail sharp and correctly coloured?</span></div>
+      <div class="scale-row" role="radiogroup" aria-label="Texture">
+        <button class="scale-btn" aria-pressed="false">1</button><button class="scale-btn" aria-pressed="false">2</button><button class="scale-btn" aria-pressed="false">3</button><button class="scale-btn" aria-pressed="false">4</button>
+        <span class="anchors">1 = Blurry / wrong · 4 = Crisp</span>
+      </div>
+    </div>
+    <div class="dim-card" data-dim="artifacts">
+      <div class="dim-head"><span class="dim-check"><svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="dim-name">Artifacts</span><span class="dim-q">Is it free of floaters, holes, and ghosting?</span></div>
+      <div class="scale-row" role="radiogroup" aria-label="Artifacts">
+        <button class="scale-btn" aria-pressed="false">1</button><button class="scale-btn" aria-pressed="false">2</button><button class="scale-btn" aria-pressed="false">3</button><button class="scale-btn" aria-pressed="false">4</button>
+        <span class="anchors">1 = Many artifacts · 4 = Clean</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REGIONS ============ -->
+  <section class="pane" id="pane-regions">
+    <div class="prompt-card">Draw a box around each <strong>reconstruction artifact</strong> and label it. Arm a label (1–3), then drag on the image.</div>
+    <div class="section-label">Artifact labels</div>
+    <div class="label-bar" id="labelBar">
+      <button class="label-chip" data-label="floater" style="border-color:#FBCFE8;color:#BE185D"><span class="key">1</span> Floater</button>
+      <button class="label-chip" data-label="blur" style="border-color:#BFDBFE;color:#1D4ED8"><span class="key">2</span> Blur / ghosting</button>
+      <button class="label-chip" data-label="color" style="border-color:#FDE68A;color:#B45309"><span class="key">3</span> Wrong colour</button>
+    </div>
+    <div class="section-label">Reconstruction · <span class="mono">CT-Scenes / office-11 · WhiskerSplat-B</span></div>
+    <div class="stage" id="stage">
+      <canvas data-seed="41" data-kind="base"></canvas>
+      <div class="overlay idle" id="overlay"></div>
+    </div>
+    <div class="hint">
+      <svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      Arm a label with <span class="mono">1–3</span>, drag to draw a box. Click a box's <span class="mono">×</span> to remove it. No artifacts? Use the button.
+    </div>
+    <div class="section-label" style="margin-top:24px">Boxes (<span id="boxCount">0</span>)</div>
+    <div class="box-list" id="boxList"></div>
+  </section>
+
+  <!-- ============ COMPLETE ============ -->
+  <section class="complete" id="complete">
+    <div class="seal"><svg class="icon" style="width:30px;height:30px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <h2>Batch complete — thank you</h2>
+    <p>All 40 items in this fictional QA batch are recorded locally. Nothing leaves the page.</p>
+    <div class="summary-grid">
+      <div class="s"><div class="sv" id="sumDone">0</div><div class="sl">submitted</div></div>
+      <div class="s"><div class="sv" id="sumSkip">0</div><div class="sl">skipped</div></div>
+      <div class="s"><div class="sv mono" id="sumTime">00:00</div><div class="sl">session time</div></div>
+    </div>
+    <button class="submit-btn" id="startOver" style="margin:0 auto">Review from start</button>
+  </section>
+</main>
+
+<div class="mobile-block">
+  <svg class="icon" style="width:40px;height:40px;color:var(--text-muted)" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+  <strong style="color:var(--text-primary)">This task requires a desktop browser</strong>
+  <span>Box drawing needs a pointer and a wider screen (&gt; 768&nbsp;px).</span>
+</div>
+
+<!-- DOCK -->
+<div class="dock" id="dock">
+  <div class="dock-row dock-pane" id="dock-pairwise">
+    <span class="dock-q">Which reconstruction is better?</span>
+    <button class="choice-btn" data-choice="A"><span class="key">1</span> A is better</button>
+    <button class="choice-btn" data-choice="tie"><span class="key">2</span> Tie</button>
+    <button class="choice-btn" data-choice="B"><span class="key">3</span> B is better</button>
+    <div class="conf" id="confRow"><span class="conf-label">Confidence</span>
+      <div class="seg" id="confSeg"><button aria-pressed="false">Low</button><button aria-pressed="false">Medium</button><button aria-pressed="false">High</button></div>
+    </div>
+    <div class="dock-spacer"></div>
+    <button class="ghost-btn" data-skip><svg class="icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>Skip <span class="key">S</span></button>
+    <button class="submit-btn" id="submitPair" disabled>Submit <span class="key">Enter</span></button>
+  </div>
+  <div class="dock-row dock-pane" id="dock-likert" style="display:none">
+    <span class="dock-q"><span id="ratedCount" class="mono">0</span> of 3 dimensions rated</span>
+    <div class="dock-spacer"></div>
+    <button class="ghost-btn" data-skip><svg class="icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>Skip <span class="key">S</span></button>
+    <button class="submit-btn" id="submitLikert" disabled>Submit <span class="key">Enter</span></button>
+  </div>
+  <div class="dock-row dock-pane" id="dock-regions" style="display:none">
+    <button class="no-error-btn" id="noErrorBtn" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>No artifacts <span class="key">N</span></button>
+    <div class="dock-spacer"></div>
+    <button class="ghost-btn" data-skip><svg class="icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>Skip <span class="key">S</span></button>
+    <button class="submit-btn" id="submitRegions" disabled>Submit <span class="key">Enter</span></button>
+  </div>
+</div>
+
+<div class="skip-menu" id="skipMenu" role="menu">
+  <div class="sm-h">Why are you skipping?</div>
+  <button role="menuitem" data-reason="Image not loading">Image not loading</button>
+  <button role="menuitem" data-reason="Cannot judge">Cannot judge</button>
+  <button role="menuitem" data-reason="Other">Other</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="drawer-veil" id="drawerVeil"></div>
+<aside class="drawer" id="drawer" aria-label="Instructions">
+  <button class="drawer-close" id="drawerClose" aria-label="Close instructions"><svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+  <h2>Instructions</h2>
+  <p>You are reviewing rendered 3D <strong>reconstructions</strong> against a reference view. Inspect the full image before answering.</p>
+  <p><strong style="color:var(--text-primary)">Pairwise:</strong> pick the reconstruction closer to the reference (sharper geometry, fewer artifacts), then set confidence.</p>
+  <p><strong style="color:var(--text-primary)">Likert:</strong> rate every dimension of the candidate against the reference.</p>
+  <p><strong style="color:var(--text-primary)">Regions:</strong> arm an artifact label, then drag a box over each artifact. If the render is clean, use "No artifacts".</p>
+  <div class="code-block mono">Payment: $18 / hour · Study CT-2026-019 (fictional)<br>Contact: calico.lee@cattower.example</div>
+  <p style="color:var(--text-muted);font-size:13px">Demo page generated from themes/eval-interface.md (research-designer). Images are self-made false-colour renders; all people, companies, datasets, and figures are fictional (Kitty Park, Ya-ong Kim, Calico Lee; study CT-2026-019). No affiliation with any real entity.</p>
+</aside>
+
+<script>
+(function(){
+  "use strict";
+  const $ = (s,el=document)=>el.querySelector(s);
+  const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
+  const DPR = Math.min(devicePixelRatio||1, 2);
+  const toast = (msg,ok=false)=>{ const t=$("#toast"); t.className="toast show"+(ok?" success":""); t.innerHTML=(ok?'<svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>':"")+msg; clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); };
+  const banner = msg=>{ const b=$("#banner"); $("#bannerText").textContent=msg; b.classList.add("show"); clearTimeout(b._h); b._h=setTimeout(()=>b.classList.remove("show"),3000); };
+
+  /* ---------- self-made false-colour renders (no external images) ---------- */
+  function rng(seed){ let s=seed*2654435761>>>0; return ()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+  const PAL=[[42,47,107],[31,143,134],[180,71,143],[217,122,43],[79,99,210]];
+  function paint(canvas){
+    const kind=canvas.dataset.kind, seed=+canvas.dataset.seed;
+    const w=canvas.clientWidth||520, h=Math.round(w*10/16);
+    canvas.width=w*DPR; canvas.height=h*DPR;
+    const ctx=canvas.getContext("2d"); ctx.setTransform(DPR,0,0,DPR,0,0);
+    const r=rng(seed + (kind==="ours"?1:kind==="base"?2:0));
+    // background
+    const bg=ctx.createLinearGradient(0,0,0,h); bg.addColorStop(0,"#10131c"); bg.addColorStop(1,"#06070b");
+    ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+    const degrade = kind==="base";
+    // soft colour blobs (scene objects)
+    for(let i=0;i<4;i++){
+      const c=PAL[(i+ (seed%PAL.length))%PAL.length];
+      const x=(0.18+r()*0.64)*w, y=(0.2+r()*0.6)*h, rad=(0.18+r()*0.22)*w;
+      const g=ctx.createRadialGradient(x,y,0,x,y,rad);
+      const a=degrade?0.55:0.85, dc=degrade?18:0;
+      g.addColorStop(0,`rgba(${c[0]+dc},${c[1]},${c[2]},${a})`); g.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,rad,0,7); ctx.fill();
+    }
+    // point cloud (reconstruction look)
+    if(degrade) ctx.filter="blur(1.4px)";
+    const n=degrade?180:480;
+    for(let i=0;i<n;i++){
+      const x=r()*w, y=r()*h, s=r()*1.6+0.5;
+      ctx.fillStyle=`rgba(236,239,244,${(degrade?0.25:0.5)+r()*0.3})`;
+      ctx.fillRect(x,y,s,s);
+    }
+    ctx.filter="none";
+    // baseline artifacts: a couple of bright floaters (so Regions has something to box)
+    if(degrade){
+      for(let i=0;i<3;i++){ const x=(0.2+r()*0.6)*w, y=(0.2+r()*0.6)*h;
+        const g=ctx.createRadialGradient(x,y,0,x,y,9); g.addColorStop(0,"rgba(244,114,182,.9)"); g.addColorStop(1,"rgba(244,114,182,0)");
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,9,0,7); ctx.fill(); }
+    }
+    // subtle vignette
+    const v=ctx.createRadialGradient(w/2,h/2,h*0.3,w/2,h/2,h*0.8);
+    v.addColorStop(0,"rgba(0,0,0,0)"); v.addColorStop(1,"rgba(0,0,0,.45)");
+    ctx.fillStyle=v; ctx.fillRect(0,0,w,h);
+  }
+  const canvases=$$("canvas");
+  function paintAll(){ canvases.forEach(paint); }
+  paintAll();
+  let rT; addEventListener("resize",()=>{ clearTimeout(rT); rT=setTimeout(paintAll,120); },{passive:true});
+
+  /* ---------- shell: state, timer, progress ---------- */
+  const state={ item:8, total:40, done:0, skip:0, elapsed:118 };
+  const fmt=s=>String((s/60)|0).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+  function updateProgress(){ $("#itemCounter").textContent="Item "+Math.min(state.item,state.total)+" / "+state.total; $("#progressFill").style.width=Math.min(100,Math.round((state.item-1)/state.total*100))+"%"; }
+  updateProgress();
+  const timerEl=$("#timer"); timerEl.textContent=fmt(state.elapsed);
+  setInterval(()=>{ if(document.hidden) return; state.elapsed++; timerEl.textContent=fmt(state.elapsed); },1000);
+
+  /* tabs */
+  let active="pairwise";
+  $$(".tab").forEach(tab=>tab.addEventListener("click",()=>{
+    active=tab.dataset.pane;
+    $$(".tab").forEach(t=>t.setAttribute("aria-selected",t===tab));
+    $$(".pane").forEach(p=>p.classList.toggle("active",p.id==="pane-"+active));
+    $$(".dock-pane").forEach(d=>d.style.display=d.id==="dock-"+active?"flex":"none");
+    closeSkip(); requestAnimationFrame(paintAll);
+  }));
+
+  /* drawer */
+  const drawer=$("#drawer"), veil=$("#drawerVeil");
+  const setDrawer=o=>{ drawer.classList.toggle("open",o); veil.classList.toggle("open",o); };
+  $("#helpBtn").addEventListener("click",()=>setDrawer(true));
+  $("#drawerClose").addEventListener("click",()=>setDrawer(false));
+  veil.addEventListener("click",()=>setDrawer(false));
+
+  /* dwell guard */
+  const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function armSubmit(btn,ready){
+    if(!ready){ btn.disabled=true; btn._ready=false; return; }
+    if(btn._ready) return;
+    let n=3; btn.disabled=true;
+    const base=btn.dataset.label||(btn.dataset.label=btn.firstChild.textContent.trim());
+    const tick=()=>{ if(n>0){ btn.firstChild.textContent=base+" ("+n--+"s) "; btn._h=setTimeout(tick,reduced?0:1000);} else { btn.firstChild.textContent=base+" "; btn.disabled=false; btn._ready=true; } };
+    clearTimeout(btn._h); tick();
+  }
+
+  /* pairwise */
+  let pairChoice=null, conf=null; const submitPair=$("#submitPair");
+  $$("#dock-pairwise .choice-btn").forEach(btn=>btn.addEventListener("click",()=>{
+    pairChoice=btn.dataset.choice;
+    $$("#dock-pairwise .choice-btn").forEach(b=>b.setAttribute("aria-pressed",b===btn));
+    $("#cardA").classList.toggle("selected",pairChoice==="A");
+    $("#cardB").classList.toggle("selected",pairChoice==="B");
+    $("#confRow").classList.add("show"); armSubmit(submitPair,true);
+  }));
+  $$("#cardA,#cardB").forEach(card=>card.addEventListener("click",()=>$('#dock-pairwise [data-choice="'+card.dataset.choice+'"]').click()));
+  $$("#confSeg button").forEach(btn=>btn.addEventListener("click",()=>{ conf=btn.textContent; $$("#confSeg button").forEach(b=>b.setAttribute("aria-pressed",b===btn)); }));
+  function resetPair(){ pairChoice=null; conf=null; $$("#dock-pairwise .choice-btn,#confSeg button").forEach(b=>b.setAttribute("aria-pressed","false")); $("#cardA").classList.remove("selected"); $("#cardB").classList.remove("selected"); $("#confRow").classList.remove("show"); submitPair.disabled=true; submitPair._ready=false; }
+  submitPair.addEventListener("click",()=>{ if(!conf){ banner("Select a confidence level to continue."); return; } advance("Judgment recorded"); });
+
+  /* likert */
+  const ratings={}; const submitLikert=$("#submitLikert");
+  $$(".dim-card").forEach(card=>$$(".scale-btn",card).forEach(btn=>btn.addEventListener("click",()=>{
+    ratings[card.dataset.dim]=btn.textContent;
+    $$(".scale-btn",card).forEach(b=>b.setAttribute("aria-pressed",b===btn));
+    card.classList.add("rated");
+    $("#ratedCount").textContent=Object.keys(ratings).length;
+    armSubmit(submitLikert,Object.keys(ratings).length===3);
+  })));
+  function resetLikert(){ for(const k in ratings) delete ratings[k]; $$(".dim-card").forEach(c=>{c.classList.remove("rated"); $$(".scale-btn",c).forEach(b=>b.setAttribute("aria-pressed","false"));}); $("#ratedCount").textContent="0"; submitLikert.disabled=true; submitLikert._ready=false; }
+  submitLikert.addEventListener("click",()=>advance("Ratings recorded"));
+
+  /* regions / bbox */
+  const boxMeta={ floater:{name:"Floater",col:"#EC4899"}, blur:{name:"Blur / ghosting",col:"#3B82F6"}, color:{name:"Wrong colour",col:"#F59E0B"} };
+  let armed=null, boxId=0; const boxes=new Map();
+  const submitRegions=$("#submitRegions"), noErrorBtn=$("#noErrorBtn"), stage=$("#stage"), overlay=$("#overlay");
+  function armLabel(key){
+    armed = armed===key ? null : key;
+    overlay.classList.toggle("idle",!armed);
+    $$("#labelBar .label-chip").forEach(chip=>{ const m=boxMeta[chip.dataset.label], on=chip.dataset.label===armed; chip.style.background=on?m.col:"var(--surface-card)"; chip.style.color=on?"#fff":""; if(!on) chip.style.color=""; });
+    // restore default chip text colour when not armed
+    $$("#labelBar .label-chip").forEach(chip=>{ if(chip.dataset.label!==armed){ chip.style.background="var(--surface-card)"; chip.style.color={floater:"#BE185D",blur:"#1D4ED8",color:"#B45309"}[chip.dataset.label]; }});
+  }
+  $$("#labelBar .label-chip").forEach(chip=>chip.addEventListener("click",()=>armLabel(chip.dataset.label)));
+  function refreshRegions(){ $("#boxCount").textContent=boxes.size; armSubmit(submitRegions, boxes.size>0 || noErrorBtn.getAttribute("aria-pressed")==="true"); }
+  function removeBox(id){ const rec=boxes.get(id); if(!rec) return; rec.el.remove(); rec.row.remove(); boxes.delete(id); refreshRegions(); }
+
+  let draw=null, ghost=null;
+  overlay.addEventListener("pointerdown",e=>{
+    if(!armed){ toast("Arm an artifact label first (1–3)"); return; }
+    const r=stage.getBoundingClientRect();
+    draw={ x0:(e.clientX-r.left)/r.width, y0:(e.clientY-r.top)/r.height, w:r.width, h:r.height };
+    ghost=document.createElement("div"); ghost.className="drawing"; stage.appendChild(ghost);
+    overlay.setPointerCapture(e.pointerId);
+  });
+  overlay.addEventListener("pointermove",e=>{
+    if(!draw) return; const r=stage.getBoundingClientRect();
+    const x1=(e.clientX-r.left)/r.width, y1=(e.clientY-r.top)/r.height;
+    const L=Math.min(draw.x0,x1), T=Math.min(draw.y0,y1), W=Math.abs(x1-draw.x0), H=Math.abs(y1-draw.y0);
+    ghost.style.left=L*100+"%"; ghost.style.top=T*100+"%"; ghost.style.width=W*100+"%"; ghost.style.height=H*100+"%";
+  });
+  overlay.addEventListener("pointerup",e=>{
+    if(!draw) return; const g=ghost; ghost=null; const d=draw; draw=null;
+    const r=stage.getBoundingClientRect();
+    const x1=(e.clientX-r.left)/r.width, y1=(e.clientY-r.top)/r.height;
+    const L=Math.min(d.x0,x1), T=Math.min(d.y0,y1), W=Math.abs(x1-d.x0), H=Math.abs(y1-d.y0);
+    g.remove();
+    if(W<0.03||H<0.04) return;                       // ignore tiny drags
+    if(noErrorBtn.getAttribute("aria-pressed")==="true") noErrorBtn.setAttribute("aria-pressed","false");
+    const m=boxMeta[armed], id=++boxId;
+    const el=document.createElement("div"); el.className="bbox";
+    el.style.cssText="left:"+L*100+"%;top:"+T*100+"%;width:"+W*100+"%;height:"+H*100+"%;border-color:"+m.col;
+    el.innerHTML='<span class="blab" style="background:'+m.col+'">'+m.name+'</span><span class="bx"><svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>';
+    el.querySelector(".bx").addEventListener("pointerdown",ev=>ev.stopPropagation());
+    el.querySelector(".bx").addEventListener("click",ev=>{ ev.stopPropagation(); removeBox(id); });
+    stage.appendChild(el);
+    const row=document.createElement("div"); row.className="box-row";
+    row.innerHTML='<span class="box-sw" style="background:'+m.col+'"></span><span style="font-weight:500;color:var(--text-primary)">'+m.name+'</span>'+
+      '<span class="box-coords">'+Math.round(L*100)+","+Math.round(T*100)+" · "+Math.round(W*100)+"×"+Math.round(H*100)+"</span>"+
+      '<button class="x" aria-label="Remove box"><svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>';
+    row.querySelector(".x").addEventListener("click",()=>removeBox(id));
+    row.addEventListener("mouseenter",()=>el.style.outline="3px solid rgba(255,255,255,.5)");
+    row.addEventListener("mouseleave",()=>el.style.outline="none");
+    $("#boxList").appendChild(row);
+    boxes.set(id,{el,row}); refreshRegions();
+  });
+  noErrorBtn.addEventListener("click",()=>{
+    const on=noErrorBtn.getAttribute("aria-pressed")==="true";
+    if(!on && boxes.size>0){ if(!confirm("Remove "+boxes.size+" box(es) and mark this render as clean?")) return; [...boxes.keys()].forEach(removeBox); }
+    noErrorBtn.setAttribute("aria-pressed",String(!on)); refreshRegions();
+  });
+  function resetRegions(){ [...boxes.keys()].forEach(removeBox); noErrorBtn.setAttribute("aria-pressed","false"); armed=null; overlay.classList.add("idle"); $$("#labelBar .label-chip").forEach(chip=>{chip.style.background="var(--surface-card)"; chip.style.color={floater:"#BE185D",blur:"#1D4ED8",color:"#B45309"}[chip.dataset.label];}); submitRegions.disabled=true; submitRegions._ready=false; refreshRegions(); }
+  submitRegions.addEventListener("click",()=>advance("Annotation recorded"));
+
+  /* advance / skip / complete */
+  function resetActive(){ active==="pairwise"?resetPair():active==="likert"?resetLikert():resetRegions(); }
+  function advance(label,isSkip){
+    if(isSkip) state.skip++; else state.done++;
+    state.item++;
+    if(state.item>state.total){ showComplete(); return; }
+    updateProgress(); resetActive(); requestAnimationFrame(paintAll);
+    toast(label+" — item "+state.item+" loaded",!isSkip);
+  }
+  const skipMenu=$("#skipMenu");
+  function openSkip(a){ const r=a.getBoundingClientRect(); skipMenu.style.left=Math.max(12,Math.min(r.left,innerWidth-250))+"px"; skipMenu.classList.add("show"); }
+  function closeSkip(){ skipMenu.classList.remove("show"); }
+  $$("[data-skip]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); skipMenu.classList.contains("show")?closeSkip():openSkip(b); }));
+  $$("#skipMenu button").forEach(b=>b.addEventListener("click",()=>{ closeSkip(); advance("Skipped: "+b.dataset.reason,true); }));
+  document.addEventListener("click",e=>{ if(!skipMenu.contains(e.target)&&!e.target.closest("[data-skip]")) closeSkip(); });
+
+  function showComplete(){ closeSkip(); $$(".pane").forEach(p=>p.classList.remove("active")); $("#dock").style.display="none"; $("#sumDone").textContent=state.done; $("#sumSkip").textContent=state.skip; $("#sumTime").textContent=fmt(state.elapsed); $("#itemCounter").textContent=state.total+" / "+state.total; $("#progressFill").style.width="100%"; $("#complete").classList.add("show"); }
+  $("#startOver").addEventListener("click",()=>{ state.item=1; state.done=0; state.skip=0; $("#complete").classList.remove("show"); $("#dock").style.display=""; resetPair(); resetLikert(); resetRegions(); $$(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.pane==="pairwise")); $$(".pane").forEach(p=>p.classList.toggle("active",p.id==="pane-pairwise")); $$(".dock-pane").forEach(d=>d.style.display=d.id==="dock-pairwise"?"flex":"none"); active="pairwise"; updateProgress(); requestAnimationFrame(paintAll); });
+
+  /* keyboard */
+  document.addEventListener("keydown",e=>{
+    if(e.target.matches("input,textarea")||drawer.classList.contains("open")) return;
+    const k=e.key.toLowerCase();
+    if(k==="escape"){ closeSkip(); return; }
+    if(active==="pairwise"){ if(k==="1")$('#dock-pairwise [data-choice="A"]').click(); if(k==="2")$('#dock-pairwise [data-choice="tie"]').click(); if(k==="3")$('#dock-pairwise [data-choice="B"]').click(); if(k==="enter"&&!submitPair.disabled)submitPair.click(); }
+    if(active==="regions"){ if(k==="1")armLabel("floater"); if(k==="2")armLabel("blur"); if(k==="3")armLabel("color"); if(k==="n")noErrorBtn.click(); if(k==="enter"&&!submitRegions.disabled)submitRegions.click(); }
+    if(active==="likert"&&k==="enter"&&!submitLikert.disabled)submitLikert.click();
+    if(k==="s"){ const b=$("#dock-"+active+" [data-skip]"); if(b)(skipMenu.classList.contains("show")?closeSkip():openSkip(b)); }
+    if(k==="?")setDrawer(true);
+  });
+})();
+</script>
+</body>
+</html>
