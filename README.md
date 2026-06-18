@@ -11,10 +11,35 @@
 
 **No time to design it. Too proud to ship it ugly.**
 
-Page specs **for researchers and engineers** who have no time to refine design but can't stand an ugly dashboard, eval UI, or project page. Four research **archetypes** each ship a self-contained spec **plus a live demo** — motion and 3D can't be conveyed in a screenshot, so they're meant to be *opened*. Alongside them, a set of **static dashboard / research-page specs** (adopted from the sibling `theme-park.md` vocabulary) cover the same surfaces when you don't need motion.
+A pack of **design skills for coding agents.** Point Claude Code, Cursor, or
+Codex at one spec file and get a project page, dashboard, eval UI, or poster
+that doesn't look like a default template — motion and 3D included.
 
-> [!NOTE]
-> Sibling project: `theme-park.md` focuses on HTML / shape / color in static Markdown specs. This repo extends that vocabulary into **kinetic and 3D** research surfaces — and re-uses its best static dashboard / research-page specs as-is.
+Agents can already build the page. What they can't do is make the design
+*decisions*: type scale, color restraint, motion timing, what to leave out.
+Each `themes/*.md` encodes those decisions as one self-contained spec your
+agent follows exactly. 15 specs, 4 with live interactive demos (motion & 3D
+don't survive a screenshot — open them).
+
+👉 **Live gallery:** https://meow-at-me.github.io/research-designer/
+
+<!-- GIF ROW GOES HERE once recorded — see Part 2.2 -->
+
+## Quickstart
+
+```bash
+git clone https://github.com/meow-at-me/research-designer ~/research-designer
+```
+
+Then prompt your agent:
+> Build the page as a single HTML file. Follow
+> `~/research-designer/themes/experiment-dashboard.md` exactly,
+> including the Don't section.
+
+Or pin one spec to a project so "follow DESIGN.md" is the whole prompt:
+```bash
+cp ~/research-designer/themes/experiment-dashboard.md ./DESIGN.md
+```
 
 ## Previews
 
