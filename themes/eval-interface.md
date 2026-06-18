@@ -1,127 +1,125 @@
 # eval-interface.md
 
-> Theme: white, high-density, monochrome chrome with one warm-red selection accent; double keyboard focus ring, snappy instant state changes; full-bleed paired A/B media and uppercase micro-labels. A fast, low-distraction annotation tool.
+> Theme: a clean slate-surfaced annotation **workbench** with one indigo selection accent; sticky header (progress · item counter · live session timer · pattern tabs) over a working canvas and a per-pattern bottom **dock**. Keyboard-first, low-distraction, with a dwell-guard before submit. Three judgment patterns in one shell.
 > Archetype: eval-interface.
-> Use case: human-verification / MTurk-style annotation & rating UI — A/B preference, Likert quality, attention checks, progress, submit.
-> Base themes: theme-park.md `dense-grid-shop` (white monochrome chrome, warm-red active accent, double keyboard focus ring, snappy instant state) + `spec-minimal` (full-bleed paired media at a fixed ratio, uppercase wide-tracked wayfinding labels).
-> Icons: Lucide (ISC), stroke 1.5px. No emoji — line-style SVG only.
-> Technique note: a worker-facing HIT rendered in a dense, keyboard-first browse system; stimuli are pre-baked plates, not live 3D. Borrow techniques, never a single composition.
+> Use case: human-verification / annotation & rating UI — **pairwise** A/B preference (+confidence), **Likert** multi-dimension rating, and **span** error labeling; progress, skip-with-reason, completion summary.
+> Base themes: theme-park.md `dense-grid-shop` (keyboard focus discipline, snappy instant state) + `spec-minimal` (calm, low-distraction surfaces), rendered as a modern slate / indigo task shell.
+> Icons: Lucide (ISC), stroke 2px — line-style SVG only. No emoji.
+> Technique note: a worker-facing HIT shell that hosts multiple judgment patterns (pairwise / Likert / span); stimuli are text or pre-baked plates, not live 3D. Borrow techniques, never a single composition.
 
 ## 0. Motion & 3D Capability
 
 | Field | Value |
 |---|---|
-| Highest tier | **0 — native** (View Transitions API + CSS), low distraction. **No 3D** (stimuli are pre-baked plates so the tool stays fast); no JS motion library. |
-| Libraries | none — native View Transitions API (item-to-item cross-fade) · CSS (≤120ms confirm pulse) |
-| The motion idea | Keyboard-first item flow: 1/2/3 selects with an **instant** accent fill (no transition — snappiness is the point), Enter advances, a fast View-Transition cross-fade swaps the outgoing/incoming item, progress bar steps. One ≤120ms CSS confirm pulse on the chosen choice is the only flourish. |
+| Highest tier | **0 — native** (vanilla JS + CSS). **No 3D**, no motion library — the tool's job is fast judgment, not spectacle. |
+| Libraries | none — vanilla JS; CSS transitions (~150ms) only |
+| The motion idea | Keyboard-first item flow: selecting fills instantly; a **dwell guard** (~3s countdown) before Submit unlocks discourages reflexive clicking; Submit / Skip advance the item (progress bar + counter step) with a toast; the live session timer ticks (pauses when the tab is hidden); a completion summary ends the batch. |
 | The 3D idea | None — Tier 2 excluded. If stimuli are 3D reconstructions, render them as pre-baked static media plates. |
-| Reduced-motion | View-Transition cross-fades disabled (instant swap), confirm-pulse off, progress bar updates without tween. Fully usable keyboard-only. |
+| Reduced-motion | All transitions/animations off; the dwell countdown collapses to 0 (instant unlock); the timer still ticks. |
 | WebGL fallback | N/A (no WebGL). |
-| Task queue (static demo) | Hardcoded JS array of ~12–20 items `{id, left, right, reference, prompt, gold?}`; state `{currentIndex, responses}`; re-render from state; "Submit" pushes a response + increments index; completion screen reads from `responses`. Optional `sessionStorage` resume (clearly a demo). First paint = item 1, static. |
+| Task flow (static demo) | A shared item counter (`Item N / total`) + progress bar; each **Submit** or **Skip** increments the item, resets the active pattern's inputs, and re-arms the dwell guard. Reaching `total` shows a **completion summary** (submitted / skipped / session time) with a restart. The three patterns share the shell via header tabs. |
 
 ## 1. Principles
 
 | # | Principle | Implementation |
 |---|---|---|
-| 1 | Speed is the feature | State changes are instant; keyboard does everything; no animation between the worker and the next item |
-| 2 | One judgment at a time | The current stimulus + its response controls own the viewport; chrome is minimal |
-| 3 | Chrome stays monochrome | Nav, progress, legend in black/white/gray; warm red only marks the active/selected choice |
-| 4 | No accidental submits | Submit is disabled until a response exists; attention checks and a "cannot judge" escape are first-class |
-| 5 | Legible density | 12–13px base, tight but aligned; fixed media ratios so the layout never jumps between items |
+| 1 | One judgment at a time | The current stimulus + its response controls own the viewport; a fixed bottom dock holds the verdict + Submit |
+| 2 | Keyboard does everything | Number keys select, Enter submits, S skips, N marks "no errors", ? opens help; mouse is optional |
+| 3 | Calm, not flashy | Slate surfaces, one indigo accent for the active/selected state; transitions ~150ms, never attention-grabbing |
+| 4 | No accidental submits | Submit is disabled until a valid response exists **and** a short dwell guard elapses; skipping requires a reason |
+| 5 | Multiple patterns, one shell | Pairwise / Likert / span share the header, dock, dwell guard, drawer, progress, and keyboard model |
 
 ## 2. Color Tokens
 
 | Token | Value | Usage |
 |---|---|---|
-| `--bg` | #FFFFFF | Page |
-| `--panel` | #F7F7F7 | Instruction panel, input fills, media placeholders |
-| `--ink` | #222222 | Text, active states, badges |
-| `--ink-mid` | #717171 | Secondary text, counts, meta |
-| `--border` | #DDDDDD | 1px rules, card/plate outlines |
-| `--accent` | #E8474D | Selected choice, active radio, required marks (warm red, never shifted toward pink) |
-| `--ok` | #1A7F37 | Confirmed / submitted / done dot |
-| `--signal` | #FF7500 | Attention-check / warning marker (≤2 per view) |
+| `--surface-page` | #F8FAFC | App background |
+| `--surface-card` | #FFFFFF | Cards, header, dock |
+| `--surface-sunken` | #F1F5F9 | Prompt card, inputs, key chips, tab track |
+| `--border-default` | #E2E8F0 | 1px rules / card borders |
+| `--border-strong` | #CBD5E1 | Control outlines (buttons, scale) |
+| `--text-primary` | #0F172A | Headings, stimulus text |
+| `--text-body` | #334155 | Body |
+| `--text-muted` | #64748B | Labels, meta, counts |
+| `--accent` | #4F46E5 | Selected choice, active scale/tab, progress, focus (indigo) |
+| `--accent-soft` | #EEF2FF | Hover wash, selected-card tint |
+| `--success` #16A34A · `--warning` #D97706 · `--danger` #DC2626 | — | Rated check · attention flag · errors/validation |
 
-Focus ring (keyboard, mandatory): double ring `0 0 0 2px #FFFFFF, 0 0 0 4px #222222`.
+Span-label palette (semantic, pastel fills with darker text): factual error `#FECACA`/`#B91C1C` · unsupported claim `#FDE68A`/`#B45309` · contradiction `#BFDBFE`/`#1D4ED8`.
+Focus ring (keyboard): `outline:2px solid var(--accent); outline-offset:2px`.
+Radius: control 8px · card 12px · modal 16px · pill 9999px.
 
 ## 3. Typography
 
 | Role | Font (SIL OFL) | Spec |
 |---|---|---|
-| All text | Pretendard | Latin + Korean in one face (demo content may be Korean) |
-| Study / section title | — | 18–20px / 700 |
-| Prompt (the question) | — | 16px / 600 |
-| Body / instructions | — | 13–14px / 1.5, `--ink-mid` |
-| Micro-label / wayfinding | — | 11–12px / 600, uppercase, +0.12em tracking |
-| Counts / progress / ids | — | 12–13px, `font-variant-numeric: tabular-nums` |
+| UI / body | IBM Plex Sans | 14px / 1.57; section labels 12px uppercase +0.06em; study/dim names 600 |
+| Stimulus / prompt / response | IBM Plex Sans | 17px / 28px — generous reading size |
+| Numerals, ids, timer, scale buttons, keys, span tags | JetBrains Mono | 12–14px, tabular |
 
 ## 4. Layout
 
-- Max 1100px centered app column; 16–24px padding; no marketing hero.
-- **Top:** task header bar (study title left · requester + HIT-id + reward right) + a thin progress bar with "Item N / M".
-- **Instruction panel:** collapsible, `--panel` fill, with a worked example; collapsed by default after first item.
-- **Stimulus zone:** the reference plate on top (or left), then the **A | B pair** side-by-side at a fixed ratio (4:3), labelled `A`/`B` in uppercase micro-labels; a divider between. Single-stimulus Likert variant: one plate + the scale.
-- **Response zone:** the 2AFC buttons (A better · Tie · B better) and/or the 1–5 quality scale, directly under the stimulus; comment + "cannot judge" below.
-- **Footer of card:** keyboard legend + Prev / Skip / Submit-next.
-- **Queue rail:** right (or bottom on narrow) — compact dots/rows for items, done/current/pending.
-- Fixed media ratios so nothing reflows between items.
+- **Sticky header** (56px): study name · `Item N / total` (mono) · live timer · pattern **tabs** (Pairwise / Likert / Span) · Instructions. A 4px progress bar sits on top; an inline error **banner** drops below it on validation failure.
+- **Canvas** (max 1200px): the active pattern pane.
+- **Fixed bottom dock** (≥72px): a per-pattern row with the verdict controls, a Skip (with reason menu), and the primary Submit. The dock swaps with the tab.
+- **Drawer** (right, 420px): instructions per pattern + payment/contact + fictional disclaimer.
+- **Mobile (<768px):** desktop-only notice (annotation precision needs a pointer + width).
 
 ## 5. Components
 
 | Component | Spec |
 |---|---|
-| Task header | study title + mono requester/HIT-id/reward; "Instructions" toggle (Lucide `info`) |
-| Progress | 1px-track bar + `--accent` fill + mono "7 / 20"; steps instantly |
-| Instruction panel | `--panel`, collapsible, worked example with a labelled correct answer |
-| Reference plate | fixed-ratio media (self-made false-color/point-field render), `--panel` placeholder, `1px --border` |
-| A/B pair | two equal fixed-ratio plates with uppercase `A`/`B` micro-labels; selected plate gets a 2px `--accent` outline |
-| Choice button (2AFC) | rect, radius 4px, 1px `--border`; selected = `--accent` bg/border + white text, **instant**; keys 1/2/3 |
-| Likert scale | 5 radio segments 1–5 with end labels (e.g. "poor"→"excellent"); selected = `--accent`; keys 1–5 |
-| Comment field | optional textarea, `--panel` fill |
-| Cannot-judge flag | checkbox + label; when set, allows submit without a preference |
-| Attention check | occasional item with a known answer; `--signal` marker; mis-answer noted in summary |
-| Keyboard legend | mono row: `1/2/3 choose · Enter submit · ← back · S skip` |
-| Nav buttons | Prev (ghost) · Skip (ghost) · Submit-next (`--ink` bg, white; disabled until a response) |
-| Queue rail | item rows/dots: done `--ok` · current `--ink` ring · pending `--border` |
-| Completion screen | counts submitted/skipped, fictional inter-annotator agreement, WhiskerSplat win-rate |
+| Pattern tabs | pill segmented control in the header; switches both the canvas pane and the dock |
+| Pairwise cards | prompt card + two response cards; selected card gets a 2px accent border + check; scrollable bodies |
+| Confidence segment | appears after a choice; Low / Medium / High; required before submit |
+| Likert dimension card | name + question + a 1–4 `radiogroup` with end anchors; rated cards get an accent left-rail + check; dock shows "n of N rated" |
+| Span labels | armable chips (keys 1–3); arm one, then mouse-select text → wraps a `<mark>` with a superscript tag; a span list with per-row remove; "No errors" toggle |
+| Dock buttons | Submit (primary, dwell-guarded, `Enter`), Skip (`S`, opens reason menu), per-pattern verdict controls with key chips |
+| Dwell guard | Submit shows a `(3s…2s…1s)` countdown before it unlocks; collapses to instant under reduced-motion |
+| Skip menu | small popover: "Content unclear / Cannot judge / Other" → records a skip + advances |
+| Toast / banner | toast confirms record + next item; red banner for validation (e.g. missing confidence) |
+| Completion summary | submitted / skipped / session-time tiles + restart |
+| Drawer (instructions) | per-pattern how-to + payment/contact + fictional disclaimer |
 
 ## 5b. Genre components — REQUIRED
 
 | # | Required block | Notes |
 |---|---|---|
-| 1 | Task header | study title, requester (CatTower LTD), HIT-id stand-in, reward |
-| 2 | Progress indicator | "Item N / M" + bar |
-| 3 | Instruction panel | collapsible, with a worked example |
-| 4 | Stimulus | A/B reconstruction pair (+ reference); plus a single-stimulus Likert variant present |
-| 5 | Response widget | 2AFC (A better / Tie / B better) **and** a 1–5 quality scale |
-| 6 | Escape controls | optional comment + "cannot judge" flag |
-| 7 | Keyboard-shortcut legend | 1/2/3, Enter, ←, Skip |
-| 8 | Navigation + validation | Prev / Skip / Submit-next; no submit without a response (unless cannot-judge) |
-| 9 | Queue rail | done / current / pending states across the item list |
-| 10 | Completion screen | summary counts + fictional agreement / win-rate |
-| 11 | Footer disclaimer | mandatory text |
+| 1 | Sticky header | study name, `Item N / total`, live session timer, pattern tabs, Instructions |
+| 2 | Progress bar | advances on each submit/skip |
+| 3 | Pairwise pattern | prompt + A/B responses + choose (A / Tie / B) + confidence |
+| 4 | Likert pattern | source + summary-under-review + ≥3 dimensions, each a 1–4 scale with anchors |
+| 5 | Span pattern | armable labels + mouse text-selection highlighting + span list + "no errors" |
+| 6 | Per-pattern dock | primary Submit + Skip, keyboard-labelled |
+| 7 | Dwell guard | Submit unlocks only after a short countdown |
+| 8 | Skip-with-reason | menu of reasons, not a silent skip |
+| 9 | Instructions drawer | per-pattern guidance + payment/contact + disclaimer |
+| 10 | Completion summary | submitted / skipped / session time + restart |
+| 11 | Keyboard model | 1–3 / Enter / S / N / ? |
+| 12 | Footer disclaimer | mandatory fictional-content text (here: in the instructions drawer) |
 
 ## 6. Motion (detailed)
 
 | Target | Effect | Tier / technique |
 |---|---|---|
-| Item swap | fast cross-fade between outgoing/incoming item | 0 / View Transitions API (instant fallback) |
-| Choice select | instant accent fill (no transition) | — / snappiness rule |
-| Confirm | ≤120ms pulse on the selected choice | 0 / CSS animation |
-| Progress bar | steps to new value, no tween needed | 0 / width set |
-| Reduced motion | cross-fade off (instant swap), no pulse | — |
+| Selection / active state | instant accent fill | — / class toggle |
+| Hover (buttons, scale, tabs) | ~150ms background / border ease | 0 / CSS transition |
+| Submit dwell guard | countdown then unlock | 0 / JS timer (instant under reduced-motion) |
+| Item advance | toast in/out, progress width step | 0 / CSS |
+| Drawer / skip menu | slide / fade ~150ms | 0 / CSS transform |
+| Reduced motion | all transitions + dwell collapse to 0; timer still ticks | — |
 
 ## 7. 3D
 
-Not applicable — Tier 2 excluded. Stimuli are pre-baked plates so the tool stays fast and low-distraction.
+Not applicable — Tier 2 excluded. Stimuli are text or pre-baked plates so judgment stays fast.
 
 ## 8. Don't
 
-- No animation between the worker and the next item beyond the fast cross-fade — selecting is instant.
-- Color never on chrome; warm red is reserved for the selected/active choice and required marks.
-- No submit enabled without a response (unless "cannot judge" is set); no silent advance past attention checks.
-- No live WebGL stimuli; no shadows; no rounded corners beyond 4px; fixed media ratios — never reflow between items.
-- No real datasets/methods/metrics — WhiskerSplat-vs-baselines study on CT-Scenes-Hard, all fictional.
+- No motion library, no 3D, no decorative animation — this is a tool; transitions are functional and ~150ms.
+- No accent beyond the active/selected state, progress, and focus; chrome stays slate/neutral. Span-label colors are semantic only.
+- No submit without a valid response **and** the dwell guard; no silent skip (always capture a reason).
+- No mixing two patterns in one verdict; the tabs are separate judgment modes.
+- No real datasets/methods/metrics/workers — fictional CatTower canon only (Kitty Park, Ya-ong Kim, Calico Lee; study CT-2026-014).
 
 ---
 
@@ -129,11 +127,12 @@ Not applicable — Tier 2 excluded. Stimuli are pre-baked plates so the tool sta
 
 ```css
 :root{
-  --bg:#FFFFFF; --panel:#F7F7F7; --ink:#222222; --ink-mid:#717171; --border:#DDDDDD;
-  --accent:#E8474D; --ok:#1A7F37; --signal:#FF7500;
-  --radius-xs:2px; --radius-sm:4px; --radius-md:12px; --radius-pill:9999px;
-  --ratio:4 / 3;
-  --font-sans:"Pretendard",system-ui,sans-serif;
+  --surface-page:#F8FAFC; --surface-card:#FFFFFF; --surface-sunken:#F1F5F9;
+  --border-default:#E2E8F0; --border-strong:#CBD5E1;
+  --text-primary:#0F172A; --text-body:#334155; --text-muted:#64748B; --text-inverse:#F8FAFC;
+  --accent:#4F46E5; --accent-hover:#4338CA; --accent-soft:#EEF2FF;
+  --success:#16A34A; --warning:#D97706; --danger:#DC2626; --danger-soft:#FEF2F2;
+  --radius-control:8px; --radius-card:12px; --radius-modal:16px; --radius-pill:9999px;
+  --font-sans:"IBM Plex Sans",system-ui,sans-serif; --font-mono:"JetBrains Mono",monospace;
 }
-::view-transition-old(item),::view-transition-new(item){ animation-duration:.18s; }
 ```

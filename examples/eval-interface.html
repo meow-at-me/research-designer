@@ -1,407 +1,753 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WhiskerSplat — Reconstruction Preference Study (fictional HIT) · CatTower LTD</title>
-<meta name="description" content="Fictional demo annotation interface for the eval-interface theme (research-designer). A/B preference + Likert quality.">
-
-<!-- Fonts: SIL OFL only (Pretendard covers Latin + Korean) -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CatTower Research Lab — Annotation Workbench (fictional) · eval-interface</title>
+<meta name="description" content="Fictional human-eval / annotation workbench for the eval-interface theme (research-designer): pairwise, Likert, and span-labeling patterns, keyboard-first.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@1.3.9/dist/web/static/pretendard.css">
-
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#FFFFFF; --panel:#F7F7F7; --ink:#222222; --ink-mid:#717171; --border:#DDDDDD;
-  --accent:#E8474D; --ok:#1A7F37; --signal:#FF7500;
-  --radius-xs:2px; --radius-sm:4px; --radius-md:12px; --radius-pill:9999px;
-  --ratio:4 / 3;
-  --font-sans:"Pretendard",system-ui,sans-serif;
-}
-*{box-sizing:border-box}
-html,body{margin:0}
-body{ background:var(--bg); color:var(--ink); font-family:var(--font-sans); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
-button{font-family:inherit; color:inherit; cursor:pointer}
-:focus-visible{outline:none; box-shadow:0 0 0 2px #fff, 0 0 0 4px var(--ink); border-radius:var(--radius-xs)}
-.mono{font-variant-numeric:tabular-nums}
-.upper{text-transform:uppercase; letter-spacing:.12em; font-size:11px; font-weight:600; color:var(--ink-mid)}
+  :root{
+    --surface-page:#F8FAFC; --surface-card:#FFFFFF; --surface-sunken:#F1F5F9;
+    --border-default:#E2E8F0; --border-strong:#CBD5E1;
+    --text-primary:#0F172A; --text-body:#334155; --text-muted:#64748B; --text-inverse:#F8FAFC;
+    --accent:#4F46E5; --accent-hover:#4338CA; --accent-soft:#EEF2FF;
+    --success:#16A34A; --warning:#D97706; --danger:#DC2626; --danger-soft:#FEF2F2;
+    --radius-control:8px; --radius-card:12px; --radius-modal:16px; --radius-pill:9999px;
+    --shadow-card:0 1px 2px rgba(15,23,42,.06);
+    --shadow-raised:0 4px 12px rgba(15,23,42,.10);
+    --shadow-modal:0 16px 48px rgba(15,23,42,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'IBM Plex Sans',sans-serif;background:var(--surface-page);
+    color:var(--text-body);font-size:14px;line-height:22px;
+    min-height:100vh;display:flex;flex-direction:column;
+  }
+  button{font:inherit;cursor:pointer;border:none;background:none}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+  .mono{font-family:'JetBrains Mono',monospace}
+  .icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
-.app{max-width:1100px; margin:0 auto; padding:20px 18px 60px}
+  /* ---------- Header ---------- */
+  .progress-track{height:4px;background:var(--border-default)}
+  .progress-fill{height:100%;width:23%;background:var(--accent);border-radius:var(--radius-pill);transition:width 150ms ease-out}
+  header{
+    position:sticky;top:0;z-index:30;background:var(--surface-card);
+    box-shadow:var(--shadow-raised);
+  }
+  .header-row{
+    height:56px;max-width:1200px;margin:0 auto;padding:0 24px;
+    display:flex;align-items:center;gap:24px;
+  }
+  .study-name{font-size:14px;font-weight:600;color:var(--text-primary)}
+  .header-meta{display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:13px}
+  .header-spacer{flex:1}
+  .tabs{display:flex;gap:4px;background:var(--surface-sunken);padding:3px;border-radius:var(--radius-pill)}
+  .tab{
+    padding:5px 14px;border-radius:var(--radius-pill);font-size:13px;color:var(--text-muted);
+    transition:background 150ms ease-out,color 150ms ease-out;
+  }
+  .tab[aria-selected="true"]{background:var(--surface-card);color:var(--accent);font-weight:600;box-shadow:var(--shadow-card)}
+  .help-btn{display:flex;align-items:center;gap:6px;color:var(--text-muted);padding:8px;border-radius:var(--radius-control)}
+  .help-btn:hover{background:var(--surface-sunken)}
 
-/* task header */
-.taskhdr{display:flex; align-items:flex-start; gap:16px; padding-bottom:14px; border-bottom:1px solid var(--border)}
-.taskhdr h1{font-size:18px; font-weight:700; margin:0}
-.taskhdr .req{font-size:12px; color:var(--ink-mid); margin-top:4px}
-.taskhdr .meta{margin-left:auto; text-align:right; font-size:12px; color:var(--ink-mid); display:flex; gap:18px}
-.taskhdr .meta b{color:var(--ink); font-weight:700}
-.itoggle{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px 10px; font-size:12px; background:#fff}
-.itoggle svg{width:14px;height:14px}
+  /* ---------- Layout ---------- */
+  main{flex:1;width:100%;max-width:1200px;margin:0 auto;padding:32px 24px 120px}
+  .section-label{
+    font-size:12px;line-height:16px;font-weight:600;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;
+  }
+  .card{
+    background:var(--surface-card);border:1px solid var(--border-default);
+    border-radius:var(--radius-card);box-shadow:var(--shadow-card);padding:24px;
+  }
+  .task-text{font-size:17px;line-height:28px;color:var(--text-primary);max-width:68ch}
+  .pane{display:none}
+  .pane.active{display:block}
 
-/* progress */
-.progress{display:flex; align-items:center; gap:12px; margin:14px 0}
-.progress .ptrack{flex:1; height:6px; background:var(--panel); border-radius:var(--radius-pill); overflow:hidden}
-.progress .pfill{height:100%; background:var(--accent); width:0; transition:width .2s ease}
-.progress .pnum{font-size:12px; color:var(--ink-mid)}
+  /* ---------- Pairwise ---------- */
+  .prompt-card{background:var(--surface-sunken);border-radius:var(--radius-card);padding:24px;margin-bottom:24px}
+  .pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .resp-card{position:relative;transition:border-color 150ms ease-out,background 150ms ease-out}
+  .resp-card .scroll{max-height:52vh;overflow-y:auto;padding-right:4px}
+  .resp-card.selected{border:2px solid var(--accent);background:linear-gradient(rgba(238,242,255,.4),rgba(238,242,255,.4)),var(--surface-card);padding:23px}
+  .resp-check{position:absolute;top:16px;right:16px;color:var(--accent);display:none}
+  .resp-card.selected .resp-check{display:block}
 
-/* instructions */
-.instr{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px 16px; margin-bottom:16px}
-.instr.collapsed{display:none}
-.instr h2{font-size:13px; margin:0 0 8px}
-.instr p{margin:0 0 8px; color:var(--ink-mid)}
-.instr .ex{display:flex; gap:10px; align-items:center; margin-top:8px; font-size:12px}
-.instr .ex .mini{width:64px; aspect-ratio:var(--ratio); border:1px solid var(--border)}
-.instr .ex .good{box-shadow:0 0 0 2px var(--ok)}
+  /* ---------- Likert ---------- */
+  .likert-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;margin-bottom:24px}
+  .likert-grid .scroll{max-height:40vh;overflow-y:auto}
+  .dim-card{padding:20px;margin-bottom:12px;position:relative;transition:border-color 150ms ease-out}
+  .dim-card.rated::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;background:var(--accent);border-radius:var(--radius-pill)}
+  .dim-card.error{border-color:var(--danger)}
+  .dim-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .dim-name{font-weight:600;color:var(--text-primary)}
+  .dim-q{color:var(--text-body)}
+  .dim-card.rated .dim-q{color:var(--text-muted)}
+  .dim-check{color:var(--success);display:none}
+  .dim-card.rated .dim-check{display:block}
+  .scale-row{display:flex;align-items:center;gap:8px}
+  .scale-btn{
+    width:44px;height:44px;border-radius:var(--radius-pill);border:1px solid var(--border-strong);
+    color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:14px;
+    transition:background 150ms ease-out,border-color 150ms ease-out;
+  }
+  .scale-btn:hover{background:var(--accent-soft)}
+  .scale-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--text-inverse)}
+  .anchors{margin-left:12px;font-size:12px;color:var(--text-muted)}
 
-/* main grid */
-.grid{display:grid; grid-template-columns:1fr 224px; gap:18px}
-#stage{view-transition-name:item}
-.card{border:1px solid var(--border); border-radius:var(--radius-md); padding:18px}
-.prompt{font-size:16px; font-weight:600; margin:0 0 14px}
-.prompt .qid{font-size:11px; color:var(--ink-mid); font-weight:500; margin-left:8px}
+  /* ---------- Span ---------- */
+  .label-bar{
+    position:sticky;top:60px;z-index:20;display:flex;gap:8px;align-items:center;
+    background:var(--surface-page);padding:8px 0 16px;
+  }
+  .label-chip{
+    height:36px;padding:0 14px;border-radius:var(--radius-pill);border:1px solid;
+    display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;background:var(--surface-card);
+    transition:background 150ms ease-out,color 150ms ease-out;
+  }
+  .span-text{padding:32px;font-size:17px;line-height:32px;color:var(--text-primary);max-width:none;user-select:text}
+  mark.span{border-radius:4px;padding:2px 1px;cursor:pointer;color:inherit}
+  mark.span .tag{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;margin-left:2px;vertical-align:super}
+  .span-list{margin-top:16px}
+  .span-row{
+    display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--surface-card);
+    border:1px solid var(--border-default);border-radius:var(--radius-control);margin-bottom:8px;font-size:13px;
+  }
+  .span-quote{font-family:'JetBrains Mono',monospace;color:var(--text-primary);max-width:60ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .span-row .x{margin-left:auto;color:var(--text-muted);padding:4px;border-radius:4px}
+  .span-row .x:hover{color:var(--danger);background:var(--danger-soft)}
+  .hint{font-size:13px;color:var(--text-muted);margin-top:12px;display:flex;gap:6px;align-items:center}
 
-/* stimulus */
-.reference{margin-bottom:14px}
-.reference .rlab{margin-bottom:6px}
-.plate{aspect-ratio:var(--ratio); border:1px solid var(--border); background:#0b0d12; position:relative; overflow:hidden}
-.refplate{max-width:280px}
-.pair{display:grid; grid-template-columns:1fr 1fr; gap:14px}
-.choiceplate{position:relative}
-.choiceplate .ptag{position:absolute; top:8px; left:8px; font-size:11px; font-weight:700; color:#fff; background:rgba(0,0,0,.55); padding:2px 8px; z-index:2}
-.choiceplate.selected .plate{box-shadow:0 0 0 2px var(--accent)}
-.choiceplate.selected .ptag{background:var(--accent)}
+  /* ---------- Completion ---------- */
+  .complete{display:none;max-width:560px;margin:56px auto;text-align:center}
+  .complete.show{display:block}
+  .complete .seal{width:64px;height:64px;border-radius:var(--radius-pill);background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin:0 auto 20px}
+  .complete h2{font-size:24px;line-height:32px;color:var(--text-primary);margin-bottom:8px}
+  .complete p{margin-bottom:24px}
+  .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+  .summary-grid .s{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-card);padding:16px}
+  .summary-grid .sv{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;color:var(--text-primary)}
+  .summary-grid .sl{font-size:12px;color:var(--text-muted);margin-top:4px}
 
-/* response widgets */
-.responses{margin-top:16px}
-.twoafc{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
-.choicebtn{border:1px solid var(--border); border-radius:var(--radius-sm); background:#fff; padding:12px; font-size:14px; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:4px}
-.choicebtn .key{font-size:11px; color:var(--ink-mid); font-weight:500}
-.choicebtn.sel{background:var(--accent); border-color:var(--accent); color:#fff}
-.choicebtn.sel .key{color:rgba(255,255,255,.8)}
-.likert{display:grid; grid-template-columns:repeat(5,1fr); gap:8px}
-.likbtn{border:1px solid var(--border); border-radius:var(--radius-sm); background:#fff; padding:14px 8px; text-align:center; font-weight:700; font-size:16px}
-.likbtn small{display:block; font-size:10px; font-weight:500; color:var(--ink-mid); margin-top:4px}
-.likbtn.sel{background:var(--accent); border-color:var(--accent); color:#fff}
-.likbtn.sel small{color:rgba(255,255,255,.85)}
-.pulse{animation:pulse .12s ease-out}
-@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+  /* ---------- Dock ---------- */
+  .dock{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface-card);
+    box-shadow:var(--shadow-raised);border-top:1px solid var(--border-default);
+  }
+  .dock-row{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:12px;min-height:72px;flex-wrap:wrap}
+  .dock-q{font-size:14px;color:var(--text-body);margin-right:8px}
+  .choice-btn{
+    height:44px;padding:0 18px 0 10px;max-width:220px;border-radius:var(--radius-control);
+    border:1px solid var(--border-strong);background:var(--surface-card);color:var(--text-body);
+    display:flex;align-items:center;gap:10px;font-size:14px;
+    transition:background 150ms ease-out,border-color 150ms ease-out,color 150ms ease-out;
+  }
+  .choice-btn:hover{background:var(--accent-soft)}
+  .choice-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--text-inverse)}
+  .key{
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);
+    background:var(--surface-sunken);border-radius:var(--radius-pill);padding:2px 8px;
+  }
+  .choice-btn[aria-pressed="true"] .key{background:var(--accent-soft);color:var(--accent)}
+  .conf{display:none;align-items:center;gap:8px;margin-left:8px;animation:fade 150ms ease-out}
+  .conf.show{display:flex}
+  .conf-label{font-size:13px;color:var(--text-muted)}
+  .seg{display:flex;border:1px solid var(--border-strong);border-radius:var(--radius-control);overflow:hidden}
+  .seg button{padding:8px 14px;font-size:13px;color:var(--text-muted);border-right:1px solid var(--border-strong)}
+  .seg button:last-child{border-right:none}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:var(--text-inverse)}
+  .ghost-btn{display:flex;align-items:center;gap:8px;color:var(--text-muted);padding:10px 12px;border-radius:var(--radius-control)}
+  .ghost-btn:hover{background:var(--surface-sunken)}
+  .submit-btn{
+    height:44px;padding:0 22px;border-radius:var(--radius-control);background:var(--accent);
+    color:var(--text-inverse);font-weight:600;display:flex;align-items:center;gap:10px;
+    transition:background 150ms ease-out;
+  }
+  .submit-btn:hover{background:var(--accent-hover)}
+  .submit-btn:disabled{background:var(--surface-sunken);color:var(--text-muted);cursor:not-allowed}
+  .submit-btn:disabled .key{background:var(--surface-card)}
+  .dock-spacer{flex:1}
+  .no-error-btn{
+    display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;font-size:14px;
+    border:1px solid var(--border-strong);border-radius:var(--radius-control);color:var(--text-body);
+  }
+  .no-error-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--text-inverse)}
 
-.extras{display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-top:14px}
-.comment{flex:1; min-width:200px}
-.comment input{width:100%; border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 10px; font-family:inherit; font-size:13px}
-.cannot{display:inline-flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-mid)}
-.attn{display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--signal); font-weight:600}
-.attn svg{width:13px;height:13px}
+  /* ---------- Skip menu ---------- */
+  .skip-menu{
+    position:fixed;bottom:88px;z-index:35;min-width:230px;background:var(--surface-card);
+    border:1px solid var(--border-default);border-radius:var(--radius-card);box-shadow:var(--shadow-modal);
+    padding:6px;display:none;
+  }
+  .skip-menu.show{display:block;animation:fade 150ms ease-out}
+  .skip-menu .sm-h{font-size:12px;color:var(--text-muted);padding:8px 10px 4px}
+  .skip-menu button{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:var(--radius-control);font-size:14px;color:var(--text-body)}
+  .skip-menu button:hover{background:var(--surface-sunken)}
 
-/* keyboard legend */
-.legend{display:flex; flex-wrap:wrap; gap:14px; margin-top:16px; font-size:12px; color:var(--ink-mid)}
-.legend kbd{font-family:inherit; font-weight:700; color:var(--ink); border:1px solid var(--border); border-bottom-width:2px; border-radius:var(--radius-xs); padding:1px 6px; margin-right:5px}
+  /* ---------- Banner / toast ---------- */
+  .banner{
+    display:none;max-width:1200px;margin:0 auto;padding:10px 24px;
+    background:var(--danger-soft);color:var(--danger);font-size:13px;
+    border-radius:0 0 var(--radius-control) var(--radius-control);
+    align-items:center;gap:8px;
+  }
+  .banner.show{display:flex}
+  .toast{
+    position:fixed;bottom:96px;left:50%;transform:translateX(-50%);z-index:40;
+    background:var(--text-primary);color:var(--text-inverse);font-size:13px;
+    padding:10px 18px;border-radius:var(--radius-control);box-shadow:var(--shadow-modal);
+    display:none;align-items:center;gap:8px;
+  }
+  .toast.show{display:flex;animation:fade 150ms ease-out}
+  .toast.success svg{color:#4ADE80}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
 
-/* nav */
-.nav{display:flex; gap:10px; margin-top:16px}
-.btn{border:1px solid var(--border); border-radius:var(--radius-sm); background:#fff; padding:11px 18px; font-size:14px; font-weight:600}
-.btn.ghost{color:var(--ink-mid)}
-.btn.primary{background:var(--ink); color:#fff; border-color:var(--ink); margin-left:auto}
-.btn.primary:disabled{background:var(--border); border-color:var(--border); color:#9a9a9a; cursor:not-allowed}
+  /* ---------- Drawer ---------- */
+  .drawer-veil{position:fixed;inset:0;background:rgba(15,23,42,.25);z-index:48;display:none}
+  .drawer{
+    position:fixed;top:0;right:0;bottom:0;width:420px;max-width:90vw;z-index:50;
+    background:var(--surface-card);border-radius:var(--radius-modal) 0 0 var(--radius-modal);
+    box-shadow:var(--shadow-modal);padding:32px;overflow-y:auto;
+    transform:translateX(105%);transition:transform 150ms ease-out;
+  }
+  .drawer.open{transform:none}
+  .drawer-veil.open{display:block}
+  .drawer h2{font-size:20px;line-height:28px;font-weight:600;color:var(--text-primary);margin-bottom:16px}
+  .drawer p{margin-bottom:12px}
+  .drawer .code-block{background:var(--surface-sunken);border-radius:var(--radius-control);padding:12px 16px;font-size:13px;margin:12px 0}
+  .drawer-close{position:absolute;top:20px;right:20px;color:var(--text-muted);padding:8px;border-radius:var(--radius-control)}
+  .drawer-close:hover{background:var(--surface-sunken)}
 
-/* queue rail */
-.queue{border:1px solid var(--border); border-radius:var(--radius-md); padding:12px; align-self:start; position:sticky; top:16px}
-.queue .qh{margin-bottom:10px}
-.qitem{display:flex; align-items:center; gap:9px; width:100%; text-align:left; background:none; border:0; padding:6px 6px; border-radius:var(--radius-sm); font-size:12px; color:var(--ink-mid)}
-.qitem:hover{background:var(--panel)}
-.qitem .qd{width:10px; height:10px; border-radius:999px; border:1px solid var(--border); flex:none}
-.qitem.cur{color:var(--ink); font-weight:600}
-.qitem.cur .qd{border-color:var(--ink); box-shadow:inset 0 0 0 2px #fff, 0 0 0 1px var(--ink)}
-.qitem.done .qd{background:var(--ok); border-color:var(--ok)}
-.qitem.skip .qd{background:var(--signal); border-color:var(--signal)}
-.qitem .qt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-
-/* completion */
-.done-screen{border:1px solid var(--border); border-radius:var(--radius-md); padding:34px; text-align:center}
-.done-screen h2{font-size:22px; margin:0 0 6px}
-.done-screen p{color:var(--ink-mid); margin:0 auto 22px; max-width:46ch}
-.summary{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; max-width:620px; margin:0 auto}
-.sumcard{border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px}
-.sumcard .sv{font-size:28px; font-weight:800}
-.sumcard .sl{font-size:11px; color:var(--ink-mid); text-transform:uppercase; letter-spacing:.06em; margin-top:4px}
-
-footer{margin-top:28px; padding-top:16px; border-top:1px solid var(--border); font-size:11px; color:var(--ink-mid); line-height:1.7}
-
-@media (max-width:820px){ .grid{grid-template-columns:1fr} .queue{position:static} }
-@media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important} ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none !important} }
-
-/* view transition timing */
-::view-transition-old(item),::view-transition-new(item){ animation-duration:.18s; }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media (max-width:768px){
+    main,.dock,.drawer,.skip-menu{display:none}
+    .mobile-block{display:flex!important}
+  }
+  .mobile-block{
+    display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;
+    gap:12px;padding:32px;text-align:center;color:var(--text-body);
+  }
 </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- TASK HEADER -->
-  <header class="taskhdr">
-    <div>
-      <h1>Reconstruction faithfulness — preference & quality</h1>
-      <div class="req">Requester: <b style="color:var(--ink)">CatTower LTD · Meowtrics</b> · Study CT-Scenes-Hard / human-eval</div>
+<header>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="header-row">
+    <span class="study-name">CatTower Research Lab</span>
+    <span class="header-meta mono" id="itemCounter">Item 14 / 60</span>
+    <span class="header-meta">
+      <svg class="icon" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>
+      <span class="mono" id="timer">02:41</span>
+    </span>
+    <div class="header-spacer"></div>
+    <div class="tabs" role="tablist" aria-label="Pattern demo switcher">
+      <button class="tab" role="tab" aria-selected="true" data-pane="pairwise">Pairwise</button>
+      <button class="tab" role="tab" aria-selected="false" data-pane="likert">Likert</button>
+      <button class="tab" role="tab" aria-selected="false" data-pane="span">Span</button>
     </div>
-    <div class="meta">
-      <div>HIT-ID<br><b class="mono">HIT-7F3A91</b></div>
-      <div>Reward<br><b>$0.18 / item</b></div>
-      <button class="itoggle" id="itoggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Instructions</button>
-    </div>
-  </header>
-
-  <!-- PROGRESS -->
-  <div class="progress">
-    <span class="pnum mono" id="pnum">Item 1 / 12</span>
-    <div class="ptrack"><div class="pfill" id="pfill"></div></div>
-    <span class="pnum mono" id="pdone">0 answered</span>
+    <button class="help-btn" id="helpBtn" aria-label="Open instructions">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+      Instructions
+    </button>
   </div>
+  <div class="banner" id="banner" role="alert">
+    <svg class="icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <span id="bannerText"></span>
+  </div>
+</header>
 
-  <!-- INSTRUCTIONS -->
-  <section class="instr" id="instr">
-    <h2>What to do</h2>
-    <p>You'll see a <b>reference view</b> of a 3D scene and one or two <b>reconstructed</b> renders. Judge which reconstruction is <b>more faithful to the reference</b> (sharper geometry, fewer artifacts), or rate a single render's quality. Use the number keys, then press <b>Enter</b> to submit.</p>
-    <div class="ex">
-      <span>Example —</span>
-      <div class="mini good" id="ex-good"></div><span style="color:var(--ok)">faithful (pick this)</span>
-      <div class="mini" id="ex-bad"></div><span>blurry / wrong scale</span>
+<main>
+  <!-- ============ PAIRWISE ============ -->
+  <section class="pane active" id="pane-pairwise">
+    <div class="section-label">Prompt</div>
+    <div class="prompt-card task-text">How do I convert 10 degrees Celsius to Fahrenheit?</div>
+    <div class="pair-grid">
+      <div>
+        <div class="section-label">Response A</div>
+        <div class="card resp-card" id="cardA">
+          <span class="resp-check"><svg class="icon" style="width:20px;height:20px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <div class="scroll task-text">
+            Multiply the Celsius value by 9/5, then add 32. For 10&nbsp;°C: 10&nbsp;×&nbsp;9/5&nbsp;=&nbsp;18, and 18&nbsp;+&nbsp;32&nbsp;=&nbsp;50. So 10&nbsp;°C equals 50&nbsp;°F.
+            <br><br>A quick mental shortcut: double the Celsius value, subtract 10% of that, then add 32. It lands on the same answer for everyday temperatures.
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Response B</div>
+        <div class="card resp-card" id="cardB">
+          <span class="resp-check"><svg class="icon" style="width:20px;height:20px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <div class="scroll task-text">
+            You can use the formula F&nbsp;=&nbsp;C&nbsp;+&nbsp;32, so 10&nbsp;°C would be 42&nbsp;°F. Fahrenheit values are always a bit higher than Celsius ones, so this checks out.
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- MAIN -->
-  <div class="grid">
-    <div>
-      <div id="stage"><!-- item rendered here --></div>
-
-      <!-- keyboard legend -->
-      <div class="legend">
-        <span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> choose</span>
-        <span><kbd>Enter</kbd> submit &amp; next</span>
-        <span><kbd>←</kbd> previous</span>
-        <span><kbd>S</kbd> skip</span>
+  <!-- ============ LIKERT ============ -->
+  <section class="pane" id="pane-likert">
+    <div class="likert-grid">
+      <div>
+        <div class="section-label">Source document</div>
+        <div class="card"><div class="scroll task-text">
+          The CatTower LTD quarterly report, prepared by Calico Lee, states that sales of the Whisker&nbsp;3000 scratching post grew 12% over the previous quarter. The growth was driven primarily by the new sisal-wrap finish, which accounted for 7 of the 12 percentage points.
+          <br><br>The report also notes that customer returns fell to 1.8%, the lowest figure since the product line launched. Two retail partners in the survey attributed the drop to the revised assembly guide shipped with every unit.
+          <br><br>Finally, the report cautions that supply constraints on sisal fiber may limit growth next quarter, and recommends securing a second supplier before peak season.
+        </div></div>
       </div>
-
-      <!-- nav -->
-      <div class="nav">
-        <button class="btn ghost" id="prev">← Previous</button>
-        <button class="btn ghost" id="skip">Skip</button>
-        <button class="btn primary" id="submit" disabled>Submit &amp; next</button>
+      <div>
+        <div class="section-label">Summary under review</div>
+        <div class="card task-text" style="position:sticky;top:88px">
+          Whisker&nbsp;3000 sales grew 12% thanks to the sisal-wrap finish, and returns dropped to 0.8%. The report recommends finding a second sisal supplier.
+        </div>
       </div>
     </div>
 
-    <!-- queue rail -->
-    <aside class="queue">
-      <div class="qh upper">Queue</div>
-      <div id="queue"></div>
-    </aside>
-  </div>
+    <div class="card dim-card" data-dim="faithfulness">
+      <div class="dim-head">
+        <span class="dim-check"><svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <span class="dim-name">Faithfulness</span>
+        <span class="dim-q">Does the summary only state facts from the source?</span>
+      </div>
+      <div class="scale-row" role="radiogroup" aria-label="Faithfulness rating">
+        <button class="scale-btn" aria-pressed="false">1</button>
+        <button class="scale-btn" aria-pressed="false">2</button>
+        <button class="scale-btn" aria-pressed="false">3</button>
+        <button class="scale-btn" aria-pressed="false">4</button>
+        <span class="anchors">1 = Contradicts the source · 4 = Fully faithful</span>
+      </div>
+    </div>
 
-  <footer>
-    Demo page generated from themes/eval-interface.md (research-designer).<br>
-    All people, companies, products, scenes, and figures are fictional. No affiliation with any real entity.
-  </footer>
+    <div class="card dim-card" data-dim="fluency">
+      <div class="dim-head">
+        <span class="dim-check"><svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <span class="dim-name">Fluency</span>
+        <span class="dim-q">Is the summary grammatical and natural?</span>
+      </div>
+      <div class="scale-row" role="radiogroup" aria-label="Fluency rating">
+        <button class="scale-btn" aria-pressed="false">1</button>
+        <button class="scale-btn" aria-pressed="false">2</button>
+        <button class="scale-btn" aria-pressed="false">3</button>
+        <button class="scale-btn" aria-pressed="false">4</button>
+        <span class="anchors">1 = Hard to read · 4 = Reads naturally</span>
+      </div>
+    </div>
+
+    <div class="card dim-card" data-dim="coverage">
+      <div class="dim-head">
+        <span class="dim-check"><svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <span class="dim-name">Coverage</span>
+        <span class="dim-q">Does the summary include the source's main points?</span>
+      </div>
+      <div class="scale-row" role="radiogroup" aria-label="Coverage rating">
+        <button class="scale-btn" aria-pressed="false">1</button>
+        <button class="scale-btn" aria-pressed="false">2</button>
+        <button class="scale-btn" aria-pressed="false">3</button>
+        <button class="scale-btn" aria-pressed="false">4</button>
+        <span class="anchors">1 = Misses key points · 4 = Covers all key points</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SPAN ============ -->
+  <section class="pane" id="pane-span">
+    <div class="section-label">Labels</div>
+    <div class="label-bar" id="labelBar">
+      <button class="label-chip" data-label="fact" style="border-color:#FECACA;color:#B91C1C">
+        <span class="key">1</span> Factual error
+      </button>
+      <button class="label-chip" data-label="claim" style="border-color:#FDE68A;color:#B45309">
+        <span class="key">2</span> Unsupported claim
+      </button>
+      <button class="label-chip" data-label="contra" style="border-color:#BFDBFE;color:#1D4ED8">
+        <span class="key">3</span> Contradiction
+      </button>
+    </div>
+    <div class="section-label">Text under review</div>
+    <div class="card span-text" id="spanText">At sea level, water boils at 90 degrees Celsius, which is why pasta cooks faster near the coast. Every scientist agrees that altitude has no measurable effect on boiling point. In reality, atmospheric pressure decreases with elevation, so water boils at lower temperatures in the mountains. This is why high-altitude baking recipes adjust cooking times. The passage above was prepared by Ya-ong Kim at CatTower Research Lab for annotation practice.</div>
+    <div class="hint">
+      <svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      Press 1–3 to arm a label, then select text with your mouse. Click a highlight's <span class="mono">x</span> in the list to remove it.
+    </div>
+    <div class="section-label" style="margin-top:24px">Spans (<span id="spanCount">0</span>)</div>
+    <div class="span-list" id="spanList"></div>
+  </section>
+
+  <!-- ============ COMPLETE ============ -->
+  <section class="complete" id="complete">
+    <div class="seal"><svg class="icon" style="width:30px;height:30px" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <h2>Batch complete — thank you</h2>
+    <p>All 60 items in this fictional HIT are recorded locally. Nothing leaves the page.</p>
+    <div class="summary-grid">
+      <div class="s"><div class="sv" id="sumDone">0</div><div class="sl">submitted</div></div>
+      <div class="s"><div class="sv" id="sumSkip">0</div><div class="sl">skipped</div></div>
+      <div class="s"><div class="sv mono" id="sumTime">00:00</div><div class="sl">session time</div></div>
+    </div>
+    <button class="submit-btn" id="startOver" style="margin:0 auto">Review from start</button>
+  </section>
+</main>
+
+<div class="mobile-block">
+  <svg class="icon" style="width:40px;height:40px;color:var(--text-muted)" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+  <strong style="color:var(--text-primary)">This task requires a desktop browser</strong>
+  <span>Please reopen this study on a screen wider than 768&nbsp;px.</span>
 </div>
 
-<script>
-/* ---------- false-color synthetic plates (self-made, no images) ---------- */
-function applyPlate(el, a, b, degrade){
-  const dots=[];
-  for(let i=0;i<44;i++){ const x=((i*37+a)%100), y=((i*53+b)%100), s=(i%3)+1;
-    dots.push(`radial-gradient(circle at ${x}% ${y}%, rgba(244,244,242,.5) ${s}px, transparent ${s+1}px)`); }
-  const fields=[
-    `radial-gradient(60% 70% at ${a}% 35%, rgba(68,119,170,.92), transparent 60%)`,
-    `radial-gradient(55% 60% at ${b}% 72%, rgba(34,136,51,.8), transparent 62%)`,
-    `radial-gradient(45% 50% at 80% 25%, rgba(204,187,68,.7), transparent 60%)`,
-    `linear-gradient(160deg,#1b2233,#0b0d12)`];
-  el.style.backgroundImage=dots.concat(fields).join(",");
-  el.style.backgroundColor="#0b0d12";
-  el.style.filter = degrade ? "blur(1.4px) saturate(.8)" : "none";
-}
-
-/* ---------- the task queue (hardcoded, fictional) ---------- */
-/* ab items: A = WhiskerSplat (ours, faithful), B = baseline (degraded). likert: single render quality. */
-const items=[
-  {id:"q01", type:"ab", scene:"living-room-07", a:38, b:22, baseline:"FelineGS"},
-  {id:"q02", type:"ab", scene:"kitchen-02", a:14, b:61, baseline:"PawSplat"},
-  {id:"q03", type:"likert", scene:"office-11", a:70},
-  {id:"q04", type:"ab", scene:"bedroom-05", a:26, b:70, baseline:"FelineGS"},
-  {id:"q05", type:"ab", scene:"hallway-09", a:55, b:30, baseline:"PawSplat", attention:true},
-  {id:"q06", type:"ab", scene:"studio-03", a:80, b:58, baseline:"FelineGS"},
-  {id:"q07", type:"likert", scene:"cafe-12", a:44},
-  {id:"q08", type:"ab", scene:"garage-04", a:33, b:66, baseline:"PawSplat"},
-  {id:"q09", type:"ab", scene:"library-08", a:48, b:18, baseline:"FelineGS"},
-  {id:"q10", type:"likert", scene:"loft-06", a:60},
-  {id:"q11", type:"ab", scene:"atrium-10", a:62, b:40, baseline:"PawSplat"},
-  {id:"q12", type:"ab", scene:"closet-01", a:20, b:75, baseline:"FelineGS"},
-];
-const N=items.length;
-
-/* ---------- state ---------- */
-let idx=0;
-const responses={};               // id -> {choice|rating, comment, flag, skipped}
-const submitted=new Set();
-
-/* example plates in instructions */
-applyPlate(document.getElementById("ex-good"), 38, 22, false);
-applyPlate(document.getElementById("ex-bad"), 60, 40, true);
-
-const stage=document.getElementById("stage");
-const submitBtn=document.getElementById("submit");
-const VT = !!document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-function answeredCount(){ return [...submitted].filter(id=>responses[id] && !responses[id].skipped).length; }
-
-function render(){
-  if(idx>=N){ renderDone(); return; }
-  const it=items[idx];
-  const r=responses[it.id]||{};
-  let html=`<div class="card">`;
-  if(it.type==="ab"){
-    html+=`<p class="prompt">Which reconstruction is more faithful to the reference?<span class="qid mono">${it.id} · CT-Scenes / ${it.scene}</span>
-      ${it.attention?`<span class="attn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>attention check</span>`:''}</p>
-      <div class="reference"><div class="rlab upper">Reference view</div><div class="plate refplate" id="p-ref"></div></div>
-      <div class="pair">
-        <div class="choiceplate ${r.choice==='A'?'selected':''}" data-c="A"><span class="ptag">A</span><div class="plate" id="p-a"></div></div>
-        <div class="choiceplate ${r.choice==='B'?'selected':''}" data-c="B"><span class="ptag">B</span><div class="plate" id="p-b"></div></div>
+<!-- ============ DOCK ============ -->
+<div class="dock" id="dock">
+  <!-- pairwise dock -->
+  <div class="dock-row dock-pane" id="dock-pairwise">
+    <span class="dock-q">Which response is better overall?</span>
+    <button class="choice-btn" data-choice="A"><span class="key">1</span> A is better</button>
+    <button class="choice-btn" data-choice="tie"><span class="key">2</span> Tie</button>
+    <button class="choice-btn" data-choice="B"><span class="key">3</span> B is better</button>
+    <div class="conf" id="confRow">
+      <span class="conf-label">Confidence</span>
+      <div class="seg" id="confSeg">
+        <button aria-pressed="false">Low</button>
+        <button aria-pressed="false">Medium</button>
+        <button aria-pressed="false">High</button>
       </div>
-      <div class="responses"><div class="twoafc">
-        <button class="choicebtn ${r.choice==='A'?'sel':''}" data-choice="A">A is better<span class="key">key 1</span></button>
-        <button class="choicebtn ${r.choice==='tie'?'sel':''}" data-choice="tie">Tie<span class="key">key 2</span></button>
-        <button class="choicebtn ${r.choice==='B'?'sel':''}" data-choice="B">B is better<span class="key">key 3</span></button>
-      </div></div>`;
-  } else {
-    html+=`<p class="prompt">Rate the quality of this reconstruction (1 = poor, 5 = excellent).<span class="qid mono">${it.id} · CT-Scenes / ${it.scene}</span></p>
-      <div class="reference"><div class="rlab upper">Reference view</div><div class="plate refplate" id="p-ref"></div></div>
-      <div style="max-width:360px"><div class="rlab upper" style="margin-bottom:6px">Reconstruction</div><div class="plate" id="p-a"></div></div>
-      <div class="responses"><div class="likert">`;
-    const labs=["poor","fair","ok","good","excellent"];
-    for(let k=1;k<=5;k++){ html+=`<button class="likbtn ${r.rating===k?'sel':''}" data-rating="${k}">${k}<small>${labs[k-1]}</small></button>`; }
-    html+=`</div></div>`;
-  }
-  // extras
-  html+=`<div class="extras">
-      <label class="comment"><input type="text" id="comment" placeholder="Optional comment…" value="${r.comment?r.comment.replace(/"/g,'&quot;'):''}"></label>
-      <label class="cannot"><input type="checkbox" id="cannot" ${r.flag==='cannot_judge'?'checked':''}> Can't judge</label>
-    </div></div>`;
-  stage.innerHTML=html;
-
-  // paint plates
-  applyPlate(document.getElementById("p-ref"), it.a, it.b===undefined?40:it.b, false);
-  applyPlate(document.getElementById("p-a"), it.a, (it.b===undefined?40:it.b), false);          // A = ours (clean)
-  if(it.type==="ab") applyPlate(document.getElementById("p-b"), (it.a+19)%90+5, (it.b+13)%90+5, true); // B = baseline (degraded)
-
-  // wire response buttons
-  stage.querySelectorAll("[data-choice]").forEach(btn=>btn.addEventListener("click",()=>setChoice(btn.dataset.choice)));
-  stage.querySelectorAll("[data-rating]").forEach(btn=>btn.addEventListener("click",()=>setRating(+btn.dataset.rating)));
-  stage.querySelectorAll(".choiceplate").forEach(p=>p.addEventListener("click",()=>setChoice(p.dataset.c)));
-  document.getElementById("comment").addEventListener("input",e=>{ const o=responses[it.id]||(responses[it.id]={}); o.comment=e.target.value; });
-  document.getElementById("cannot").addEventListener("change",e=>{ const o=responses[it.id]||(responses[it.id]={}); o.flag=e.target.checked?'cannot_judge':null; updateSubmit(); });
-
-  // header/progress/queue
-  document.getElementById("pnum").textContent=`Item ${idx+1} / ${N}`;
-  document.getElementById("pdone").textContent=`${answeredCount()} answered`;
-  document.getElementById("pfill").style.width=(answeredCount()/N*100)+"%";
-  document.getElementById("prev").disabled = idx===0;
-  updateSubmit();
-  renderQueue();
-}
-
-function setChoice(c){
-  const it=items[idx]; const o=responses[it.id]||(responses[it.id]={}); o.choice=c; o.flag=null;
-  stage.querySelectorAll(".choicebtn").forEach(b=>b.classList.toggle("sel", b.dataset.choice===c));
-  stage.querySelectorAll(".choiceplate").forEach(p=>p.classList.toggle("selected", (c==='A'||c==='B') && p.dataset.c===c));
-  const cb=document.getElementById("cannot"); if(cb) cb.checked=false;
-  pulse(stage.querySelector(".choicebtn.sel"));
-  updateSubmit();
-}
-function setRating(k){
-  const it=items[idx]; const o=responses[it.id]||(responses[it.id]={}); o.rating=k; o.flag=null;
-  stage.querySelectorAll(".likbtn").forEach((b,i)=>b.classList.toggle("sel", i+1===k));
-  const cb=document.getElementById("cannot"); if(cb) cb.checked=false;
-  pulse(stage.querySelector(".likbtn.sel"));
-  updateSubmit();
-}
-function pulse(el){ if(!el) return; el.classList.remove("pulse"); void el.offsetWidth; el.classList.add("pulse"); }
-
-function hasResponse(){ const r=responses[items[idx].id]; return !!(r && (r.choice || r.rating || r.flag==='cannot_judge')); }
-function updateSubmit(){ submitBtn.disabled = !hasResponse(); submitBtn.textContent = idx===N-1 ? "Submit & finish" : "Submit & next"; }
-
-function go(target){
-  const run=()=>{ idx=Math.max(0,Math.min(N,target)); render(); window.scrollTo({top:0}); };
-  if(VT) document.startViewTransition(run); else run();
-}
-function submit(){
-  if(!hasResponse()) return;
-  submitted.add(items[idx].id); responses[items[idx].id].skipped=false;
-  go(idx+1);
-}
-function skip(){
-  const it=items[idx]; const o=responses[it.id]||(responses[it.id]={}); o.skipped=true; o.choice=null; o.rating=null; submitted.add(it.id);
-  go(idx+1);
-}
-
-document.getElementById("submit").addEventListener("click", submit);
-document.getElementById("skip").addEventListener("click", skip);
-document.getElementById("prev").addEventListener("click", ()=>{ if(idx>0) go(idx-1); });
-document.getElementById("itoggle").addEventListener("click", ()=>document.getElementById("instr").classList.toggle("collapsed"));
-
-/* keyboard */
-addEventListener("keydown",(e)=>{
-  if(idx>=N) return;
-  const tag=(e.target.tagName||"").toLowerCase(); if(tag==="input"&&e.key!=="Enter") return;
-  const it=items[idx];
-  if(e.key==="Enter"){ if(hasResponse()) submit(); e.preventDefault(); return; }
-  if(e.key==="ArrowLeft"){ if(idx>0) go(idx-1); return; }
-  if(e.key==="s"||e.key==="S"){ skip(); return; }
-  if(it.type==="ab" && ["1","2","3"].includes(e.key)){ setChoice({"1":"A","2":"tie","3":"B"}[e.key]); }
-  if(it.type==="likert" && ["1","2","3","4","5"].includes(e.key)){ setRating(+e.key); }
-});
-
-/* queue rail */
-function renderQueue(){
-  const q=document.getElementById("queue"); q.innerHTML="";
-  items.forEach((it,i)=>{
-    let cls="qitem"; if(i===idx) cls+=" cur";
-    else if(submitted.has(it.id) && responses[it.id].skipped) cls+=" skip";
-    else if(submitted.has(it.id)) cls+=" done";
-    const b=document.createElement("button"); b.className=cls;
-    b.innerHTML=`<span class="qd"></span><span class="qt">${it.id} · ${it.scene}</span>`;
-    b.addEventListener("click",()=>go(i));
-    q.appendChild(b);
-  });
-}
-
-/* completion */
-function renderDone(){
-  const abItems=items.filter(it=>it.type==="ab");
-  const abAnswered=abItems.filter(it=>responses[it.id] && !responses[it.id].skipped && responses[it.id].choice);
-  const wins=abAnswered.filter(it=>responses[it.id].choice==="A").length;
-  const winRate=abAnswered.length? Math.round(wins/abAnswered.length*100):0;
-  const skipped=items.filter(it=>responses[it.id] && responses[it.id].skipped).length;
-  const answered=answeredCount();
-  const attn=items.find(it=>it.attention);
-  const attnPass = attn && responses[attn.id] && responses[attn.id].choice==="A";
-  stage.innerHTML=`<div class="done-screen">
-    <h2>Batch complete — thank you</h2>
-    <p>Your responses for this fictional HIT have been recorded locally. No data leaves the page.</p>
-    <div class="summary">
-      <div class="sumcard"><div class="sv">${answered}</div><div class="sl">answered</div></div>
-      <div class="sumcard"><div class="sv">${skipped}</div><div class="sl">skipped</div></div>
-      <div class="sumcard"><div class="sv" style="color:var(--accent)">${winRate}%</div><div class="sl">WhiskerSplat win-rate</div></div>
-      <div class="sumcard"><div class="sv">0.81</div><div class="sl">κ agreement (fictional)</div></div>
     </div>
-    <p style="margin-top:18px; font-size:12px">Attention check: <b style="color:${attnPass?'var(--ok)':'var(--signal)'}">${attnPass?'passed':'review'}</b></p>
-    <div class="nav" style="justify-content:center"><button class="btn" id="restart">← Review from start</button></div>
-  </div>`;
-  document.getElementById("pnum").textContent=`Item ${N} / ${N}`;
-  document.getElementById("pfill").style.width="100%";
-  document.getElementById("pdone").textContent=`${answered} answered`;
-  document.getElementById("submit").disabled=true; document.getElementById("skip").disabled=true; document.getElementById("prev").disabled=false;
-  renderQueue();
-  document.getElementById("restart").addEventListener("click",()=>go(0));
-}
+    <div class="dock-spacer"></div>
+    <button class="ghost-btn" data-skip>
+      <svg class="icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
+      Skip <span class="key">S</span>
+    </button>
+    <button class="submit-btn" id="submitPair" disabled>
+      Submit <span class="key">Enter</span>
+    </button>
+  </div>
 
-render();
+  <!-- likert dock -->
+  <div class="dock-row dock-pane" id="dock-likert" style="display:none">
+    <span class="dock-q"><span id="ratedCount" class="mono">0</span> of 3 dimensions rated</span>
+    <div class="dock-spacer"></div>
+    <button class="ghost-btn" data-skip>
+      <svg class="icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
+      Skip <span class="key">S</span>
+    </button>
+    <button class="submit-btn" id="submitLikert" disabled>
+      Submit <span class="key">Enter</span>
+    </button>
+  </div>
+
+  <!-- span dock -->
+  <div class="dock-row dock-pane" id="dock-span" style="display:none">
+    <button class="no-error-btn" id="noErrorBtn" aria-pressed="false">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+      No errors in this text <span class="key">N</span>
+    </button>
+    <div class="dock-spacer"></div>
+    <button class="ghost-btn" data-skip>
+      <svg class="icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
+      Skip <span class="key">S</span>
+    </button>
+    <button class="submit-btn" id="submitSpan" disabled>
+      Submit <span class="key">Enter</span>
+    </button>
+  </div>
+</div>
+
+<!-- skip reason menu -->
+<div class="skip-menu" id="skipMenu" role="menu">
+  <div class="sm-h">Why are you skipping?</div>
+  <button role="menuitem" data-reason="Content unclear">Content unclear</button>
+  <button role="menuitem" data-reason="Cannot judge">Cannot judge</button>
+  <button role="menuitem" data-reason="Other">Other</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ============ DRAWER ============ -->
+<div class="drawer-veil" id="drawerVeil"></div>
+<aside class="drawer" id="drawer" aria-label="Instructions">
+  <button class="drawer-close" id="drawerClose" aria-label="Close instructions">
+    <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+  </button>
+  <h2>Instructions</h2>
+  <p>You will judge model-generated text. Read the full content before answering. There is no time pressure beyond the session limit shown in the header.</p>
+  <p><strong style="color:var(--text-primary)">Pairwise:</strong> choose the response that is more helpful, truthful, and harmless overall. Choose Tie only when you genuinely cannot decide.</p>
+  <p><strong style="color:var(--text-primary)">Likert:</strong> rate every dimension. Hover a number to see what it means for that dimension.</p>
+  <p><strong style="color:var(--text-primary)">Span:</strong> arm a label, then select the exact words that contain the problem. If the text is clean, use "No errors in this text".</p>
+  <div class="code-block mono">Payment: $15 / hour · Study CT-2026-014 (fictional)<br>Contact: ya-ong.kim@cattower.example</div>
+  <p style="color:var(--text-muted);font-size:13px">Demo page generated from themes/eval-interface.md (research-designer). All people, companies, products, datasets, and figures are fictional — annotators Kitty Park, Ya-ong Kim, Calico Lee; study CT-2026-014. No affiliation with any real entity.</p>
+</aside>
+
+<script>
+(function(){
+  "use strict";
+  /* ---------- helpers ---------- */
+  const $ = (s, el=document) => el.querySelector(s);
+  const $$ = (s, el=document) => [...el.querySelectorAll(s)];
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const toast = (msg, ok=false) => {
+    const t = $("#toast");
+    t.className = "toast show" + (ok ? " success" : "");
+    t.innerHTML = (ok ? '<svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>' : "") + msg;
+    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2200);
+  };
+  const banner = msg => {
+    const b = $("#banner"); $("#bannerText").textContent = msg;
+    b.classList.add("show"); clearTimeout(b._h); b._h = setTimeout(() => b.classList.remove("show"), 3000);
+  };
+
+  /* ---------- session state + progress ---------- */
+  const state = { item: 14, total: 60, done: 0, skip: 0, elapsed: 161 };
+  function fmt(s){ return String((s/60)|0).padStart(2,"0") + ":" + String(s%60).padStart(2,"0"); }
+  function updateProgress(){
+    $("#itemCounter").textContent = "Item " + Math.min(state.item, state.total) + " / " + state.total;
+    $("#progressFill").style.width = Math.min(100, Math.round((state.item-1)/state.total*100)) + "%";
+  }
+  updateProgress();
+
+  /* ---------- session timer (ticks, pauses when tab hidden) ---------- */
+  const timerEl = $("#timer"); timerEl.textContent = fmt(state.elapsed);
+  setInterval(() => { if(document.hidden) return; state.elapsed++; timerEl.textContent = fmt(state.elapsed); }, 1000);
+
+  /* ---------- tabs ---------- */
+  let active = "pairwise";
+  $$(".tab").forEach(tab => tab.addEventListener("click", () => {
+    active = tab.dataset.pane;
+    $$(".tab").forEach(t => t.setAttribute("aria-selected", t === tab));
+    $$(".pane").forEach(p => p.classList.toggle("active", p.id === "pane-" + active));
+    $$(".dock-pane").forEach(d => d.style.display = d.id === "dock-" + active ? "flex" : "none");
+    closeSkip();
+  }));
+
+  /* ---------- drawer ---------- */
+  const drawer = $("#drawer"), veil = $("#drawerVeil");
+  const setDrawer = open => { drawer.classList.toggle("open", open); veil.classList.toggle("open", open); };
+  $("#helpBtn").addEventListener("click", () => setDrawer(true));
+  $("#drawerClose").addEventListener("click", () => setDrawer(false));
+  veil.addEventListener("click", () => setDrawer(false));
+
+  /* ---------- dwell guard + submit ---------- */
+  function armSubmit(btn, ready){
+    if(!ready){ btn.disabled = true; btn._ready = false; return; }
+    if(btn._ready) return;
+    let n = 3; btn.disabled = true;
+    const base = btn.dataset.label || (btn.dataset.label = btn.firstChild.textContent.trim());
+    const tick = () => {
+      if(n > 0){ btn.firstChild.textContent = base + " (" + n-- + "s) "; btn._h = setTimeout(tick, reduced ? 0 : 1000); }
+      else { btn.firstChild.textContent = base + " "; btn.disabled = false; btn._ready = true; }
+    };
+    clearTimeout(btn._h); tick();
+  }
+
+  /* ================= PAIRWISE ================= */
+  let pairChoice = null, conf = null;
+  const submitPair = $("#submitPair");
+  $$("#dock-pairwise .choice-btn").forEach(btn => btn.addEventListener("click", () => {
+    pairChoice = btn.dataset.choice;
+    $$("#dock-pairwise .choice-btn").forEach(b => b.setAttribute("aria-pressed", b === btn));
+    $("#cardA").classList.toggle("selected", pairChoice === "A");
+    $("#cardB").classList.toggle("selected", pairChoice === "B");
+    $("#confRow").classList.add("show");
+    armSubmit(submitPair, true);
+  }));
+  $$("#confSeg button").forEach(btn => btn.addEventListener("click", () => {
+    conf = btn.textContent;
+    $$("#confSeg button").forEach(b => b.setAttribute("aria-pressed", b === btn));
+  }));
+  function resetPair(){
+    pairChoice = null; conf = null;
+    $$("#dock-pairwise .choice-btn").forEach(b => b.setAttribute("aria-pressed","false"));
+    $("#cardA").classList.remove("selected"); $("#cardB").classList.remove("selected");
+    $("#confRow").classList.remove("show");
+    $$("#confSeg button").forEach(b => b.setAttribute("aria-pressed","false"));
+    submitPair.disabled = true; submitPair._ready = false;
+  }
+  submitPair.addEventListener("click", () => {
+    if(!conf){ banner("Select a confidence level to continue."); return; }
+    advance("Judgment recorded");
+  });
+
+  /* ================= LIKERT ================= */
+  const ratings = {};
+  const submitLikert = $("#submitLikert");
+  $$(".dim-card").forEach(card => {
+    $$(".scale-btn", card).forEach(btn => btn.addEventListener("click", () => {
+      ratings[card.dataset.dim] = btn.textContent;
+      $$(".scale-btn", card).forEach(b => b.setAttribute("aria-pressed", b === btn));
+      card.classList.add("rated"); card.classList.remove("error");
+      const n = Object.keys(ratings).length;
+      $("#ratedCount").textContent = n;
+      armSubmit(submitLikert, n === 3);
+    }));
+  });
+  function resetLikert(){
+    for(const k in ratings) delete ratings[k];
+    $$(".dim-card").forEach(c => { c.classList.remove("rated","error"); $$(".scale-btn", c).forEach(b => b.setAttribute("aria-pressed","false")); });
+    $("#ratedCount").textContent = "0";
+    submitLikert.disabled = true; submitLikert._ready = false;
+  }
+  submitLikert.addEventListener("click", () => advance("Ratings recorded"));
+
+  /* ================= SPAN ================= */
+  const labelMeta = {
+    fact:  { name:"Factual error",     bg:"#FECACA", fg:"#B91C1C", tag:"F" },
+    claim: { name:"Unsupported claim", bg:"#FDE68A", fg:"#B45309", tag:"U" },
+    contra:{ name:"Contradiction",     bg:"#BFDBFE", fg:"#1D4ED8", tag:"C" }
+  };
+  let armed = null, spanId = 0;
+  const spans = new Map();
+  const submitSpan = $("#submitSpan");
+  const noErrorBtn = $("#noErrorBtn");
+
+  function armLabel(key){
+    armed = armed === key ? null : key;
+    $$("#labelBar .label-chip").forEach(chip => {
+      const m = labelMeta[chip.dataset.label], on = chip.dataset.label === armed;
+      chip.style.background = on ? m.fg : "var(--surface-card)";
+      chip.style.color = on ? "#FFFFFF" : m.fg;
+    });
+  }
+  $$("#labelBar .label-chip").forEach(chip =>
+    chip.addEventListener("click", () => armLabel(chip.dataset.label)));
+
+  function refreshSpanState(){
+    $("#spanCount").textContent = spans.size;
+    armSubmit(submitSpan, spans.size > 0 || noErrorBtn.getAttribute("aria-pressed") === "true");
+  }
+
+  function removeSpan(id){
+    const rec = spans.get(id); if(!rec) return;
+    const mark = rec.mark, parent = mark.parentNode;
+    if(parent){
+      const tag = mark.querySelector(".tag"); if(tag) tag.remove();
+      while(mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+      parent.removeChild(mark); parent.normalize();
+    }
+    rec.row.remove(); spans.delete(id); refreshSpanState();
+  }
+
+  $("#spanText").addEventListener("mouseup", () => {
+    const sel = window.getSelection();
+    if(sel.isCollapsed) return;
+    if(!armed){ toast("Choose a label first (1–3)"); sel.removeAllRanges(); return; }
+    const range = sel.getRangeAt(0);
+    const box = $("#spanText");
+    if(!box.contains(range.commonAncestorContainer)) return;
+    const text = range.toString().trim();
+    if(text.length < 2){ sel.removeAllRanges(); return; }
+    if(noErrorBtn.getAttribute("aria-pressed") === "true") noErrorBtn.setAttribute("aria-pressed","false");
+    const m = labelMeta[armed], id = ++spanId;
+    const mark = document.createElement("mark");
+    mark.className = "span"; mark.style.background = m.bg;
+    try { range.surroundContents(mark); }
+    catch(e){ sel.removeAllRanges(); toast("Selection crosses an existing span — overlaps aren't allowed"); return; }
+    const tag = document.createElement("span");
+    tag.className = "tag"; tag.textContent = m.tag; tag.style.color = m.fg;
+    mark.appendChild(tag);
+    mark.addEventListener("click", () => removeSpan(id));
+    const row = document.createElement("div");
+    row.className = "span-row";
+    row.innerHTML =
+      '<span class="span-quote">&ldquo;' + text.replace(/</g,"&lt;").slice(0,80) + '&rdquo;</span>' +
+      '<span style="color:' + m.fg + ';font-weight:500">' + m.name + '</span>' +
+      '<button class="x" aria-label="Remove span">' +
+      '<svg class="icon" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>';
+    row.querySelector(".x").addEventListener("click", () => removeSpan(id));
+    row.addEventListener("mouseenter", () => mark.style.opacity = ".7");
+    row.addEventListener("mouseleave", () => mark.style.opacity = "1");
+    $("#spanList").appendChild(row);
+    spans.set(id, { mark, row });
+    sel.removeAllRanges(); refreshSpanState();
+  });
+
+  noErrorBtn.addEventListener("click", () => {
+    const on = noErrorBtn.getAttribute("aria-pressed") === "true";
+    if(!on && spans.size > 0){
+      if(!confirm("Remove " + spans.size + " span(s) and mark this text as error-free?")) return;
+      [...spans.keys()].forEach(removeSpan);
+    }
+    noErrorBtn.setAttribute("aria-pressed", String(!on));
+    refreshSpanState();
+  });
+  function resetSpan(){
+    [...spans.keys()].forEach(removeSpan);
+    noErrorBtn.setAttribute("aria-pressed","false");
+    armed = null;
+    $$("#labelBar .label-chip").forEach(chip => { const m = labelMeta[chip.dataset.label]; chip.style.background = "var(--surface-card)"; chip.style.color = m.fg; });
+    submitSpan.disabled = true; submitSpan._ready = false;
+    refreshSpanState();
+  }
+  submitSpan.addEventListener("click", () => advance("Annotation recorded"));
+
+  /* ================= advance / skip / complete ================= */
+  function resetActive(){ active === "pairwise" ? resetPair() : active === "likert" ? resetLikert() : resetSpan(); }
+  function advance(label, isSkip){
+    if(isSkip) state.skip++; else state.done++;
+    state.item++;
+    if(state.item > state.total){ showComplete(); return; }
+    updateProgress(); resetActive();
+    toast(label + " — item " + state.item + " loaded", !isSkip);
+  }
+
+  /* skip menu */
+  const skipMenu = $("#skipMenu");
+  function openSkip(anchor){
+    const r = anchor.getBoundingClientRect();
+    skipMenu.style.left = Math.max(12, Math.min(r.left, innerWidth - 250)) + "px";
+    skipMenu.classList.add("show");
+  }
+  function closeSkip(){ skipMenu.classList.remove("show"); }
+  $$("[data-skip]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); skipMenu.classList.contains("show") ? closeSkip() : openSkip(b); }));
+  $$("#skipMenu button").forEach(b => b.addEventListener("click", () => { closeSkip(); advance("Skipped: " + b.dataset.reason, true); }));
+  document.addEventListener("click", e => { if(!skipMenu.contains(e.target) && !e.target.closest("[data-skip]")) closeSkip(); });
+
+  /* completion */
+  function showComplete(){
+    closeSkip();
+    $$(".pane").forEach(p => p.classList.remove("active"));
+    $("#dock").style.display = "none";
+    $("#sumDone").textContent = state.done;
+    $("#sumSkip").textContent = state.skip;
+    $("#sumTime").textContent = fmt(state.elapsed);
+    $("#itemCounter").textContent = state.total + " / " + state.total;
+    $("#progressFill").style.width = "100%";
+    $("#complete").classList.add("show");
+  }
+  $("#startOver").addEventListener("click", () => {
+    state.item = 1; state.done = 0; state.skip = 0;
+    $("#complete").classList.remove("show");
+    $("#dock").style.display = "";
+    resetPair(); resetLikert(); resetSpan();
+    $$(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.pane === "pairwise"));
+    $$(".pane").forEach(p => p.classList.toggle("active", p.id === "pane-pairwise"));
+    $$(".dock-pane").forEach(d => d.style.display = d.id === "dock-pairwise" ? "flex" : "none");
+    active = "pairwise"; updateProgress();
+  });
+
+  /* ---------- keyboard ---------- */
+  document.addEventListener("keydown", e => {
+    if(e.target.matches("input,textarea") || drawer.classList.contains("open")) return;
+    const k = e.key.toLowerCase();
+    if(k === "escape"){ closeSkip(); return; }
+    if(active === "pairwise"){
+      if(k === "1") $('[data-choice="A"]').click();
+      if(k === "2") $('[data-choice="tie"]').click();
+      if(k === "3") $('[data-choice="B"]').click();
+      if(k === "enter" && !submitPair.disabled) submitPair.click();
+    }
+    if(active === "span"){
+      if(k === "1") armLabel("fact");
+      if(k === "2") armLabel("claim");
+      if(k === "3") armLabel("contra");
+      if(k === "n") noErrorBtn.click();
+      if(k === "enter" && !submitSpan.disabled) submitSpan.click();
+    }
+    if(active === "likert" && k === "enter" && !submitLikert.disabled) submitLikert.click();
+    if(k === "s"){ const b = $("#dock-"+active+" [data-skip]"); if(b) (skipMenu.classList.contains("show") ? closeSkip() : openSkip(b)); }
+    if(k === "?") setDrawer(true);
+  });
+})();
 </script>
 </body>
 </html>
