@@ -17,6 +17,8 @@
 | The 3D idea | None — Tier 2 excluded. If stimuli are 3D reconstructions, render them as pre-baked static media plates. |
 | Reduced-motion | All transitions/animations off; the dwell countdown collapses to 0 (instant unlock); the timer still ticks. |
 | WebGL fallback | N/A (no WebGL). |
+| Dark mode | Light + dark via CSS-variable token sets; **follow `prefers-color-scheme` by default**, with a header toggle that overrides (persisted, applied before paint). Span/box label colours use theme-agnostic mid tones so chips and highlights read in both; the toast stays fixed-dark. |
+| Image variant | A sibling demo (`examples/eval-interface-image.html`) swaps text stimuli for **self-made false-colour renders**: pairwise A/B images, per-dimension image quality, and **bounding-box** region labelling (drag to draw). Same shell, dwell guard, completion, and dark mode. |
 | Task flow (static demo) | A shared item counter (`Item N / total`) + progress bar; each **Submit** or **Skip** increments the item, resets the active pattern's inputs, and re-arms the dwell guard. Reaching `total` shows a **completion summary** (submitted / skipped / session time) with a restart. The three patterns share the shell via header tabs. |
 
 ## 1. Principles

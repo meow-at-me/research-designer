@@ -91,8 +91,12 @@ Human-verification / rating UIs and fixed-aspect posters (screen + print-to-PDF)
 
 <table>
 <tr>
-<td width="50%"><img src="assets/previews/eval-interface.png" alt="eval-interface preview" width="100%"><br><sub><a href="themes/eval-interface.md">themes/eval-interface.md</a></sub></td>
+<td width="50%"><img src="assets/previews/eval-interface.png" alt="eval-interface preview" width="100%"><br><sub><a href="themes/eval-interface.md">themes/eval-interface.md</a> — text workbench</sub></td>
+<td width="50%"><img src="assets/previews/eval-interface-image.png" alt="eval-interface image variant preview" width="100%"><br><sub><a href="examples/eval-interface-image.html">examples/eval-interface-image.html</a> — image variant</sub></td>
+</tr>
+<tr>
 <td width="50%"><img src="assets/previews/research-poster.png" alt="research-poster preview" width="100%"><br><sub><a href="themes/research-poster.md">themes/research-poster.md</a></sub></td>
+<td></td>
 </tr>
 </table>
 
@@ -141,7 +145,7 @@ Collection-wide rule: every chart datapoint is **traceable to its source log lin
 
 | Spec | What it is |
 |---|---|
-| `themes/eval-interface.md` | Human-verification / MTurk-style annotation & rating UI, keyboard-first A/B + Likert — Tier 0 |
+| `themes/eval-interface.md` | Human-verification annotation **workbench** — keyboard-first pairwise / Likert / span, plus an **image variant** (A/B, quality, bounding-box); light &amp; dark — Tier 0 |
 | `themes/research-poster.md` | Fixed-aspect A0 poster — renders on screen *and* prints to PDF in one system — Tier 0 |
 
 ### Motion & 3D showcase
